@@ -6,7 +6,7 @@
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6">
     <!-- Profile Information -->
-    <div class="bg-white rounded-lg shadow-sm p-6">
+    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-900 mb-6">Profile Information</h3>
         
         <form action="{{ route('userpanel.settings.update') }}" method="POST">
@@ -18,7 +18,7 @@
                            id="name" 
                            name="name" 
                            value="{{ old('name', $user->name) }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 transition-colors"
                            required>
                     @error('name')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -31,7 +31,7 @@
                            id="email" 
                            name="email" 
                            value="{{ old('email', $user->email) }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 transition-colors"
                            required>
                     @error('email')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -41,7 +41,7 @@
             
             <div class="mt-6">
                 <button type="submit" 
-                        class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        class="gradient-bg text-white px-4 py-2 rounded-md hover-gradient focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200">
                     Update Profile
                 </button>
             </div>
@@ -49,7 +49,7 @@
     </div>
 
     <!-- Change Password -->
-    <div class="bg-white rounded-lg shadow-sm p-6">
+    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-900 mb-6">Change Password</h3>
         
         <form action="{{ route('userpanel.settings.update') }}" method="POST">
@@ -60,7 +60,7 @@
                     <input type="password" 
                            id="current_password" 
                            name="current_password"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 transition-colors">
                     @error('current_password')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -71,7 +71,7 @@
                     <input type="password" 
                            id="new_password" 
                            name="new_password"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 transition-colors">
                     @error('new_password')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -82,13 +82,13 @@
                     <input type="password" 
                            id="new_password_confirmation" 
                            name="new_password_confirmation"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 transition-colors">
                 </div>
             </div>
             
             <div class="mt-6">
                 <button type="submit" 
-                        class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
                     Change Password
                 </button>
             </div>
@@ -96,7 +96,7 @@
     </div>
 
     <!-- Account Information -->
-    <div class="bg-white rounded-lg shadow-sm p-6">
+    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-900 mb-6">Account Information</h3>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -147,7 +147,7 @@
                     <p class="text-sm text-red-700 mt-1">Permanently delete your account and all associated data.</p>
                 </div>
                 <button type="button" 
-                        class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                        class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
                         onclick="alert('This feature is not implemented yet.')">
                     Delete Account
                 </button>
@@ -159,7 +159,7 @@
                     <p class="text-sm text-yellow-700 mt-1">Temporarily deactivate your account. You can reactivate it later.</p>
                 </div>
                 <button type="button" 
-                        class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+                        class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-colors"
                         onclick="alert('This feature is not implemented yet.')">
                     Deactivate
                 </button>

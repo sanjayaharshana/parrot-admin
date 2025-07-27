@@ -16,42 +16,62 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Heroicons -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         [x-cloak] { display: none !important; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hover-gradient:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        }
     </style>
 </head>
 
 <body class="bg-gray-50">
     <div class="min-h-screen flex">
         <!-- Sidebar -->
-        <div class="bg-white shadow-lg w-64 flex-shrink-0">
+        <div class="gradient-bg text-white shadow-lg w-64 flex-shrink-0">
             <div class="p-6">
-                <h1 class="text-2xl font-bold text-gray-800">{{ config('app.name', 'Laravel') }}</h1>
+                <h1 class="text-2xl font-bold text-white">{{ config('app.name', 'Laravel') }}</h1>
             </div>
             
             <nav class="mt-6">
                 <div class="px-4 space-y-2">
                     <a href="{{ route('userpanel.dashboard') }}" 
-                       class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 {{ request()->routeIs('userpanel.dashboard') ? 'bg-blue-50 text-blue-700' : '' }}">
+                       class="flex items-center px-4 py-2 text-white rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 {{ request()->routeIs('userpanel.dashboard') ? 'bg-white bg-opacity-20 text-white' : '' }}">
                         <i class="fas fa-tachometer-alt w-5 h-5 mr-3"></i>
                         Dashboard
                     </a>
                     
                     <a href="{{ route('userpanel.settings') }}" 
-                       class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 {{ request()->routeIs('userpanel.settings*') ? 'bg-blue-50 text-blue-700' : '' }}">
+                       class="flex items-center px-4 py-2 text-white rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 {{ request()->routeIs('userpanel.settings*') ? 'bg-white bg-opacity-20 text-white' : '' }}">
                         <i class="fas fa-cog w-5 h-5 mr-3"></i>
                         Settings
                     </a>
                     
                     <a href="{{ route('userpanel.subscription') }}" 
-                       class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 {{ request()->routeIs('userpanel.subscription') ? 'bg-blue-50 text-blue-700' : '' }}">
+                       class="flex items-center px-4 py-2 text-white rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 {{ request()->routeIs('userpanel.subscription') ? 'bg-white bg-opacity-20 text-white' : '' }}">
                         <i class="fas fa-credit-card w-5 h-5 mr-3"></i>
                         Subscription
                     </a>
@@ -70,14 +90,14 @@
                     
                     <div class="flex items-center space-x-4">
                         <!-- Notifications -->
-                        <button class="p-2 text-gray-400 hover:text-gray-600">
+                        <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
                             <i class="fas fa-bell w-5 h-5"></i>
                         </button>
                         
                         <!-- User Menu -->
                         <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
-                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                            <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors">
+                                <div class="w-8 h-8 gradient-bg rounded-full flex items-center justify-center text-white font-semibold">
                                     {{ substr(auth()->user()->name, 0, 1) }}
                                 </div>
                                 <span class="hidden md:block">{{ auth()->user()->name }}</span>
@@ -85,13 +105,13 @@
                             </button>
                             
                             <div x-show="open" @click.away="open = false" x-cloak 
-                                 class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                                <a href="{{ route('userpanel.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                 class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                                <a href="{{ route('userpanel.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                     <i class="fas fa-user mr-2"></i> Profile
                                 </a>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                         <i class="fas fa-sign-out-alt mr-2"></i> Logout
                                     </button>
                                 </form>
@@ -102,15 +122,15 @@
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 p-6">
+            <main class="flex-1 p-6 bg-gray-50">
                 @if(session('success'))
-                    <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                    <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
                         {{ session('success') }}
                     </div>
                 @endif
 
                 @if($errors->any())
-                    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
                         <ul class="list-disc list-inside">
                             @foreach($errors->all() as $error)
                                 <li>{{ $error }}</li>
