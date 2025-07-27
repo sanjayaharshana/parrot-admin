@@ -1,4 +1,7 @@
-<x-auth::layouts.auth>
+<x-auth::layouts.auth 
+    heroTitle="Welcome Back" 
+    heroSubtitle="Sign in to your account and continue managing your business with powerful tools and insights."
+>
     <div class="auth-form">
         <h1 class="auth-title">Welcome Back</h1>
         <p class="auth-subtitle">Sign in to your account to continue</p>

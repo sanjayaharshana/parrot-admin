@@ -27,24 +27,86 @@
 </head>
 <body>
     <div class="auth-container">
-        <div class="auth-background">
-            <div class="auth-background-overlay"></div>
-        </div>
-        
-        <div class="auth-content">
-            <div class="auth-header">
-                <a href="/" class="auth-logo">
+        <!-- Left Side - Content -->
+        <div class="auth-content-side">
+            <div class="auth-content-overlay"></div>
+            <div class="auth-content-inner">
+                <div class="auth-brand">
                     <i class="fas fa-parrot"></i>
                     <span>Parrot Admin</span>
-                </a>
+                </div>
+                
+                <div class="auth-hero">
+                    <h1 class="auth-hero-title">{{ $heroTitle ?? 'Transform Your Business' }}</h1>
+                    <p class="auth-hero-subtitle">{{ $heroSubtitle ?? 'Join thousands of businesses already using Parrot Admin to streamline operations and boost productivity.' }}</p>
+                </div>
+
+                <div class="auth-features">
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <div class="auth-feature-content">
+                            <h3>Lightning Fast</h3>
+                            <p>Built with modern technologies for optimal performance</p>
+                        </div>
+                    </div>
+                    
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="auth-feature-content">
+                            <h3>Enterprise Security</h3>
+                            <p>Bank-level security with encryption and compliance</p>
+                        </div>
+                    </div>
+                    
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="auth-feature-content">
+                            <h3>Advanced Analytics</h3>
+                            <p>Get deep insights into your business performance</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="auth-testimonial">
+                    <div class="auth-testimonial-content">
+                        <p>"Parrot Admin has completely transformed how we manage our operations. The interface is intuitive and the features are exactly what we needed."</p>
+                        <div class="auth-testimonial-author">
+                            <div class="auth-testimonial-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="auth-testimonial-info">
+                                <h4>Sarah Johnson</h4>
+                                <span>CEO, TechCorp</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="auth-main">
-                {{ $slot }}
-            </div>
-            
-            <div class="auth-footer">
-                <p>&copy; {{ date('Y') }} Parrot Admin. All rights reserved.</p>
+        </div>
+
+        <!-- Right Side - Form -->
+        <div class="auth-form-side">
+            <div class="auth-form-container">
+                <div class="auth-form-header">
+                    <a href="/" class="auth-logo-mobile">
+                        <i class="fas fa-parrot"></i>
+                        <span>Parrot Admin</span>
+                    </a>
+                </div>
+                
+                <div class="auth-form-main">
+                    {{ $slot }}
+                </div>
+                
+                <div class="auth-form-footer">
+                    <p>&copy; {{ date('Y') }} Parrot Admin. All rights reserved.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -62,28 +124,28 @@
             color: #333;
             background: #f8fafc;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .auth-container {
             min-height: 100vh;
             display: flex;
+            position: relative;
+        }
+
+        /* Left Side - Content */
+        .auth-content-side {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            padding: 2rem;
+            padding: 3rem;
+            overflow: hidden;
         }
 
-        .auth-background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            z-index: -2;
-        }
-
-        .auth-background-overlay {
+        .auth-content-overlay {
             position: absolute;
             top: 0;
             left: 0;
@@ -91,48 +153,176 @@
             bottom: 0;
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
             opacity: 0.3;
-            z-index: -1;
         }
 
-        .auth-content {
+        .auth-content-inner {
+            position: relative;
+            z-index: 1;
+            color: white;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .auth-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+        }
+
+        .auth-brand i {
+            font-size: 2.5rem;
+        }
+
+        .auth-hero {
+            margin-bottom: 3rem;
+        }
+
+        .auth-hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .auth-hero-subtitle {
+            font-size: 1.125rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .auth-features {
+            margin-bottom: 3rem;
+        }
+
+        .auth-feature {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-feature-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .auth-feature-content h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .auth-feature-content p {
+            font-size: 0.875rem;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        .auth-testimonial {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-testimonial-content p {
+            font-style: italic;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .auth-testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .auth-testimonial-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .auth-testimonial-info h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.125rem;
+        }
+
+        .auth-testimonial-info span {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        /* Right Side - Form */
+        .auth-form-side {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .auth-form-container {
             width: 100%;
             max-width: 450px;
-            overflow: hidden;
-            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
-        .auth-header {
-            padding: 2rem 2rem 1rem;
+        .auth-form-header {
+            padding: 1rem 0;
             text-align: center;
             border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
         }
 
-        .auth-logo {
+        .auth-logo-mobile {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
             text-decoration: none;
             color: #667eea;
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 700;
         }
 
-        .auth-logo i {
-            font-size: 2rem;
+        .auth-logo-mobile i {
+            font-size: 1.75rem;
         }
 
-        .auth-main {
-            padding: 2rem;
+        .auth-form-main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .auth-footer {
-            padding: 1rem 2rem 2rem;
+        .auth-form-footer {
+            padding: 1rem 0;
             text-align: center;
             color: #718096;
             font-size: 0.875rem;
+            border-top: 1px solid #e2e8f0;
+            margin-top: 2rem;
         }
 
         /* Form Styles */
@@ -351,31 +541,6 @@
             text-decoration: underline;
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .auth-container {
-                padding: 1rem;
-            }
-
-            .auth-content {
-                border-radius: 15px;
-            }
-
-            .auth-header,
-            .auth-main,
-            .auth-footer {
-                padding: 1.5rem;
-            }
-
-            .auth-title {
-                font-size: 1.5rem;
-            }
-
-            .social-login {
-                flex-direction: column;
-            }
-        }
-
         /* Loading State */
         .btn.loading {
             position: relative;
@@ -426,6 +591,112 @@
             background: #eff6ff;
             color: #1d4ed8;
             border: 1px solid #bfdbfe;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .auth-container {
+                flex-direction: column;
+            }
+
+            .auth-content-side {
+                padding: 2rem;
+                min-height: 40vh;
+            }
+
+            .auth-content-inner {
+                max-width: 100%;
+            }
+
+            .auth-hero-title {
+                font-size: 2rem;
+            }
+
+            .auth-features {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 1rem;
+            }
+
+            .auth-form-side {
+                min-height: 60vh;
+                padding: 1.5rem;
+            }
+
+            .auth-form-container {
+                min-height: auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .auth-content-side {
+                padding: 1.5rem;
+                min-height: 35vh;
+            }
+
+            .auth-hero-title {
+                font-size: 1.75rem;
+            }
+
+            .auth-hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .auth-features {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .auth-feature {
+                margin-bottom: 1rem;
+            }
+
+            .auth-form-side {
+                padding: 1rem;
+                min-height: 65vh;
+            }
+
+            .auth-form-header,
+            .auth-form-main,
+            .auth-form-footer {
+                padding: 1rem 0;
+            }
+
+            .auth-title {
+                font-size: 1.5rem;
+            }
+
+            .social-login {
+                flex-direction: column;
+            }
+
+            .auth-testimonial {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-content-side {
+                min-height: 30vh;
+                padding: 1rem;
+            }
+
+            .auth-hero-title {
+                font-size: 1.5rem;
+            }
+
+            .auth-form-side {
+                min-height: 70vh;
+                padding: 0.75rem;
+            }
+
+            .auth-brand {
+                font-size: 1.5rem;
+            }
+
+            .auth-brand i {
+                font-size: 2rem;
+            }
         }
     </style>
 

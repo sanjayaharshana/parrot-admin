@@ -101,7 +101,7 @@
                 <div class="feature-card" style="background: rgba(255,255,255,0.1); color: white;">
                     <div class="feature-icon" style="background: rgba(255,255,255,0.2);">
                         <i class="fas fa-lightbulb"></i>
-                    </div>
+                </div>
                     <h3>Innovation</h3>
                     <p>We constantly push boundaries to deliver cutting-edge solutions that drive business growth.</p>
                 </div>

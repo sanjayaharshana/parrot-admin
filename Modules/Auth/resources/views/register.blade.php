@@ -1,4 +1,7 @@
-<x-auth::layouts.auth>
+<x-auth::layouts.auth 
+    heroTitle="Join Parrot Admin" 
+    heroSubtitle="Create your account and start transforming your business operations with our powerful SaaS platform."
+>
     <div class="auth-form">
         <h1 class="auth-title">Create Account</h1>
         <p class="auth-subtitle">Join thousands of businesses using Parrot Admin</p>

@@ -1,4 +1,7 @@
-<x-auth::layouts.auth>
+<x-auth::layouts.auth 
+    heroTitle="Reset Your Password" 
+    heroSubtitle="Don't worry, we'll help you get back into your account quickly and securely."
+>
     <div class="auth-form">
         <h1 class="auth-title">Forgot Password</h1>
         <p class="auth-subtitle">Enter your email address and we'll send you a link to reset your password</p>
