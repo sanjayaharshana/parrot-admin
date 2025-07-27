@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parrot Admin - Modern SaaS Solution</title>
+    <title>About Us - Parrot Admin</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -71,6 +71,11 @@
 
         .nav-menu a:hover {
             color: #667eea;
+        }
+
+        .nav-menu a.active {
+            color: #667eea;
+            font-weight: 600;
         }
 
         .nav-menu .btn-get-started {
@@ -151,57 +156,16 @@
             opacity: 0.9;
         }
 
-        .cta-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 50px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background: white;
-            color: #667eea;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: white;
-            border: 2px solid white;
-        }
-
-        .btn-secondary:hover {
-            background: white;
-            color: #667eea;
-            transform: translateY(-2px);
-        }
-
-        /* Features Section */
-        .features {
-            padding: 5rem 0;
-            background: #f8fafc;
-        }
-
+        /* Container */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 2rem;
+        }
+
+        /* Section Styles */
+        .section {
+            padding: 5rem 0;
         }
 
         .section-title {
@@ -222,28 +186,81 @@
             margin-right: auto;
         }
 
-        .features-grid {
+        /* Story Section */
+        .story {
+            background: #f8fafc;
+        }
+
+        .story-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .story-text h3 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1a202c;
+        }
+
+        .story-text p {
+            font-size: 1.1rem;
+            color: #4a5568;
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .story-image {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .story-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+
+        /* Mission Section */
+        .mission {
+            background: white;
+        }
+
+        .mission-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
-            margin-top: 3rem;
         }
 
-        .feature-card {
-            background: white;
+        .mission-card {
+            background: #f8fafc;
             padding: 2rem;
             border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
             text-align: center;
+            transition: all 0.3s ease;
         }
 
-        .feature-card:hover {
+        .mission-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
 
-        .feature-icon {
+        .mission-icon {
             width: 80px;
             height: 80px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -256,99 +273,132 @@
             font-size: 2rem;
         }
 
-        .feature-card h3 {
+        .mission-card h3 {
             font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 1rem;
             color: #1a202c;
         }
 
-        .feature-card p {
+        .mission-card p {
             color: #718096;
             line-height: 1.6;
         }
 
-        /* Pricing Section */
-        .pricing {
-            padding: 5rem 0;
-            background: white;
+        /* Team Section */
+        .team {
+            background: #f8fafc;
         }
 
-        .pricing-grid {
+        .team-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 2rem;
-            margin-top: 3rem;
         }
 
-        .pricing-card {
+        .team-member {
             background: white;
-            border: 2px solid #e2e8f0;
             border-radius: 15px;
-            padding: 2rem;
-            text-align: center;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
-            position: relative;
         }
 
-        .pricing-card.featured {
-            border-color: #667eea;
-            transform: scale(1.05);
-        }
-
-        .pricing-card:hover {
+        .team-member:hover {
             transform: translateY(-5px);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
 
-        .pricing-card.featured:hover {
-            transform: scale(1.05) translateY(-5px);
+        .team-photo {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
         }
 
-        .pricing-header {
-            margin-bottom: 2rem;
+        .team-info {
+            padding: 1.5rem;
+            text-align: center;
         }
 
-        .plan-name {
-            font-size: 1.5rem;
+        .team-info h3 {
+            font-size: 1.25rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
             color: #1a202c;
         }
 
-        .plan-price {
+        .team-info .position {
+            color: #667eea;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .team-info p {
+            color: #718096;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .social-links a {
+            width: 35px;
+            height: 35px;
+            background: #f1f5f9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Stats Section */
+        .stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat-item h3 {
             font-size: 3rem;
             font-weight: 700;
-            color: #667eea;
             margin-bottom: 0.5rem;
         }
 
-        .plan-period {
-            color: #718096;
-        }
-
-        .pricing-features {
-            list-style: none;
-            margin: 2rem 0;
-        }
-
-        .pricing-features li {
-            padding: 0.5rem 0;
-            color: #4a5568;
-        }
-
-        .pricing-features li::before {
-            content: '✓';
-            color: #48bb78;
-            font-weight: bold;
-            margin-right: 0.5rem;
+        .stat-item p {
+            font-size: 1.1rem;
+            opacity: 0.9;
         }
 
         /* CTA Section */
         .cta-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 5rem 0;
+            background: white;
+            padding: 4rem 0;
             text-align: center;
         }
 
@@ -356,12 +406,38 @@
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 1rem;
+            color: #1a202c;
         }
 
         .cta-section p {
             font-size: 1.25rem;
+            color: #718096;
             margin-bottom: 2rem;
-            opacity: 0.9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         }
 
         /* Footer */
@@ -402,13 +478,13 @@
             color: #a0aec0;
         }
 
-        .social-links {
+        .footer-social-links {
             display: flex;
             gap: 1rem;
             margin-top: 1rem;
         }
 
-        .social-links a {
+        .footer-social-links a {
             width: 40px;
             height: 40px;
             background: #2d3748;
@@ -419,7 +495,7 @@
             transition: all 0.3s ease;
         }
 
-        .social-links a:hover {
+        .footer-social-links a:hover {
             background: #667eea;
             transform: translateY(-2px);
         }
@@ -470,26 +546,25 @@
                 font-size: 1.1rem;
             }
 
-            .cta-buttons {
-                flex-direction: column;
-                align-items: center;
+            .story-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
             }
 
-            .btn {
-                width: 100%;
-                max-width: 300px;
+            .story-image {
+                height: 300px;
             }
 
             .section-title {
                 font-size: 2rem;
             }
 
-            .pricing-card.featured {
-                transform: none;
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
 
-            .pricing-card.featured:hover {
-                transform: translateY(-5px);
+            .stat-item h3 {
+                font-size: 2.5rem;
             }
         }
 
@@ -519,12 +594,12 @@
     <!-- Header -->
     <header class="header" id="header">
         <nav class="nav-container">
-            <a href="#" class="logo">Parrot Admin</a>
+            <a href="/" class="logo">Parrot Admin</a>
             <ul class="nav-menu">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#pricing">Pricing</a></li>
-                <li><a href="/about">About</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <li><a href="/#features">Features</a></li>
+                <li><a href="/#pricing">Pricing</a></li>
+                <li><a href="/about" class="active">About</a></li>
+                <li><a href="/#contact">Contact</a></li>
                 <li><a href="/login" class="btn-get-started">Get Started</a></li>
             </ul>
             <button class="mobile-menu-btn" id="mobile-menu-btn">
@@ -536,120 +611,151 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <h1>Transform Your Business with Parrot Admin</h1>
-            <p>The ultimate SaaS solution for modern businesses. Streamline operations, boost productivity, and scale with confidence.</p>
-            <div class="cta-buttons">
-                <a href="#pricing" class="btn btn-primary">Get Started Free</a>
-                <a href="#features" class="btn btn-secondary">Learn More</a>
+            <h1>About Parrot Admin</h1>
+            <p>We're on a mission to transform how businesses manage their operations through innovative SaaS solutions.</p>
+        </div>
+    </section>
+
+    <!-- Story Section -->
+    <section class="story section">
+        <div class="container">
+            <div class="story-content">
+                <div class="story-text">
+                    <h3>Our Story</h3>
+                    <p>Founded in 2020, Parrot Admin was born from a simple observation: businesses were struggling with complex, outdated management systems that slowed them down instead of accelerating their growth.</p>
+                    <p>Our team of passionate developers, designers, and business experts came together with a shared vision: to create a SaaS platform that would be powerful enough for enterprise needs, yet simple enough for small teams to adopt immediately.</p>
+                    <p>Today, we serve thousands of businesses worldwide, helping them streamline operations, boost productivity, and scale with confidence. Our commitment to innovation and customer success drives everything we do.</p>
+                </div>
+                <div class="story-image">
+                    <i class="fas fa-rocket"></i>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="features" id="features">
+    <!-- Mission Section -->
+    <section class="mission section">
         <div class="container">
-            <h2 class="section-title">Why Choose Parrot Admin?</h2>
-            <p class="section-subtitle">Powerful features designed to help your business grow and succeed in the digital age.</p>
-            <div class="features-grid">
-                <div class="feature-card animate-fade-in-up">
-                    <div class="feature-icon">
-                        <i class="fas fa-rocket"></i>
+            <h2 class="section-title">Our Mission & Values</h2>
+            <p class="section-subtitle">We're guided by core principles that shape everything we build and every decision we make.</p>
+            <div class="mission-grid">
+                <div class="mission-card animate-fade-in-up">
+                    <div class="mission-icon">
+                        <i class="fas fa-lightbulb"></i>
                     </div>
-                    <h3>Lightning Fast</h3>
-                    <p>Built with modern technologies for optimal performance and speed. Your team will love the responsive interface.</p>
+                    <h3>Innovation First</h3>
+                    <p>We constantly push the boundaries of what's possible, always looking for new ways to solve old problems and create better experiences for our users.</p>
                 </div>
-                <div class="feature-card animate-fade-in-up">
-                    <div class="feature-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h3>Enterprise Security</h3>
-                    <p>Bank-level security with encryption, two-factor authentication, and compliance with industry standards.</p>
-                </div>
-                <div class="feature-card animate-fade-in-up">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <h3>Advanced Analytics</h3>
-                    <p>Get deep insights into your business performance with real-time analytics and customizable dashboards.</p>
-                </div>
-                <div class="feature-card animate-fade-in-up">
-                    <div class="feature-icon">
+                <div class="mission-card animate-fade-in-up">
+                    <div class="mission-icon">
                         <i class="fas fa-users"></i>
                     </div>
-                    <h3>Team Collaboration</h3>
-                    <p>Work together seamlessly with built-in collaboration tools, real-time updates, and team management features.</p>
+                    <h3>Customer Success</h3>
+                    <p>Your success is our success. We're committed to understanding your needs and building solutions that genuinely help your business grow.</p>
                 </div>
-                <div class="feature-card animate-fade-in-up">
-                    <div class="feature-icon">
-                        <i class="fas fa-mobile-alt"></i>
+                <div class="mission-card animate-fade-in-up">
+                    <div class="mission-icon">
+                        <i class="fas fa-shield-alt"></i>
                     </div>
-                    <h3>Mobile First</h3>
-                    <p>Access your dashboard anywhere, anytime with our mobile-optimized interface that works on all devices.</p>
+                    <h3>Trust & Security</h3>
+                    <p>We take security seriously. Your data is protected with enterprise-grade security measures and we're transparent about how we handle your information.</p>
                 </div>
-                <div class="feature-card animate-fade-in-up">
-                    <div class="feature-icon">
-                        <i class="fas fa-headset"></i>
+                <div class="mission-card animate-fade-in-up">
+                    <div class="mission-icon">
+                        <i class="fas fa-globe"></i>
                     </div>
-                    <h3>24/7 Support</h3>
-                    <p>Our dedicated support team is always here to help you succeed with round-the-clock assistance.</p>
+                    <h3>Global Impact</h3>
+                    <p>We believe technology should make the world better. Our platform helps businesses of all sizes reduce waste, improve efficiency, and create more value.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Pricing Section -->
-    <section class="pricing" id="pricing">
+    <!-- Stats Section -->
+    <section class="stats">
         <div class="container">
-            <h2 class="section-title">Simple, Transparent Pricing</h2>
-            <p class="section-subtitle">Choose the plan that's right for your business. No hidden fees, no surprises.</p>
-            <div class="pricing-grid">
-                <div class="pricing-card">
-                    <div class="pricing-header">
-                        <h3 class="plan-name">Starter</h3>
-                        <div class="plan-price">$29</div>
-                        <div class="plan-period">per month</div>
-                    </div>
-                    <ul class="pricing-features">
-                        <li>Up to 5 team members</li>
-                        <li>Basic analytics</li>
-                        <li>Email support</li>
-                        <li>10GB storage</li>
-                        <li>Core features</li>
-                    </ul>
-                    <a href="#" class="btn btn-secondary">Start Free Trial</a>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h3>10,000+</h3>
+                    <p>Happy Customers</p>
                 </div>
-                <div class="pricing-card featured">
-                    <div class="pricing-header">
-                        <h3 class="plan-name">Professional</h3>
-                        <div class="plan-price">$79</div>
-                        <div class="plan-period">per month</div>
-                    </div>
-                    <ul class="pricing-features">
-                        <li>Up to 25 team members</li>
-                        <li>Advanced analytics</li>
-                        <li>Priority support</li>
-                        <li>100GB storage</li>
-                        <li>All features</li>
-                        <li>Custom integrations</li>
-                    </ul>
-                    <a href="#" class="btn btn-primary">Start Free Trial</a>
+                <div class="stat-item">
+                    <h3>50+</h3>
+                    <p>Countries Served</p>
                 </div>
-                <div class="pricing-card">
-                    <div class="pricing-header">
-                        <h3 class="plan-name">Enterprise</h3>
-                        <div class="plan-price">$199</div>
-                        <div class="plan-period">per month</div>
+                <div class="stat-item">
+                    <h3>99.9%</h3>
+                    <p>Uptime Guarantee</p>
+                </div>
+                <div class="stat-item">
+                    <h3>24/7</h3>
+                    <p>Customer Support</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="team section">
+        <div class="container">
+            <h2 class="section-title">Meet Our Team</h2>
+            <p class="section-subtitle">The passionate people behind Parrot Admin who are dedicated to your success.</p>
+            <div class="team-grid">
+                <div class="team-member animate-fade-in-up">
+                    <div class="team-photo">
+                        <i class="fas fa-user"></i>
                     </div>
-                    <ul class="pricing-features">
-                        <li>Unlimited team members</li>
-                        <li>Custom analytics</li>
-                        <li>Dedicated support</li>
-                        <li>Unlimited storage</li>
-                        <li>All features</li>
-                        <li>Custom development</li>
-                        <li>SLA guarantee</li>
-                    </ul>
-                    <a href="#" class="btn btn-secondary">Contact Sales</a>
+                    <div class="team-info">
+                        <h3>Sarah Johnson</h3>
+                        <div class="position">CEO & Founder</div>
+                        <p>Former tech executive with 15+ years experience in SaaS and enterprise software. Passionate about building products that make a difference.</p>
+                        <div class="social-links">
+                            <a href="#"><i class="fab fa-linkedin"></i></a>
+                            <a href="#"><i class="fab fa-twitter"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="team-member animate-fade-in-up">
+                    <div class="team-photo">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="team-info">
+                        <h3>Michael Chen</h3>
+                        <div class="position">CTO</div>
+                        <p>Full-stack engineer with expertise in scalable architecture and cloud infrastructure. Leads our technical vision and product development.</p>
+                        <div class="social-links">
+                            <a href="#"><i class="fab fa-linkedin"></i></a>
+                            <a href="#"><i class="fab fa-github"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="team-member animate-fade-in-up">
+                    <div class="team-photo">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="team-info">
+                        <h3>Emily Rodriguez</h3>
+                        <div class="position">Head of Design</div>
+                        <p>UX/UI designer focused on creating intuitive, beautiful interfaces that users love. Believes great design should be invisible.</p>
+                        <div class="social-links">
+                            <a href="#"><i class="fab fa-linkedin"></i></a>
+                            <a href="#"><i class="fab fa-dribbble"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="team-member animate-fade-in-up">
+                    <div class="team-photo">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="team-info">
+                        <h3>David Kim</h3>
+                        <div class="position">Head of Customer Success</div>
+                        <p>Customer success expert who ensures every client gets maximum value from our platform. Your success is his mission.</p>
+                        <div class="social-links">
+                            <a href="#"><i class="fab fa-linkedin"></i></a>
+                            <a href="#"><i class="fab fa-twitter"></i></a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -658,9 +764,9 @@
     <!-- CTA Section -->
     <section class="cta-section">
         <div class="container">
-            <h2>Ready to Get Started?</h2>
-            <p>Join thousands of businesses already using Parrot Admin to grow their operations.</p>
-            <a href="#" class="btn btn-primary">Start Your Free Trial</a>
+            <h2>Ready to Join Our Mission?</h2>
+            <p>Be part of the thousands of businesses already transforming their operations with Parrot Admin.</p>
+            <a href="/#pricing" class="btn btn-primary">Get Started Today</a>
         </div>
     </section>
 
@@ -671,7 +777,7 @@
                 <div class="footer-section">
                     <h3>Parrot Admin</h3>
                     <p>Transform your business with our modern SaaS solution. Built for growth, designed for success.</p>
-                    <div class="social-links">
+                    <div class="footer-social-links">
                         <a href="#"><i class="fab fa-twitter"></i></a>
                         <a href="#"><i class="fab fa-linkedin"></i></a>
                         <a href="#"><i class="fab fa-github"></i></a>
@@ -680,14 +786,14 @@
                 </div>
                 <div class="footer-section">
                     <h3>Product</h3>
-                    <p><a href="#features">Features</a></p>
-                    <p><a href="#pricing">Pricing</a></p>
+                    <p><a href="/#features">Features</a></p>
+                    <p><a href="/#pricing">Pricing</a></p>
                     <p><a href="#">API</a></p>
                     <p><a href="#">Documentation</a></p>
                 </div>
                 <div class="footer-section">
                     <h3>Company</h3>
-                    <p><a href="#about">About</a></p>
+                    <p><a href="/about">About</a></p>
                     <p><a href="#">Blog</a></p>
                     <p><a href="#">Careers</a></p>
                     <p><a href="#">Press</a></p>
@@ -760,36 +866,15 @@
             });
         }, observerOptions);
 
-        // Observe all feature cards
-        document.querySelectorAll('.feature-card').forEach(card => {
-            observer.observe(card);
-        });
-
-        // Add loading animation
-        window.addEventListener('load', function() {
-            document.body.style.opacity = '1';
+        // Observe all animated elements
+        document.querySelectorAll('.animate-fade-in-up').forEach(element => {
+            observer.observe(element);
         });
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            // Add any additional initialization code here
-            console.log('Parrot Admin Landing Page Loaded');
+            console.log('Parrot Admin About Page Loaded');
         });
-
-        // Form handling (if needed)
-        function handleContactForm(event) {
-            event.preventDefault();
-            // Add your form handling logic here
-            alert('Thank you for your message! We\'ll get back to you soon.');
-        }
-
-        // Pricing toggle (if needed)
-        function togglePricing() {
-            const pricingCards = document.querySelectorAll('.pricing-card');
-            pricingCards.forEach(card => {
-                // Add pricing toggle logic here
-            });
-        }
     </script>
 </body>
-</html>
+</html> 

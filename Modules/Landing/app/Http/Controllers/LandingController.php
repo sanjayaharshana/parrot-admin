@@ -16,6 +16,14 @@ class LandingController extends Controller
     }
 
     /**
+     * Display the about page.
+     */
+    public function about()
+    {
+        return view('landing::about');
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()
