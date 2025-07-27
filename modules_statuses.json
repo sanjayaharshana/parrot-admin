@@ -1,4 +1,5 @@
 {
     "Admin": true,
-    "TestModule": true
+    "TestModule": true,
+    "Landing": true
 }
