@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/userpanel",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\UserPanel\\": "app/",
+            "Modules\\UserPanel\\Database\\Factories\\": "database/factories/",
+            "Modules\\UserPanel\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\UserPanel\\Tests\\": "tests/"
+        }
+    }
+}

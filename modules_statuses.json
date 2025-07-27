@@ -2,5 +2,6 @@
     "Admin": true,
     "TestModule": true,
     "Landing": true,
-    "Auth": true
+    "Auth": true,
+    "UserPanel": true
 }

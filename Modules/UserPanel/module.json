@@ -1,0 +1,11 @@
+{
+    "name": "UserPanel",
+    "alias": "userpanel",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\UserPanel\\Providers\\UserPanelServiceProvider"
+    ],
+    "files": []
+}
