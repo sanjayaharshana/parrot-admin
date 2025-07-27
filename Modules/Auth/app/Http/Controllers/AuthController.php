@@ -33,7 +33,7 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('home'));
+            return redirect()->intended(route('userpanel.dashboard'));
         }
 
         return back()->withErrors([
@@ -79,7 +79,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('home');
+        return redirect()->route('userpanel.dashboard');
     }
 
     /**
