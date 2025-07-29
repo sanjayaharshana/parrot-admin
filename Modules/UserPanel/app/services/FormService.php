@@ -5,6 +5,7 @@ namespace Modules\UserPanel\Services;
 class FormService
 {
     protected array $fields = [];
+    protected array $layout = [];
     protected string $formClass = 'space-y-6';
     protected string $buttonClass = 'w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50';
 
@@ -55,13 +56,55 @@ class FormService
         return $field;
     }
 
+    // Layout Management Methods
+    public function row(): Row
+    {
+        $row = new Row($this);
+        $this->layout[] = $row;
+        return $row;
+    }
+
+    public function column(int $width = 12): Column
+    {
+        $column = new Column($width, $this);
+        $this->layout[] = $column;
+        return $column;
+    }
+
+    public function grid(int $cols = 2, int $gap = 6): Grid
+    {
+        $grid = new Grid($cols, $gap, $this);
+        $this->layout[] = $grid;
+        return $grid;
+    }
+
+    public function section(string $title = null, string $description = null): Section
+    {
+        $section = new Section($title, $description, $this);
+        $this->layout[] = $section;
+        return $section;
+    }
+
+    public function card(string $title = null): Card
+    {
+        $card = new Card($title, $this);
+        $this->layout[] = $card;
+        return $card;
+    }
+
     public function renderForm(): string
     {
         $html = '<form method="POST" class="' . $this->formClass . '">' . PHP_EOL;
         $html .= '<div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200">' . PHP_EOL;
 
-        foreach ($this->fields as $field) {
-            $html .= $field->render() . PHP_EOL;
+        // If layout is defined, render with layout
+        if (!empty($this->layout)) {
+            $html .= $this->renderLayout();
+        } else {
+            // Fallback to simple field rendering
+            foreach ($this->fields as $field) {
+                $html .= $field->render() . PHP_EOL;
+            }
         }
 
         $html .= '<div class="pt-4">' . PHP_EOL;
@@ -72,6 +115,252 @@ class FormService
         $html .= '</div>' . PHP_EOL;
         $html .= '</form>';
 
+        return $html;
+    }
+
+    protected function renderLayout(): string
+    {
+        $html = '';
+        foreach ($this->layout as $item) {
+            $html .= $item->render() . PHP_EOL;
+        }
+        return $html;
+    }
+}
+
+// Layout Classes
+class Row
+{
+    protected array $columns = [];
+    protected string $classes = 'flex flex-wrap -mx-3';
+    protected FormService $formService;
+
+    public function __construct(FormService $formService)
+    {
+        $this->formService = $formService;
+    }
+
+    public function column(int $width = 12): Column
+    {
+        $column = new Column($width, $this->formService);
+        $this->columns[] = $column;
+        return $column;
+    }
+
+    public function render(): string
+    {
+        $html = '<div class="' . $this->classes . '">' . PHP_EOL;
+        foreach ($this->columns as $column) {
+            $html .= $column->render() . PHP_EOL;
+        }
+        $html .= '</div>' . PHP_EOL;
+        return $html;
+    }
+}
+
+class Column
+{
+    protected int $width;
+    protected array $fields = [];
+    protected string $classes = '';
+    protected FormService $formService;
+
+    public function __construct(int $width = 12, FormService $formService = null)
+    {
+        $this->width = $width;
+        $this->formService = $formService;
+        $this->classes = $this->getColumnClasses($width);
+    }
+
+    protected function getColumnClasses(int $width): string
+    {
+        $classes = 'px-3 mb-4';
+        
+        // Tailwind CSS grid classes
+        switch ($width) {
+            case 1: $classes .= ' w-full md:w-1/12'; break;
+            case 2: $classes .= ' w-full md:w-2/12'; break;
+            case 3: $classes .= ' w-full md:w-3/12'; break;
+            case 4: $classes .= ' w-full md:w-4/12'; break;
+            case 5: $classes .= ' w-full md:w-5/12'; break;
+            case 6: $classes .= ' w-full md:w-6/12'; break;
+            case 7: $classes .= ' w-full md:w-7/12'; break;
+            case 8: $classes .= ' w-full md:w-8/12'; break;
+            case 9: $classes .= ' w-full md:w-9/12'; break;
+            case 10: $classes .= ' w-full md:w-10/12'; break;
+            case 11: $classes .= ' w-full md:w-11/12'; break;
+            case 12: $classes .= ' w-full'; break;
+            default: $classes .= ' w-full'; break;
+        }
+        
+        return $classes;
+    }
+
+    public function addField(Field $field): self
+    {
+        $this->fields[] = $field;
+        return $this;
+    }
+
+    public function render(): string
+    {
+        $html = '<div class="' . $this->classes . '">' . PHP_EOL;
+        foreach ($this->fields as $field) {
+            $html .= $field->render() . PHP_EOL;
+        }
+        $html .= '</div>' . PHP_EOL;
+        return $html;
+    }
+}
+
+class Grid
+{
+    protected int $cols;
+    protected int $gap;
+    protected array $items = [];
+    protected FormService $formService;
+
+    public function __construct(int $cols = 2, int $gap = 6, FormService $formService = null)
+    {
+        $this->cols = $cols;
+        $this->gap = $gap;
+        $this->formService = $formService;
+    }
+
+    public function item(): GridItem
+    {
+        $item = new GridItem($this->cols, $this->formService);
+        $this->items[] = $item;
+        return $item;
+    }
+
+    public function render(): string
+    {
+        $gridClasses = 'grid gap-' . $this->gap;
+        
+        switch ($this->cols) {
+            case 1: $gridClasses .= ' grid-cols-1'; break;
+            case 2: $gridClasses .= ' grid-cols-1 md:grid-cols-2'; break;
+            case 3: $gridClasses .= ' grid-cols-1 md:grid-cols-3'; break;
+            case 4: $gridClasses .= ' grid-cols-1 md:grid-cols-2 lg:grid-cols-4'; break;
+            case 6: $gridClasses .= ' grid-cols-2 md:grid-cols-3 lg:grid-cols-6'; break;
+            default: $gridClasses .= ' grid-cols-1 md:grid-cols-2'; break;
+        }
+
+        $html = '<div class="' . $gridClasses . '">' . PHP_EOL;
+        foreach ($this->items as $item) {
+            $html .= $item->render() . PHP_EOL;
+        }
+        $html .= '</div>' . PHP_EOL;
+        return $html;
+    }
+}
+
+class GridItem
+{
+    protected int $cols;
+    protected array $fields = [];
+    protected FormService $formService;
+
+    public function __construct(int $cols, FormService $formService = null)
+    {
+        $this->cols = $cols;
+        $this->formService = $formService;
+    }
+
+    public function addField(Field $field): self
+    {
+        $this->fields[] = $field;
+        return $this;
+    }
+
+    public function render(): string
+    {
+        $html = '<div class="space-y-4">' . PHP_EOL;
+        foreach ($this->fields as $field) {
+            $html .= $field->render() . PHP_EOL;
+        }
+        $html .= '</div>' . PHP_EOL;
+        return $html;
+    }
+}
+
+class Section
+{
+    protected string $title;
+    protected string $description;
+    protected array $fields = [];
+    protected FormService $formService;
+
+    public function __construct(string $title = null, string $description = null, FormService $formService = null)
+    {
+        $this->title = $title;
+        $this->description = $description;
+        $this->formService = $formService;
+    }
+
+    public function addField(Field $field): self
+    {
+        $this->fields[] = $field;
+        return $this;
+    }
+
+    public function render(): string
+    {
+        $html = '<div class="border-b border-gray-200 pb-6 mb-6">' . PHP_EOL;
+        
+        if ($this->title) {
+            $html .= '<h3 class="text-lg font-medium text-gray-900 mb-2">' . htmlspecialchars($this->title) . '</h3>' . PHP_EOL;
+        }
+        
+        if ($this->description) {
+            $html .= '<p class="text-sm text-gray-600 mb-4">' . htmlspecialchars($this->description) . '</p>' . PHP_EOL;
+        }
+        
+        $html .= '<div class="space-y-4">' . PHP_EOL;
+        foreach ($this->fields as $field) {
+            $html .= $field->render() . PHP_EOL;
+        }
+        $html .= '</div>' . PHP_EOL;
+        $html .= '</div>' . PHP_EOL;
+        
+        return $html;
+    }
+}
+
+class Card
+{
+    protected string $title;
+    protected array $fields = [];
+    protected FormService $formService;
+
+    public function __construct(string $title = null, FormService $formService = null)
+    {
+        $this->title = $title;
+        $this->formService = $formService;
+    }
+
+    public function addField(Field $field): self
+    {
+        $this->fields[] = $field;
+        return $this;
+    }
+
+    public function render(): string
+    {
+        $html = '<div class="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-6">' . PHP_EOL;
+        
+        if ($this->title) {
+            $html .= '<h4 class="text-md font-medium text-gray-900 mb-3">' . htmlspecialchars($this->title) . '</h4>' . PHP_EOL;
+        }
+        
+        $html .= '<div class="space-y-4">' . PHP_EOL;
+        foreach ($this->fields as $field) {
+            $html .= $field->render() . PHP_EOL;
+        }
+        $html .= '</div>' . PHP_EOL;
+        $html .= '</div>' . PHP_EOL;
+        
         return $html;
     }
 }

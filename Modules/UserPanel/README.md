@@ -37,9 +37,9 @@ class YourController extends BaseController
 
 The `TestController` is excluded from the sidebar because it has `showInSidebar = false`, while `UserPanelController` appears in the sidebar because it uses the default value of `true`.
 
-## Enhanced Form Service
+## Enhanced Form Service with Layout Management
 
-The module includes an enhanced `FormService` class for creating beautiful, modern backend forms with Tailwind CSS styling:
+The module includes an enhanced `FormService` class for creating beautiful, modern backend forms with advanced layout management capabilities.
 
 ### Basic Usage:
 
@@ -48,7 +48,7 @@ use Modules\UserPanel\Services\FormService;
 
 $form = new FormService();
 
-// Text field with label and placeholder
+// Simple fields
 $form->text()
     ->name('username')
     ->label('Username')
@@ -56,60 +56,180 @@ $form->text()
     ->value('john_doe')
     ->required();
 
-// Email field
-$form->email()
-    ->name('email')
-    ->label('Email Address')
-    ->placeholder('Enter your email')
-    ->value('john@example.com')
-    ->required();
+$html = $form->renderForm();
+```
 
-// Textarea field
-$form->textarea()
-    ->name('description')
-    ->label('Description')
-    ->placeholder('Enter your description')
-    ->value('This is a sample description')
-    ->required();
+### Layout Management
 
-// Select dropdown
-$form->select()
-    ->name('country')
-    ->label('Country')
-    ->options([
-        'us' => 'United States',
-        'uk' => 'United Kingdom',
-        'ca' => 'Canada',
-        'au' => 'Australia'
-    ])
-    ->value('us')
-    ->required();
+The FormService now supports advanced layout management with rows, columns, grids, sections, and cards.
 
-// Number field
-$form->number()
-    ->name('age')
-    ->label('Age')
-    ->placeholder('Enter your age')
-    ->value('25')
-    ->required();
+#### 1. Rows and Columns
 
-// Checkbox
-$form->checkbox()
-    ->name('newsletter')
-    ->label('Subscribe to newsletter')
-    ->value('1');
+```php
+// Create a row with two equal columns
+$form->row()
+    ->column(6)  // 6/12 = 50% width
+        ->text()
+            ->name('first_name')
+            ->label('First Name')
+            ->required()
+    ->column(6)  // 6/12 = 50% width
+        ->text()
+            ->name('last_name')
+            ->label('Last Name')
+            ->required();
 
-// Radio buttons
-$form->radio()
-    ->name('gender')
-    ->label('Gender')
-    ->options([
-        'male' => 'Male',
-        'female' => 'Female',
-        'other' => 'Other'
-    ])
-    ->value('male')
-    ->required();
+// Different column widths
+$form->row()
+    ->column(4)  // 4/12 = 33% width
+        ->text()
+            ->name('phone')
+            ->label('Phone')
+    ->column(8)  // 8/12 = 67% width
+        ->text()
+            ->name('address')
+            ->label('Address');
+```
+
+#### 2. Grid Layout
+
+```php
+// 3-column grid
+$form->grid(3, 4)  // 3 columns, gap-4
+    ->item()
+        ->text()
+            ->name('street')
+            ->label('Street')
+    ->item()
+        ->text()
+            ->name('city')
+            ->label('City')
+    ->item()
+        ->text()
+            ->name('zip')
+            ->label('ZIP Code');
+
+// 2-column grid
+$form->grid(2, 6)  // 2 columns, gap-6
+    ->item()
+        ->email()
+            ->name('email')
+            ->label('Email')
+    ->item()
+        ->text()
+            ->name('website')
+            ->label('Website');
+```
+
+#### 3. Sections
+
+```php
+// Section with title and description
+$form->section('Personal Information', 'Please provide your basic details.')
+    ->text()
+        ->name('first_name')
+        ->label('First Name')
+        ->required()
+    ->text()
+        ->name('last_name')
+        ->label('Last Name')
+        ->required()
+    ->email()
+        ->name('email')
+        ->label('Email')
+        ->required();
+```
+
+#### 4. Cards
+
+```php
+// Card with title
+$form->card('Contact Information')
+    ->text()
+        ->name('phone')
+        ->label('Phone Number')
+    ->text()
+        ->name('website')
+        ->label('Website')
+    ->textarea()
+        ->name('notes')
+        ->label('Notes');
+```
+
+### Complete Example
+
+```php
+$form = new FormService();
+
+// Personal Information Section
+$form->section('Personal Information', 'Please provide your basic personal details.')
+    ->text()
+        ->name('first_name')
+        ->label('First Name')
+        ->placeholder('Enter your first name')
+        ->required()
+    ->text()
+        ->name('last_name')
+        ->label('Last Name')
+        ->placeholder('Enter your last name')
+        ->required()
+    ->email()
+        ->name('email')
+        ->label('Email Address')
+        ->placeholder('Enter your email')
+        ->required();
+
+// Contact Information in a Row with Columns
+$form->row()
+    ->column(6)
+        ->text()
+            ->name('phone')
+            ->label('Phone Number')
+            ->placeholder('Enter your phone number')
+            ->required()
+    ->column(6)
+        ->text()
+            ->name('website')
+            ->label('Website')
+            ->placeholder('Enter your website URL');
+
+// Address Information in Grid
+$form->grid(3, 4)
+    ->item()
+        ->text()
+            ->name('street')
+            ->label('Street Address')
+            ->placeholder('Enter street address')
+            ->required()
+    ->item()
+        ->text()
+            ->name('city')
+            ->label('City')
+            ->placeholder('Enter city')
+            ->required()
+    ->item()
+        ->text()
+            ->name('zip_code')
+            ->label('ZIP Code')
+            ->placeholder('Enter ZIP code')
+            ->required();
+
+// Additional Information in Cards
+$form->card('Profile Information')
+    ->textarea()
+        ->name('bio')
+        ->label('Biography')
+        ->placeholder('Tell us about yourself')
+    ->select()
+        ->name('experience_level')
+        ->label('Experience Level')
+        ->options([
+            'beginner' => 'Beginner',
+            'intermediate' => 'Intermediate',
+            'advanced' => 'Advanced',
+            'expert' => 'Expert'
+        ])
+        ->required();
 
 $html = $form->renderForm();
 ```
@@ -125,6 +245,14 @@ $html = $form->renderForm();
 - `checkbox()` - Checkbox
 - `radio()` - Radio buttons
 
+### Layout Components:
+
+- `row()` - Creates a flex row container
+- `column(int $width)` - Creates a column (width 1-12)
+- `grid(int $cols, int $gap)` - Creates a CSS grid (1-6 columns)
+- `section(string $title, string $description)` - Creates a section with title
+- `card(string $title)` - Creates a card container
+
 ### Field Methods:
 
 - `name(string $name)` - Set field name
@@ -137,9 +265,11 @@ $html = $form->renderForm();
 
 ### Features:
 
+- **Advanced Layout Management**: Rows, columns, grids, sections, and cards
+- **Responsive Design**: All layouts are mobile-friendly
 - **Modern Styling**: Beautiful Tailwind CSS styling with gradients and animations
-- **Responsive Design**: Works perfectly on all screen sizes
 - **Accessibility**: Proper labels, focus states, and semantic HTML
 - **Validation Ready**: Required fields are marked with asterisks
 - **Customizable**: Easy to extend and customize styling
-- **Type Safety**: Fluent interface with method chaining 
+- **Type Safety**: Fluent interface with method chaining
+- **Backend-Driven**: All layout logic controlled from PHP 
