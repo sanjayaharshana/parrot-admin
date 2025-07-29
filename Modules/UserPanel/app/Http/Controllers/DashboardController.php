@@ -37,6 +37,8 @@ class DashboardController extends BaseController
             ]);
         });
 
+
+
         $layoutRow = $layout->row();
         $layoutRow->column(6,function ($form, $column) use ($layout) {
 
@@ -49,6 +51,7 @@ class DashboardController extends BaseController
                     ->placeholder('Enter title')
                     ->required()
             );
+            $column->addHtml('<br><p class="text-muted">This is a custom HTML content block that can be used to display additional information or instructions.</p><br>');
             $column->addField(
                 $form->textarea()
                     ->name('desc')
