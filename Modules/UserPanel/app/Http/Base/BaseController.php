@@ -28,18 +28,27 @@ class BaseController extends Controller
     // Form service for creating forms
     protected $form;
 
+    protected $type;
+
     function __construct()
     {
         $this->layoutService = new \Modules\UserPanel\Services\LayoutService();
         $this->form = new \Modules\UserPanel\Services\FormService();
     }
 
+
+    public function dataSetView()
+    {
+
+    }
+
     public function index()
     {
-        $layout = $this->page();
-        return view('userpanel::simple-layout',[
-            'layout' => $layout
+
+        return view('userpanel::index', [
+            'layout' => ''
         ]);
+
     }
 
     /**
@@ -47,13 +56,18 @@ class BaseController extends Controller
      */
     public function create()
     {
-        return view('userpanel::create');
+        $layout = $this->page();
+        return view('userpanel::create',[
+            'layout' => $layout
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request) {}
+    public function store(Request $request) {
+
+    }
 
     /**
      * Show the specified resource.

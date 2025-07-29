@@ -5,10 +5,11 @@ use Modules\UserPanel\Http\Controllers\UserPanelController;
 use Modules\UserPanel\Http\Controllers\CallbackLayoutController;
 use Modules\UserPanel\Http\Controllers\CallableOptionsController;
 use Modules\UserPanel\Http\Controllers\CustomContentController;
+use Modules\UserPanel\Http\Controllers\ModelBindingController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Layout Service Demo
-    Route::get('/dashboard', [\Modules\UserPanel\Http\Controllers\DashboardController::class, 'index'])->name('dashboard.index');
+    Route::resource('/dashboard', \Modules\UserPanel\Http\Controllers\DashboardController::class);
 
     // Callback Layout Examples
     Route::get('/callback-layout', [CallbackLayoutController::class, 'index'])->name('userpanel.callback-layout');
@@ -21,4 +22,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Custom Content Examples
     Route::get('/custom-content', [CustomContentController::class, 'index'])->name('userpanel.custom-content');
     Route::get('/custom-content/advanced', [CustomContentController::class, 'advanced'])->name('userpanel.custom-content.advanced');
+
+    // Model Binding Examples
+    Route::get('/model-binding', [ModelBindingController::class, 'index'])->name('userpanel.model-binding');
+    Route::get('/model-binding/advanced', [ModelBindingController::class, 'advanced'])->name('userpanel.model-binding.advanced');
+    Route::get('/model-binding/{id}/edit', [ModelBindingController::class, 'edit'])->name('userpanel.model-binding.edit');
+    Route::post('/model-binding', [ModelBindingController::class, 'store'])->name('userpanel.model-binding.store');
+    Route::put('/model-binding/{id}', [ModelBindingController::class, 'update'])->name('userpanel.model-binding.update');
 });

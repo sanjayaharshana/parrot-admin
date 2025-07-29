@@ -15,7 +15,6 @@ class DashboardController extends BaseController
     {
         $layout = $this->layoutService;
         $layout->setFormService($this->form);
-
         $stateRow  = $layout->row();
         $stateRow->column(6, function ($form, $column) use ($layout) {
             $column->addView('userpanel::components.custom-stats', [
@@ -26,7 +25,6 @@ class DashboardController extends BaseController
                 ]
             ]);
         });
-
         $stateRow->column(6, function ($form, $column) use ($layout) {
             $column->addView('userpanel::components.custom-stats', [
                 'stats' => [
@@ -36,8 +34,6 @@ class DashboardController extends BaseController
                 ]
             ]);
         });
-
-
 
         $layoutRow = $layout->row();
         $layoutRow->column(6,function ($form, $column) use ($layout) {
@@ -78,7 +74,6 @@ class DashboardController extends BaseController
                     ->placeholder('Enter file path')
             );
         });
-
         return $layout->render();
     }
 

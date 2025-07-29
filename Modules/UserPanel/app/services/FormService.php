@@ -1,6 +1,8 @@
 <?php
 namespace Modules\UserPanel\Services;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
 class FormService
 {
@@ -8,6 +10,140 @@ class FormService
     protected array $layout = [];
     protected string $formClass = 'space-y-6';
     protected string $buttonClass = 'w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50';
+    protected ?Model $model = null;
+    protected string $method = 'POST';
+    protected string $action = '';
+    protected array $formAttributes = [];
+
+    /**
+     * Bind a model to the form
+     */
+    public function bindModel(Model $model): self
+    {
+        $this->model = $model;
+        return $this;
+    }
+
+    /**
+     * Set form method (GET, POST, PUT, PATCH, DELETE)
+     */
+    public function method(string $method): self
+    {
+        $this->method = strtoupper($method);
+        return $this;
+    }
+
+    /**
+     * Set form action URL
+     */
+    public function action(string $action): self
+    {
+        $this->action = $action;
+        return $this;
+    }
+
+    /**
+     * Add form attributes
+     */
+    public function formAttribute(string $key, string $value): self
+    {
+        $this->formAttributes[$key] = $value;
+        return $this;
+    }
+
+    /**
+     * Get model value for a field
+     */
+    public function getModelValue(string $fieldName)
+    {
+        if (!$this->model) {
+            return null;
+        }
+
+        // Handle nested attributes (e.g., 'user.name')
+        if (strpos($fieldName, '.') !== false) {
+            $parts = explode('.', $fieldName);
+            $value = $this->model;
+            
+            foreach ($parts as $part) {
+                if (is_object($value) && method_exists($value, $part)) {
+                    $value = $value->$part();
+                } elseif (is_object($value) && property_exists($value, $part)) {
+                    $value = $value->$part;
+                } elseif (is_array($value) && isset($value[$part])) {
+                    $value = $value[$part];
+                } else {
+                    return null;
+                }
+            }
+            
+            return $value;
+        }
+
+        // Handle direct attributes
+        if (method_exists($this->model, $fieldName)) {
+            return $this->model->$fieldName();
+        }
+
+        if (property_exists($this->model, $fieldName)) {
+            return $this->model->$fieldName;
+        }
+
+        return $this->model->getAttribute($fieldName);
+    }
+
+    /**
+     * Handle form submission and save data
+     */
+    public function handle(Request $request, array $rules = [], array $messages = []): array
+    {
+        // Validate request
+        $validated = $request->validate($rules, $messages);
+
+        if ($this->model) {
+            // Update existing model
+            $this->model->fill($validated);
+            $this->model->save();
+            
+            return [
+                'success' => true,
+                'message' => 'Data saved successfully!',
+                'model' => $this->model
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Data validated successfully!',
+            'data' => $validated
+        ];
+    }
+
+    /**
+     * Create a new model instance and bind it
+     */
+    public function create(string $modelClass, array $attributes = []): self
+    {
+        $this->model = new $modelClass($attributes);
+        return $this;
+    }
+
+    /**
+     * Find and bind an existing model
+     */
+    public function find(string $modelClass, $id): self
+    {
+        $this->model = $modelClass::findOrFail($id);
+        return $this;
+    }
+
+    /**
+     * Get the bound model
+     */
+    public function getModel(): ?Model
+    {
+        return $this->model;
+    }
 
     public function text(): Field
     {
@@ -51,7 +187,7 @@ class FormService
 
     protected function addField(string $type): Field
     {
-        $field = new Field($type);
+        $field = new Field($type, $this);
         $this->fields[] = $field;
         return $field;
     }
@@ -94,27 +230,48 @@ class FormService
 
     public function renderForm(): string
     {
-        $html = '<form method="POST" class="' . $this->formClass . '">' . PHP_EOL;
+        $method = $this->method;
+        $action = $this->action ?: request()->url();
+        
+        $formAttributes = 'method="POST" action="' . htmlspecialchars($action) . '" class="' . $this->formClass . '"';
+        
+        // Add custom form attributes
+        foreach ($this->formAttributes as $key => $value) {
+            $formAttributes .= ' ' . htmlspecialchars($key) . '="' . htmlspecialchars($value) . '"';
+        }
+        
+        $html = '<form ' . $formAttributes . '>' . PHP_EOL;
+        
+        // Add CSRF token
+        $html .= csrf_field() . PHP_EOL;
+        
+        // Add method spoofing for PUT/PATCH/DELETE
+        if (in_array($method, ['PUT', 'PATCH', 'DELETE'])) {
+            $html .= '<input type="hidden" name="_method" value="' . $method . '">' . PHP_EOL;
+        }
+        
         $html .= '<div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200">' . PHP_EOL;
 
         // If layout is defined, render with layout
         if (!empty($this->layout)) {
             $html .= $this->renderLayout();
         } else {
-            // Fallback to simple field rendering
+            // Render fields directly
             foreach ($this->fields as $field) {
                 $html .= $field->render() . PHP_EOL;
             }
         }
 
-        $html .= '<div class="pt-4">' . PHP_EOL;
+        // Add submit button
+        $html .= '<div class="mt-6">' . PHP_EOL;
         $html .= '<button type="submit" class="' . $this->buttonClass . '">' . PHP_EOL;
-        $html .= '<i class="fas fa-paper-plane mr-2"></i>Submit' . PHP_EOL;
+        $html .= 'Save Changes' . PHP_EOL;
         $html .= '</button>' . PHP_EOL;
         $html .= '</div>' . PHP_EOL;
-        $html .= '</div>' . PHP_EOL;
-        $html .= '</form>';
 
+        $html .= '</div>' . PHP_EOL;
+        $html .= '</form>' . PHP_EOL;
+        
         return $html;
     }
 
@@ -376,15 +533,26 @@ class Field
     protected array $options = [];
     protected $optionsCallback = null;
     protected bool $required = false;
+    protected ?FormService $formService = null;
 
-    public function __construct(string $type)
+    public function __construct(string $type, ?FormService $formService = null)
     {
         $this->type = $type;
+        $this->formService = $formService;
     }
 
     public function name(string $name): self
     {
         $this->name = $name;
+        
+        // Auto-populate value from bound model if not already set
+        if ($this->formService && $this->value === null) {
+            $modelValue = $this->formService->getModelValue($name);
+            if ($modelValue !== null) {
+                $this->value = $modelValue;
+            }
+        }
+        
         return $this;
     }
 
