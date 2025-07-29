@@ -12,24 +12,39 @@ class LayoutService
 {
     protected array $layout = [];
     protected string $containerClass = 'space-y-6';
+    protected ?FormService $formService = null;
+
+    /**
+     * Set the form service for this layout
+     */
+    public function setFormService(FormService $formService): self
+    {
+        $this->formService = $formService;
+        return $this;
+    }
 
     /**
      * Create a new row container
      */
     public function row(string $classes = 'flex flex-wrap -mx-3'): LayoutRow
     {
-        $row = new LayoutRow($classes);
+        $row = new LayoutRow($classes, $this->formService);
         $this->layout[] = $row;
         return $row;
     }
 
     /**
-     * Create a new column container
+     * Create a new column container with callback support
      */
-    public function column(int $width = 12, string $classes = ''): LayoutColumn
+    public function column($width, callable $callback = null): LayoutColumn
     {
-        $column = new LayoutColumn($width, $classes);
+        $column = new LayoutColumn($this->parseWidth($width), '', $this->formService);
         $this->layout[] = $column;
+        
+        if ($callback && $this->formService) {
+            $callback($this->formService, $column);
+        }
+        
         return $column;
     }
 
@@ -38,28 +53,38 @@ class LayoutService
      */
     public function grid(int $cols = 2, int $gap = 6): LayoutGrid
     {
-        $grid = new LayoutGrid($cols, $gap);
+        $grid = new LayoutGrid($cols, $gap, $this->formService);
         $this->layout[] = $grid;
         return $grid;
     }
 
     /**
-     * Create a new section container
+     * Create a new section container with callback support
      */
-    public function section(string $title = null, string $description = null): LayoutSection
+    public function section(string $title = null, string $description = null, callable $callback = null): LayoutSection
     {
-        $section = new LayoutSection($title, $description);
+        $section = new LayoutSection($title, $description, $this->formService);
         $this->layout[] = $section;
+        
+        if ($callback && $this->formService) {
+            $callback($this->formService, $section);
+        }
+        
         return $section;
     }
 
     /**
-     * Create a new card container
+     * Create a new card container with callback support
      */
-    public function card(string $title = null): LayoutCard
+    public function card(string $title = null, callable $callback = null): LayoutCard
     {
-        $card = new LayoutCard($title);
+        $card = new LayoutCard($title, $this->formService);
         $this->layout[] = $card;
+        
+        if ($callback && $this->formService) {
+            $callback($this->formService, $card);
+        }
+        
         return $card;
     }
 
@@ -88,9 +113,62 @@ class LayoutService
      */
     public function container(string $classes = 'bg-white rounded-lg shadow-lg p-6 border border-gray-200'): LayoutContainer
     {
-        $container = new LayoutContainer($classes);
+        $container = new LayoutContainer($classes, $this->formService);
         $this->layout[] = $container;
         return $container;
+    }
+
+    /**
+     * Add custom HTML content
+     */
+    public function html(string $html, string $classes = ''): LayoutHtml
+    {
+        $htmlItem = new LayoutHtml($html, $classes);
+        $this->layout[] = $htmlItem;
+        return $htmlItem;
+    }
+
+    /**
+     * Add custom Blade view
+     */
+    public function view(string $view, array $data = [], string $classes = ''): LayoutView
+    {
+        $viewItem = new LayoutView($view, $data, $classes);
+        $this->layout[] = $viewItem;
+        return $viewItem;
+    }
+
+    /**
+     * Add custom component
+     */
+    public function component(string $component, array $data = [], string $classes = ''): LayoutComponent
+    {
+        $componentItem = new LayoutComponent($component, $data, $classes);
+        $this->layout[] = $componentItem;
+        return $componentItem;
+    }
+
+    /**
+     * Parse width parameter (supports fractions like 1/2, 1/3, etc.)
+     */
+    protected function parseWidth($width): int
+    {
+        if (is_numeric($width)) {
+            return (int) $width;
+        }
+        
+        if (is_string($width) && strpos($width, '/') !== false) {
+            $parts = explode('/', $width);
+            if (count($parts) === 2) {
+                $numerator = (int) $parts[0];
+                $denominator = (int) $parts[1];
+                if ($denominator > 0) {
+                    return (int) (12 * $numerator / $denominator);
+                }
+            }
+        }
+        
+        return 12; // Default to full width
     }
 
     /**
@@ -150,17 +228,44 @@ class LayoutRow implements LayoutItem
 {
     protected array $columns = [];
     protected string $classes;
+    protected ?FormService $formService;
 
-    public function __construct(string $classes = 'flex flex-wrap -mx-3')
+    public function __construct(string $classes = 'flex flex-wrap -mx-3', ?FormService $formService = null)
     {
         $this->classes = $classes;
+        $this->formService = $formService;
     }
 
-    public function column(int $width = 12, string $classes = ''): LayoutColumn
+    public function column($width, callable $callback = null): LayoutColumn
     {
-        $column = new LayoutColumn($width, $classes);
+        $column = new LayoutColumn($this->parseWidth($width), '', $this->formService);
         $this->columns[] = $column;
+        
+        if ($callback && $this->formService) {
+            $callback($this->formService, $column);
+        }
+        
         return $column;
+    }
+
+    protected function parseWidth($width): int
+    {
+        if (is_numeric($width)) {
+            return (int) $width;
+        }
+        
+        if (is_string($width) && strpos($width, '/') !== false) {
+            $parts = explode('/', $width);
+            if (count($parts) === 2) {
+                $numerator = (int) $parts[0];
+                $denominator = (int) $parts[1];
+                if ($denominator > 0) {
+                    return (int) (12 * $numerator / $denominator);
+                }
+            }
+        }
+        
+        return 12;
     }
 
     public function render(): string
@@ -187,10 +292,12 @@ class LayoutColumn implements LayoutItem
     protected int $width;
     protected string $classes;
     protected array $content = [];
+    protected ?FormService $formService;
 
-    public function __construct(int $width = 12, string $classes = '')
+    public function __construct(int $width = 12, string $classes = '', ?FormService $formService = null)
     {
         $this->width = $width;
+        $this->formService = $formService;
         $this->classes = $this->getColumnClasses($width) . ' ' . $classes;
     }
 
@@ -229,6 +336,38 @@ class LayoutColumn implements LayoutItem
         return $this;
     }
 
+    public function addHtml(string $html): self
+    {
+        $this->content[] = $html;
+        return $this;
+    }
+
+    public function addView(string $view, array $data = []): self
+    {
+        try {
+            $this->content[] = view($view, $data)->render();
+        } catch (\Exception $e) {
+            $this->content[] = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">' .
+                              '<p class="font-medium">Error rendering view: ' . htmlspecialchars($view) . '</p>' .
+                              '<p class="text-sm">' . htmlspecialchars($e->getMessage()) . '</p>' .
+                              '</div>';
+        }
+        return $this;
+    }
+
+    public function addComponent(string $component, array $data = []): self
+    {
+        try {
+            $this->content[] = view('components.' . $component, $data)->render();
+        } catch (\Exception $e) {
+            $this->content[] = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">' .
+                              '<p class="font-medium">Error rendering component: ' . htmlspecialchars($component) . '</p>' .
+                              '<p class="text-sm">' . htmlspecialchars($e->getMessage()) . '</p>' .
+                              '</div>';
+        }
+        return $this;
+    }
+
     public function render(): string
     {
         $html = '<div class="' . $this->classes . '">' . PHP_EOL;
@@ -253,17 +392,24 @@ class LayoutGrid implements LayoutItem
     protected int $cols;
     protected int $gap;
     protected array $items = [];
+    protected ?FormService $formService;
 
-    public function __construct(int $cols = 2, int $gap = 6)
+    public function __construct(int $cols = 2, int $gap = 6, ?FormService $formService = null)
     {
         $this->cols = $cols;
         $this->gap = $gap;
+        $this->formService = $formService;
     }
 
-    public function item(): LayoutGridItem
+    public function item(callable $callback = null): LayoutGridItem
     {
-        $item = new LayoutGridItem($this->cols);
+        $item = new LayoutGridItem($this->cols, $this->formService);
         $this->items[] = $item;
+        
+        if ($callback && $this->formService) {
+            $callback($this->formService, $item);
+        }
+        
         return $item;
     }
 
@@ -301,10 +447,12 @@ class LayoutGridItem implements LayoutItem
 {
     protected int $cols;
     protected array $content = [];
+    protected ?FormService $formService;
 
-    public function __construct(int $cols)
+    public function __construct(int $cols, ?FormService $formService = null)
     {
         $this->cols = $cols;
+        $this->formService = $formService;
     }
 
     public function addContent(string $content): self
@@ -316,6 +464,38 @@ class LayoutGridItem implements LayoutItem
     public function addField(Field $field): self
     {
         $this->content[] = $field->render();
+        return $this;
+    }
+
+    public function addHtml(string $html): self
+    {
+        $this->content[] = $html;
+        return $this;
+    }
+
+    public function addView(string $view, array $data = []): self
+    {
+        try {
+            $this->content[] = view($view, $data)->render();
+        } catch (\Exception $e) {
+            $this->content[] = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">' .
+                              '<p class="font-medium">Error rendering view: ' . htmlspecialchars($view) . '</p>' .
+                              '<p class="text-sm">' . htmlspecialchars($e->getMessage()) . '</p>' .
+                              '</div>';
+        }
+        return $this;
+    }
+
+    public function addComponent(string $component, array $data = []): self
+    {
+        try {
+            $this->content[] = view('components.' . $component, $data)->render();
+        } catch (\Exception $e) {
+            $this->content[] = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">' .
+                              '<p class="font-medium">Error rendering component: ' . htmlspecialchars($component) . '</p>' .
+                              '<p class="text-sm">' . htmlspecialchars($e->getMessage()) . '</p>' .
+                              '</div>';
+        }
         return $this;
     }
 
@@ -343,11 +523,13 @@ class LayoutSection implements LayoutItem
     protected string $title;
     protected string $description;
     protected array $content = [];
+    protected ?FormService $formService;
 
-    public function __construct(string $title = null, string $description = null)
+    public function __construct(string $title = null, string $description = null, ?FormService $formService = null)
     {
         $this->title = $title;
         $this->description = $description;
+        $this->formService = $formService;
     }
 
     public function addContent(string $content): self
@@ -359,6 +541,38 @@ class LayoutSection implements LayoutItem
     public function addField(Field $field): self
     {
         $this->content[] = $field->render();
+        return $this;
+    }
+
+    public function addHtml(string $html): self
+    {
+        $this->content[] = $html;
+        return $this;
+    }
+
+    public function addView(string $view, array $data = []): self
+    {
+        try {
+            $this->content[] = view($view, $data)->render();
+        } catch (\Exception $e) {
+            $this->content[] = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">' .
+                              '<p class="font-medium">Error rendering view: ' . htmlspecialchars($view) . '</p>' .
+                              '<p class="text-sm">' . htmlspecialchars($e->getMessage()) . '</p>' .
+                              '</div>';
+        }
+        return $this;
+    }
+
+    public function addComponent(string $component, array $data = []): self
+    {
+        try {
+            $this->content[] = view('components.' . $component, $data)->render();
+        } catch (\Exception $e) {
+            $this->content[] = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">' .
+                              '<p class="font-medium">Error rendering component: ' . htmlspecialchars($component) . '</p>' .
+                              '<p class="text-sm">' . htmlspecialchars($e->getMessage()) . '</p>' .
+                              '</div>';
+        }
         return $this;
     }
 
@@ -397,10 +611,12 @@ class LayoutCard implements LayoutItem
 {
     protected string $title;
     protected array $content = [];
+    protected ?FormService $formService;
 
-    public function __construct(string $title = null)
+    public function __construct(string $title = null, ?FormService $formService = null)
     {
         $this->title = $title;
+        $this->formService = $formService;
     }
 
     public function addContent(string $content): self
@@ -412,6 +628,38 @@ class LayoutCard implements LayoutItem
     public function addField(Field $field): self
     {
         $this->content[] = $field->render();
+        return $this;
+    }
+
+    public function addHtml(string $html): self
+    {
+        $this->content[] = $html;
+        return $this;
+    }
+
+    public function addView(string $view, array $data = []): self
+    {
+        try {
+            $this->content[] = view($view, $data)->render();
+        } catch (\Exception $e) {
+            $this->content[] = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">' .
+                              '<p class="font-medium">Error rendering view: ' . htmlspecialchars($view) . '</p>' .
+                              '<p class="text-sm">' . htmlspecialchars($e->getMessage()) . '</p>' .
+                              '</div>';
+        }
+        return $this;
+    }
+
+    public function addComponent(string $component, array $data = []): self
+    {
+        try {
+            $this->content[] = view('components.' . $component, $data)->render();
+        } catch (\Exception $e) {
+            $this->content[] = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">' .
+                              '<p class="font-medium">Error rendering component: ' . htmlspecialchars($component) . '</p>' .
+                              '<p class="text-sm">' . htmlspecialchars($e->getMessage()) . '</p>' .
+                              '</div>';
+        }
         return $this;
     }
 
@@ -482,10 +730,12 @@ class LayoutContainer implements LayoutItem
 {
     protected string $classes;
     protected array $content = [];
+    protected ?FormService $formService;
 
-    public function __construct(string $classes = 'bg-white rounded-lg shadow-lg p-6 border border-gray-200')
+    public function __construct(string $classes = 'bg-white rounded-lg shadow-lg p-6 border border-gray-200', ?FormService $formService = null)
     {
         $this->classes = $classes;
+        $this->formService = $formService;
     }
 
     public function addContent(string $content): self
@@ -497,6 +747,38 @@ class LayoutContainer implements LayoutItem
     public function addField(Field $field): self
     {
         $this->content[] = $field->render();
+        return $this;
+    }
+
+    public function addHtml(string $html): self
+    {
+        $this->content[] = $html;
+        return $this;
+    }
+
+    public function addView(string $view, array $data = []): self
+    {
+        try {
+            $this->content[] = view($view, $data)->render();
+        } catch (\Exception $e) {
+            $this->content[] = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">' .
+                              '<p class="font-medium">Error rendering view: ' . htmlspecialchars($view) . '</p>' .
+                              '<p class="text-sm">' . htmlspecialchars($e->getMessage()) . '</p>' .
+                              '</div>';
+        }
+        return $this;
+    }
+
+    public function addComponent(string $component, array $data = []): self
+    {
+        try {
+            $this->content[] = view('components.' . $component, $data)->render();
+        } catch (\Exception $e) {
+            $this->content[] = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">' .
+                              '<p class="font-medium">Error rendering component: ' . htmlspecialchars($component) . '</p>' .
+                              '<p class="text-sm">' . htmlspecialchars($e->getMessage()) . '</p>' .
+                              '</div>';
+        }
         return $this;
     }
 
@@ -513,5 +795,123 @@ class LayoutContainer implements LayoutItem
     public function getContent(): array
     {
         return $this->content;
+    }
+}
+
+/**
+ * Custom HTML content
+ */
+class LayoutHtml implements LayoutItem
+{
+    protected string $html;
+    protected string $classes;
+
+    public function __construct(string $html, string $classes = '')
+    {
+        $this->html = $html;
+        $this->classes = $classes;
+    }
+
+    public function render(): string
+    {
+        if ($this->classes) {
+            return '<div class="' . $this->classes . '">' . PHP_EOL . $this->html . PHP_EOL . '</div>' . PHP_EOL;
+        }
+        return $this->html . PHP_EOL;
+    }
+
+    public function getHtml(): string
+    {
+        return $this->html;
+    }
+}
+
+/**
+ * Custom Blade view
+ */
+class LayoutView implements LayoutItem
+{
+    protected string $view;
+    protected array $data;
+    protected string $classes;
+
+    public function __construct(string $view, array $data = [], string $classes = '')
+    {
+        $this->view = $view;
+        $this->data = $data;
+        $this->classes = $classes;
+    }
+
+    public function render(): string
+    {
+        try {
+            $content = view($this->view, $this->data)->render();
+            
+            if ($this->classes) {
+                return '<div class="' . $this->classes . '">' . PHP_EOL . $content . PHP_EOL . '</div>' . PHP_EOL;
+            }
+            
+            return $content . PHP_EOL;
+        } catch (\Exception $e) {
+            return '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">' . PHP_EOL .
+                   '<p class="font-medium">Error rendering view: ' . htmlspecialchars($this->view) . '</p>' . PHP_EOL .
+                   '<p class="text-sm">' . htmlspecialchars($e->getMessage()) . '</p>' . PHP_EOL .
+                   '</div>' . PHP_EOL;
+        }
+    }
+
+    public function getView(): string
+    {
+        return $this->view;
+    }
+
+    public function getData(): array
+    {
+        return $this->data;
+    }
+}
+
+/**
+ * Custom Blade component
+ */
+class LayoutComponent implements LayoutItem
+{
+    protected string $component;
+    protected array $data;
+    protected string $classes;
+
+    public function __construct(string $component, array $data = [], string $classes = '')
+    {
+        $this->component = $component;
+        $this->data = $data;
+        $this->classes = $classes;
+    }
+
+    public function render(): string
+    {
+        try {
+            $content = view('components.' . $this->component, $this->data)->render();
+            
+            if ($this->classes) {
+                return '<div class="' . $this->classes . '">' . PHP_EOL . $content . PHP_EOL . '</div>' . PHP_EOL;
+            }
+            
+            return $content . PHP_EOL;
+        } catch (\Exception $e) {
+            return '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">' . PHP_EOL .
+                   '<p class="font-medium">Error rendering component: ' . htmlspecialchars($this->component) . '</p>' . PHP_EOL .
+                   '<p class="text-sm">' . htmlspecialchars($e->getMessage()) . '</p>' . PHP_EOL .
+                   '</div>' . PHP_EOL;
+        }
+    }
+
+    public function getComponent(): string
+    {
+        return $this->component;
+    }
+
+    public function getData(): array
+    {
+        return $this->data;
     }
 } 

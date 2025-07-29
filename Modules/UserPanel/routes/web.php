@@ -2,16 +2,23 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\UserPanel\Http\Controllers\UserPanelController;
+use Modules\UserPanel\Http\Controllers\CallbackLayoutController;
+use Modules\UserPanel\Http\Controllers\CallableOptionsController;
+use Modules\UserPanel\Http\Controllers\CustomContentController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Dashboard routes
-    Route::resource('/dashboard', UserPanelController::class);
-
-    Route::resource('/test', \Modules\UserPanel\Http\Controllers\TestController::class);
-
     // Layout Service Demo
-    Route::get('/layout-demo', [\Modules\UserPanel\Http\Controllers\LayoutDemoController::class, 'index'])->name('userpanel.layout-demo');
-    Route::get('/layout-demo/alternative', [\Modules\UserPanel\Http\Controllers\LayoutDemoController::class, 'alternative'])->name('userpanel.layout-demo.alternative');
+    Route::get('/dashboard', [\Modules\UserPanel\Http\Controllers\DashboardController::class, 'index'])->name('dashboard.index');
 
-//    Route::resource('plugin', )
+    // Callback Layout Examples
+    Route::get('/callback-layout', [CallbackLayoutController::class, 'index'])->name('userpanel.callback-layout');
+    Route::get('/callback-layout/advanced', [CallbackLayoutController::class, 'advanced'])->name('userpanel.callback-layout.advanced');
+
+    // Callable Options Examples
+    Route::get('/callable-options', [CallableOptionsController::class, 'index'])->name('userpanel.callable-options');
+    Route::get('/callable-options/advanced', [CallableOptionsController::class, 'advanced'])->name('userpanel.callable-options.advanced');
+
+    // Custom Content Examples
+    Route::get('/custom-content', [CustomContentController::class, 'index'])->name('userpanel.custom-content');
+    Route::get('/custom-content/advanced', [CustomContentController::class, 'advanced'])->name('userpanel.custom-content.advanced');
 });

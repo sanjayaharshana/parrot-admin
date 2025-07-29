@@ -374,6 +374,7 @@ class Field
     protected ?string $placeholder = null;
     protected array $attributes = [];
     protected array $options = [];
+    protected $optionsCallback = null;
     protected bool $required = false;
 
     public function __construct(string $type)
@@ -411,10 +412,22 @@ class Field
         return $this;
     }
 
-    public function options(array $options): self
+    public function options($options): self
     {
-        $this->options = $options;
+        if (is_callable($options)) {
+            $this->optionsCallback = $options;
+        } else {
+            $this->options = $options;
+        }
         return $this;
+    }
+
+    protected function getOptions(): array
+    {
+        if ($this->optionsCallback) {
+            return call_user_func($this->optionsCallback);
+        }
+        return $this->options;
     }
 
     public function attribute(string $key, string $value): self
@@ -486,7 +499,7 @@ class Field
             case 'select':
                 $html .= '<select' . $attrs . '>' . PHP_EOL;
                 $html .= '<option value="">Select an option</option>' . PHP_EOL;
-                foreach ($this->options as $value => $label) {
+                foreach ($this->getOptions() as $value => $label) {
                     $selected = ($this->value == $value) ? ' selected' : '';
                     $html .= '<option value="' . htmlspecialchars($value) . '"' . $selected . '>' . htmlspecialchars($label) . '</option>' . PHP_EOL;
                 }
@@ -508,7 +521,7 @@ class Field
                 
             case 'radio':
                 $html .= '<div class="space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-200">' . PHP_EOL;
-                foreach ($this->options as $value => $label) {
+                foreach ($this->getOptions() as $value => $label) {
                     $optionId = htmlspecialchars($this->name) . '_' . htmlspecialchars($value);
                     $html .= '<div class="flex items-start space-x-3">' . PHP_EOL;
                     $html .= '<input type="radio"' . $attrs . ' value="' . htmlspecialchars($value) . '"' . ($this->value == $value ? ' checked' : '') . ' id="' . $optionId . '">' . PHP_EOL;

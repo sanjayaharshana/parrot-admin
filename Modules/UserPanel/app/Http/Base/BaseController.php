@@ -18,20 +18,27 @@ class BaseController extends Controller
      */
 
     public $icon = 'fa fa-users';
-    
+
     // Set to false to exclude from sidebar, true by default
     public $showInSidebar = true;
 
+    // Layout service for creating page layouts
+    protected $layoutService;
+
+    // Form service for creating forms
+    protected $form;
+
+    function __construct()
+    {
+        $this->layoutService = new \Modules\UserPanel\Services\LayoutService();
+        $this->form = new \Modules\UserPanel\Services\FormService();
+    }
 
     public function index()
     {
-        $formService = new FormService();
-        $formService->text()->name('text_field_name')->value('value');
-        $formService->textarea()->name('textarea_name')->value('some text');
-        $formService->text()->name('firstName')->value('John');
-
-        return view('userpanel::index',[
-            'form' => $formService->renderForm()
+        $layout = $this->page();
+        return view('userpanel::simple-layout',[
+            'layout' => $layout
         ]);
     }
 
