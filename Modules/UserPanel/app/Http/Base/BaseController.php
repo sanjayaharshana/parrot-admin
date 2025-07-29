@@ -18,6 +18,9 @@ class BaseController extends Controller
      */
 
     public $icon = 'fa fa-users';
+    
+    // Set to false to exclude from sidebar, true by default
+    public $showInSidebar = true;
 
 
     public function index()

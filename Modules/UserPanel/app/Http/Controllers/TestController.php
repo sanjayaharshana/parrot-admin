@@ -9,6 +9,8 @@ use Modules\UserPanel\Services\FormService;
 
 class TestController extends BaseController
 {
+    // Set to false to exclude from sidebar
+    public $showInSidebar = true;
 
     public function index()
     {

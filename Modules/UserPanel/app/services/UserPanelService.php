@@ -15,8 +15,29 @@ class UserPanelService {
         $hasModule = strpos($input, 'Modules\\UserPanel') !== false;
         $hasAtIndex = str_ends_with($input, '@index');
 
+        // Check if controller should be shown in sidebar
+        $controllerClass = explode('@', $input)[0];
+        if (!$hasModule || !$hasAtIndex) {
+            return false;
+        }
+
+        // Check if controller has showInSidebar property set to false
+        try {
+            $reflection = new ReflectionClass($controllerClass);
+            if ($reflection->hasProperty('showInSidebar')) {
+                $property = $reflection->getProperty('showInSidebar');
+                $property->setAccessible(true);
+                $defaultValue = $property->getDefaultValue();
+                if ($defaultValue === false) {
+                    return false;
+                }
+            }
+        } catch (\ReflectionException $e) {
+            // If reflection fails, continue with default behavior
+        }
+
         // Return true if both conditions met
-        return $hasModule && $hasAtIndex;
+        return true;
     }
 
     public static function getControllerIcon($controllerClass) {
