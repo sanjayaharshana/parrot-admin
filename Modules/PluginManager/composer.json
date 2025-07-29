@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/pluginmanager",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\PluginManager\\": "app/",
+            "Modules\\PluginManager\\Database\\Factories\\": "database/factories/",
+            "Modules\\PluginManager\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\PluginManager\\Tests\\": "tests/"
+        }
+    }
+}

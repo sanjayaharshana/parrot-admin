@@ -1,0 +1,11 @@
+{
+    "name": "PluginManager",
+    "alias": "pluginmanager",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\PluginManager\\Providers\\PluginManagerServiceProvider"
+    ],
+    "files": []
+}

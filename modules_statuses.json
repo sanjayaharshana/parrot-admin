@@ -3,5 +3,6 @@
     "TestModule": true,
     "Landing": true,
     "Auth": true,
-    "UserPanel": true
+    "UserPanel": true,
+    "PluginManager": true
 }

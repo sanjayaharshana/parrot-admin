@@ -1,14 +1,13 @@
 <?php
 
-namespace Modules\UserPanel\Providers;
+namespace Modules\PluginManager\Providers;
 
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Route;
-use Modules\UserPanel\Http\Middleware\Userpanel;
 
 class RouteServiceProvider extends ServiceProvider
 {
-    protected string $name = 'UserPanel';
+    protected string $name = 'PluginManager';
 
     /**
      * Called before routes are registered.
@@ -36,9 +35,7 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function mapWebRoutes(): void
     {
-        Route::middleware('web')
-//            ->middleware('userpanel')
-            ->group(module_path($this->name, '/routes/web.php'));
+        Route::middleware('web')->group(module_path($this->name, '/routes/web.php'));
     }
 
     /**
