@@ -6,6 +6,7 @@ use Modules\UserPanel\Http\Controllers\CallbackLayoutController;
 use Modules\UserPanel\Http\Controllers\CallableOptionsController;
 use Modules\UserPanel\Http\Controllers\CustomContentController;
 use Modules\UserPanel\Http\Controllers\ModelBindingController;
+use Modules\UserPanel\Http\Controllers\DataViewController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Layout Service Demo
@@ -29,4 +30,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/model-binding/{id}/edit', [ModelBindingController::class, 'edit'])->name('userpanel.model-binding.edit');
     Route::post('/model-binding', [ModelBindingController::class, 'store'])->name('userpanel.model-binding.store');
     Route::put('/model-binding/{id}', [ModelBindingController::class, 'update'])->name('userpanel.model-binding.update');
+
+    // Data View Examples
+    Route::get('/data-view', [DataViewController::class, 'index'])->name('userpanel.data-view');
+    Route::get('/data-view/advanced', [DataViewController::class, 'advanced'])->name('userpanel.data-view.advanced');
+    Route::get('/data-view/{id}', [DataViewController::class, 'show'])->name('userpanel.data-view.show');
+    Route::get('/data-view/{id}/edit', [DataViewController::class, 'edit'])->name('userpanel.data-view.edit');
+    Route::delete('/data-view/{id}', [DataViewController::class, 'destroy'])->name('userpanel.data-view.destroy');
+    Route::post('/data-view/bulk-action', [DataViewController::class, 'bulkAction'])->name('userpanel.data-view.bulk-action');
 });

@@ -3,11 +3,14 @@
 namespace Modules\UserPanel\Http\Base;
 
 use App\Http\Controllers\Controller;
+use App\Models\Evest;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Modules\PluginManager\Services\PluginService;
+use Modules\UserPanel\Services\DataViewService;
 use Modules\UserPanel\Services\FormService;
 
 class BaseController extends Controller
@@ -27,8 +30,9 @@ class BaseController extends Controller
 
     // Form service for creating forms
     protected $form;
-
     protected $type;
+    protected $dataSet;
+    protected $model;
 
     function __construct()
     {
@@ -36,19 +40,18 @@ class BaseController extends Controller
         $this->form = new \Modules\UserPanel\Services\FormService();
     }
 
-
     public function dataSetView()
     {
-
+        return null;
     }
 
     public function index()
     {
-
+        $gridDetails = $this::dataSetView();
         return view('userpanel::index', [
-            'layout' => ''
+            'grid' => $gridDetails,
+            'title' => 'Users Data Grid'
         ]);
-
     }
 
     /**
@@ -56,7 +59,7 @@ class BaseController extends Controller
      */
     public function create()
     {
-        $layout = $this->page();
+        $layout = $this->createForm();
         return view('userpanel::create',[
             'layout' => $layout
         ]);

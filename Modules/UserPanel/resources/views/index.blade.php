@@ -8,7 +8,7 @@
     <div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
 
         <form method="POST" class="space-y-6">
-            {!! $layout !!}
+            {!! $grid !!}
         </form>
     </div>
 @endsection

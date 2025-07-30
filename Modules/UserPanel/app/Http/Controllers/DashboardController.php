@@ -3,15 +3,17 @@
 namespace Modules\UserPanel\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Evest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Modules\UserPanel\Http\Base\BaseController;
+use Modules\UserPanel\Services\DataViewService;
 
 class DashboardController extends BaseController
 {
     public $icon = 'fa fa-dashboard';
 
-    public function page()
+    public function createForm()
     {
         $layout = $this->layoutService;
         $layout->setFormService($this->form);
@@ -75,6 +77,41 @@ class DashboardController extends BaseController
             );
         });
         return $layout->render();
+    }
+
+    public function dataSetView()
+    {
+        $grid = new DataViewService(new Evest());
+
+        // The first column displays the id field and sets the column as a sortable column
+        $grid->id('ID')->sortable();
+
+        // The second column shows the name field
+        $grid->column('name', 'Full Name')->sortable();
+
+        // The third column shows the email field
+        $grid->column('email', 'Email Address')->sortable();
+
+        // The fourth column shows the created_at field with custom formatting
+        $grid->column('created_at', 'Joined Date')->display(function($value) {
+            return $value ? date('M d, Y', strtotime($value)) : 'N/A';
+        });
+
+        // The fifth column shows the email_verified_at field with status indicator
+        $grid->column('email_verified_at', 'Status')->display(function($value) {
+            if ($value) {
+                return '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Verified</span>';
+            }
+            return '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">Unverified</span>';
+        });
+
+        // Configure grid settings
+        $grid->perPage(10)
+            ->defaultSort('created_at', 'desc')
+            ->search(true)
+            ->pagination(true);
+
+        return $grid->render();
     }
 
 
