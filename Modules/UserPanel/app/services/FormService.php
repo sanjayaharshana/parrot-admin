@@ -185,6 +185,11 @@ class FormService
         return $this->addField('radio');
     }
 
+    public function file(): Field
+    {
+        return $this->addField('file');
+    }
+
     protected function addField(string $type): Field
     {
         $field = new Field($type, $this);
@@ -604,6 +609,18 @@ class Field
         return $this;
     }
 
+    public function accept(string $accept): self
+    {
+        $this->attributes['accept'] = $accept;
+        return $this;
+    }
+
+    public function step(string $step): self
+    {
+        $this->attributes['step'] = $step;
+        return $this;
+    }
+
     protected function renderAttributes(): string
     {
         $attrs = '';
@@ -612,6 +629,9 @@ class Field
         if (in_array($this->type, ['checkbox', 'radio'])) {
             // For checkbox and radio, use minimal styling
             $defaultClasses = 'h-4 w-4 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border-gray-300 rounded transition-all duration-200 cursor-pointer';
+        } elseif ($this->type === 'file') {
+            // For file inputs, use file-specific styling
+            $defaultClasses = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100';
         } else {
             // For other fields, use full styling
             $defaultClasses = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 placeholder-gray-500';
@@ -627,7 +647,7 @@ class Field
             $attrs .= ' name="' . htmlspecialchars($this->name) . '"';
         }
 
-        if ($this->placeholder && !in_array($this->type, ['checkbox', 'radio'])) {
+        if ($this->placeholder && !in_array($this->type, ['checkbox', 'radio', 'file'])) {
             $attrs .= ' placeholder="' . htmlspecialchars($this->placeholder) . '"';
         }
 
@@ -660,6 +680,10 @@ class Field
 
         // Render different field types
         switch ($this->type) {
+            case 'file':
+                $html .= '<input type="file"' . $attrs . '>';
+                break;
+                
             case 'textarea':
                 $html .= '<textarea' . $attrs . ' rows="4">' . htmlspecialchars($this->value ?? '') . '</textarea>';
                 break;

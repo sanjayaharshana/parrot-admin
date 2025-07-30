@@ -12,6 +12,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Layout Service Demo
     Route::resource('/dashboard', \Modules\UserPanel\Http\Controllers\DashboardController::class);
 
+    // Products Resource Route (Example of complete CRUD controller)
+    Route::resource('/products', \Modules\UserPanel\Http\Controllers\ProductController::class);
+    Route::post('/products/bulk-action', [\Modules\UserPanel\Http\Controllers\ProductController::class, 'bulkAction'])->name('userpanel.products.bulk-action');
+
     // Callback Layout Examples
     Route::get('/callback-layout', [CallbackLayoutController::class, 'index'])->name('userpanel.callback-layout');
     Route::get('/callback-layout/advanced', [CallbackLayoutController::class, 'advanced'])->name('userpanel.callback-layout.advanced');
