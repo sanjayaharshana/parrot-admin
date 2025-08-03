@@ -59,7 +59,7 @@
             <nav class="mt-6">
                 <div class="px-4 space-y-2">
                    @foreach(\Modules\UserPanel\Services\UserPanelService::getNavMenuItem() as $menuItem)
-                        <a href="{{ $menuItem['uri'] }}"
+                        <a href="{{ url($menuItem['uri']) }}"
                            class="flex items-center px-4 py-2 text-white rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 {{ request()->routeIs($menuItem['name']) ? 'bg-white bg-opacity-20 text-white' : '' }}">
                             <i class="{{ $menuItem['icon'] }} w-5 h-5 mr-3"></i>
                             {{ $menuItem['name'] ? ucfirst(str_replace(['userpanel.', 'pluginmanager.', '-'], ['', '', ' '], $menuItem['name'])) : 'Dashboard' }}
