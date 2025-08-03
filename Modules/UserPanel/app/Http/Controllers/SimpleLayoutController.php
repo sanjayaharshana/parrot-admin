@@ -58,7 +58,8 @@ class SimpleLayoutController extends BaseController
             ->filters(true)
             ->pagination(true)
             ->title('User Management')
-            ->description('Manage and view all registered users in the system');
+            ->description('Manage and view all registered users in the system')
+            ->createButton('/create', 'Add New User');
 
         return view('userpanel::index', [
             'grid' => $grid

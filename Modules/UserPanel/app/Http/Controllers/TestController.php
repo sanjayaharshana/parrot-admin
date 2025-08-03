@@ -105,7 +105,8 @@ class TestController extends BaseController
             ->filters(true)
             ->pagination(true)
             ->title('Users Grid with Enhanced Search & Filters')
-            ->description('Advanced user management with comprehensive search and filtering capabilities');
+            ->description('Advanced user management with comprehensive search and filtering capabilities')
+            ->createButton('/users/create', 'Add New User');
 
         return view('userpanel::data-view', [
             'grid' => $grid,
@@ -167,7 +168,8 @@ class TestController extends BaseController
             ->filters(true)
             ->pagination(true)
             ->title('Products Grid with Multiple Filter Types')
-            ->description('Product management with various filter types including dropdowns and date ranges');
+            ->description('Product management with various filter types including dropdowns and date ranges')
+            ->createButton('/products/create', 'Add New Product');
 
         return view('userpanel::data-view', [
             'grid' => $grid,

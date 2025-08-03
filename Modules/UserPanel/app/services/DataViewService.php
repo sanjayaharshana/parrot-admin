@@ -27,6 +27,9 @@ class DataViewService
     protected string $title = '';
     protected string $description = '';
     protected bool $showTitle = true;
+    protected string $createButtonUrl = '';
+    protected string $createButtonText = 'Create New';
+    protected bool $showCreateButton = false;
 
     public function __construct(Model $model)
     {
@@ -199,6 +202,26 @@ class DataViewService
     }
 
     /**
+     * Add create button
+     */
+    public function createButton(string $url, string $text = 'Create New'): self
+    {
+        $this->createButtonUrl = $url;
+        $this->createButtonText = $text;
+        $this->showCreateButton = true;
+        return $this;
+    }
+
+    /**
+     * Show/hide create button
+     */
+    public function showCreateButton(bool $show = true): self
+    {
+        $this->showCreateButton = $show;
+        return $this;
+    }
+
+    /**
      * Add custom attribute
      */
     public function attribute(string $key, string $value): self
@@ -229,7 +252,10 @@ class DataViewService
             'attributes' => $this->attributes,
             'title' => $this->title,
             'description' => $this->description,
-            'showTitle' => $this->showTitle
+            'showTitle' => $this->showTitle,
+            'createButtonUrl' => $this->createButtonUrl,
+            'createButtonText' => $this->createButtonText,
+            'showCreateButton' => $this->showCreateButton
         ];
     }
 
@@ -447,16 +473,34 @@ class DataViewService
      */
     protected function renderTitleSection(array $data): string
     {
-        $html = '<div class="px-4 py-3 border-b border-gray-200 bg-gray-50">';
+        $html = '<div class="px-6 py-4 border-b border-gray-200">';
         
+        // Header with title and create button
+        $html .= '<div class="flex items-center justify-between">';
+        
+        // Title and description
+        $html .= '<div>';
         if ($this->title) {
-            $html .= '<h2 class="text-lg font-semibold text-gray-900">' . htmlspecialchars($this->title) . '</h2>';
+            $html .= '<h2 class="text-xl font-semibold text-gray-900">' . htmlspecialchars($this->title) . '</h2>';
         }
         
         if ($this->description) {
             $html .= '<p class="text-sm text-gray-600 mt-1">' . htmlspecialchars($this->description) . '</p>';
         }
+        $html .= '</div>';
         
+        // Create button
+        if ($this->showCreateButton && $this->createButtonUrl) {
+            $html .= '<a href="' . htmlspecialchars($this->createButtonUrl) . '" 
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        ' . htmlspecialchars($this->createButtonText) . '
+                    </a>';
+        }
+        
+        $html .= '</div>';
         $html .= '</div>';
         return $html;
     }

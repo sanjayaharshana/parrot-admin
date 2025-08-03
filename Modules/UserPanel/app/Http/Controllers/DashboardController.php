@@ -116,6 +116,7 @@ class DashboardController extends BaseController
             'unverified' => 'Not Verified'
         ], 'select');
 
+        $grid->createButton(url('dashboard/create'),'Create', 'fa fa-plus', 'btn-primary');
         // Configure grid settings
         $grid->perPage(10)
             ->defaultSort('created_at', 'desc')
