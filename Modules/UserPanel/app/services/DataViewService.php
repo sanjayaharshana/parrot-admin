@@ -14,6 +14,7 @@ class DataViewService
     protected array $sortableColumns = [];
     protected array $searchableColumns = [];
     protected array $filters = [];
+    protected array $filterOptions = [];
     protected int $perPage = 15;
     protected string $defaultSort = 'id';
     protected string $defaultOrder = 'desc';
@@ -37,6 +38,7 @@ class DataViewService
         $column = new DataViewColumn('id', $label);
         $column->sortable();
         $this->columns['id'] = $column;
+        $this->searchableColumns[] = 'id';
         return $column;
     }
 
@@ -84,6 +86,43 @@ class DataViewService
     }
 
     /**
+     * Add filter options
+     */
+    public function addFilter(string $field, string $label, array $options = [], string $type = 'select'): self
+    {
+        $this->filters[$field] = [
+            'label' => $label,
+            'type' => $type,
+            'options' => $options
+        ];
+        return $this;
+    }
+
+    /**
+     * Add date range filter
+     */
+    public function addDateRangeFilter(string $field, string $label): self
+    {
+        $this->filters[$field] = [
+            'label' => $label,
+            'type' => 'date_range'
+        ];
+        return $this;
+    }
+
+    /**
+     * Add text filter
+     */
+    public function addTextFilter(string $field, string $label): self
+    {
+        $this->filters[$field] = [
+            'label' => $label,
+            'type' => 'text'
+        ];
+        return $this;
+    }
+
+    /**
      * Set items per page
      */
     public function perPage(int $perPage): self
@@ -103,7 +142,7 @@ class DataViewService
     }
 
     /**
-     * Enable/disable pagination
+     * Show/hide pagination
      */
     public function pagination(bool $show = true): self
     {
@@ -112,7 +151,7 @@ class DataViewService
     }
 
     /**
-     * Enable/disable search
+     * Show/hide search
      */
     public function search(bool $show = true): self
     {
@@ -121,7 +160,7 @@ class DataViewService
     }
 
     /**
-     * Enable/disable filters
+     * Show/hide filters
      */
     public function filters(bool $show = true): self
     {
@@ -130,7 +169,7 @@ class DataViewService
     }
 
     /**
-     * Add custom attributes
+     * Add custom attribute
      */
     public function attribute(string $key, string $value): self
     {
@@ -139,10 +178,13 @@ class DataViewService
     }
 
     /**
-     * Get the data for the grid
+     * Get formatted data for the grid
      */
     public function getData(): array
     {
+        // Collect searchable columns
+        $this->collectSearchableColumns();
+        
         $query = $this->buildQuery();
         $data = $this->showPagination ? $query->paginate($this->perPage) : $query->get();
 
@@ -153,8 +195,22 @@ class DataViewService
             'bulkActions' => $this->bulkActions,
             'showSearch' => $this->showSearch,
             'showFilters' => $this->showFilters,
+            'filters' => $this->filters,
             'attributes' => $this->attributes
         ];
+    }
+
+    /**
+     * Collect searchable columns from defined columns
+     */
+    protected function collectSearchableColumns(): void
+    {
+        $this->searchableColumns = [];
+        foreach ($this->columns as $field => $column) {
+            if ($column->isSearchable() && $field !== 'actions') {
+                $this->searchableColumns[] = $field;
+            }
+        }
     }
 
     /**
@@ -174,7 +230,7 @@ class DataViewService
 
         // Apply search
         $search = Request::get('search');
-        if ($search && $this->showSearch) {
+        if ($search && $this->showSearch && !empty($this->searchableColumns)) {
             $query->where(function ($q) use ($search) {
                 foreach ($this->searchableColumns as $column) {
                     $q->orWhere($column, 'like', "%{$search}%");
@@ -186,15 +242,49 @@ class DataViewService
         foreach ($this->filters as $field => $filter) {
             $value = Request::get("filter_{$field}");
             if ($value !== null && $value !== '') {
-                if (is_callable($filter)) {
-                    $filter($query, $value);
-                } else {
-                    $query->where($field, $filter, $value);
-                }
+                $this->applyFilter($query, $field, $filter, $value);
             }
         }
 
         return $query;
+    }
+
+    /**
+     * Apply individual filter
+     */
+    protected function applyFilter(Builder $query, string $field, array $filter, $value): void
+    {
+        switch ($filter['type']) {
+            case 'date_range':
+                $startDate = Request::get("filter_{$field}_start");
+                $endDate = Request::get("filter_{$field}_end");
+                
+                if ($startDate) {
+                    $query->whereDate($field, '>=', $startDate);
+                }
+                if ($endDate) {
+                    $query->whereDate($field, '<=', $endDate);
+                }
+                break;
+                
+            case 'select':
+                // Handle special cases for select filters
+                if ($field === 'email_verified_at') {
+                    if ($value === 'verified') {
+                        $query->whereNotNull($field);
+                    } elseif ($value === 'unverified') {
+                        $query->whereNull($field);
+                    }
+                } else {
+                    $query->where($field, $value);
+                }
+                break;
+                
+            case 'text':
+            default:
+                $query->where($field, 'like', "%{$value}%");
+                break;
+        }
     }
 
     /**
@@ -261,36 +351,34 @@ class DataViewService
             return $item->$field();
         }
         
-        if (property_exists($item, $field)) {
-            return $item->$field;
-        }
-        
-        return $item->getAttribute($field) ?? '';
+        return $item->$field ?? '';
     }
 
     /**
-     * Render actions column
+     * Render actions for a row
      */
     protected function renderActions($item, DataViewColumn $column): string
     {
         $actions = $column->getActions();
+        if (empty($actions)) {
+            return '';
+        }
+
         $html = '<div class="flex space-x-2">';
-        
         foreach ($actions as $action) {
             $url = is_callable($action['url']) ? $action['url']($item) : $action['url'];
-            $label = $action['label'] ?? 'Action';
-            $class = $action['class'] ?? 'btn btn-sm';
+            $class = $action['class'] ?? 'px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600';
             $icon = isset($action['icon']) ? "<i class=\"{$action['icon']}\"></i> " : '';
             
-            $html .= "<a href=\"{$url}\" class=\"{$class}\">{$icon}{$label}</a>";
+            $html .= "<a href=\"{$url}\" class=\"{$class}\">{$icon}{$action['label']}</a>";
         }
-        
         $html .= '</div>';
+        
         return $html;
     }
 
     /**
-     * Render the grid HTML
+     * Render the complete grid
      */
     public function render(): string
     {
@@ -323,20 +411,160 @@ class DataViewService
     {
         $html = '<div class="px-6 py-4 border-b border-gray-200">';
         
+        // Search form
         if ($this->showSearch) {
-            $html .= '<div class="flex items-center space-x-4">';
-            $html .= '<div class="flex-1">';
-            $html .= '<form method="GET" class="flex">';
-            $html .= '<input type="text" name="search" value="' . Request::get('search') . '" 
-                        placeholder="Search..." 
-                        class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500">';
-            $html .= '<button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600">Search</button>';
-            $html .= '</form>';
-            $html .= '</div>';
-            $html .= '</div>';
+            $html .= $this->renderSearchForm();
+        }
+        
+        // Filters
+        if ($this->showFilters && !empty($this->filters)) {
+            $html .= $this->renderFilters();
         }
         
         $html .= '</div>';
+        return $html;
+    }
+
+    /**
+     * Render search form
+     */
+    protected function renderSearchForm(): string
+    {
+        $currentSearch = Request::get('search', '');
+        $currentUrl = Request::url();
+        $currentParams = Request::except(['search', 'page']);
+        
+        $html = '<div class="mb-4">';
+        $html .= '<form method="GET" class="flex items-center space-x-4">';
+        
+        // Preserve other parameters
+        foreach ($currentParams as $key => $value) {
+            if (is_array($value)) {
+                foreach ($value as $v) {
+                    $html .= '<input type="hidden" name="' . htmlspecialchars($key) . '[]" value="' . htmlspecialchars($v) . '">';
+                }
+            } else {
+                $html .= '<input type="hidden" name="' . htmlspecialchars($key) . '" value="' . htmlspecialchars($value) . '">';
+            }
+        }
+        
+        $html .= '<div class="flex-1 max-w-md">';
+        $html .= '<div class="relative">';
+        $html .= '<input type="text" name="search" value="' . htmlspecialchars($currentSearch) . '" 
+                    placeholder="Search..." 
+                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">';
+        $html .= '<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">';
+        $html .= '<svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
+        $html .= '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>';
+        $html .= '</svg>';
+        $html .= '</div>';
+        $html .= '</div>';
+        $html .= '</div>';
+        
+        $html .= '<button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">';
+        $html .= 'Search';
+        $html .= '</button>';
+        
+        if ($currentSearch) {
+            $html .= '<a href="' . $currentUrl . '?' . http_build_query($currentParams) . '" class="px-4 py-2 text-gray-600 hover:text-gray-800">Clear</a>';
+        }
+        
+        $html .= '</form>';
+        $html .= '</div>';
+        
+        return $html;
+    }
+
+    /**
+     * Render filters
+     */
+    protected function renderFilters(): string
+    {
+        $html = '<div class="border-t border-gray-200 pt-4">';
+        $html .= '<div class="flex items-center space-x-4 flex-wrap">';
+        
+        foreach ($this->filters as $field => $filter) {
+            $html .= $this->renderFilter($field, $filter);
+        }
+        
+        $html .= '<div class="flex items-center space-x-2">';
+        $html .= '<button type="submit" form="filters-form" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm">Apply Filters</button>';
+        $html .= '<a href="' . Request::url() . '" class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm">Clear All</a>';
+        $html .= '</div>';
+        
+        $html .= '</div>';
+        $html .= '</div>';
+        
+        return $html;
+    }
+
+    /**
+     * Render individual filter
+     */
+    protected function renderFilter(string $field, array $filter): string
+    {
+        $currentValue = Request::get("filter_{$field}", '');
+        $currentParams = Request::except(['page']);
+        
+        $html = '<form id="filters-form" method="GET" class="flex items-center space-x-2">';
+        
+        // Preserve other parameters
+        foreach ($currentParams as $key => $value) {
+            if (strpos($key, 'filter_') === 0 && $key !== "filter_{$field}") {
+                if (is_array($value)) {
+                    foreach ($value as $v) {
+                        $html .= '<input type="hidden" name="' . htmlspecialchars($key) . '[]" value="' . htmlspecialchars($v) . '">';
+                    }
+                } else {
+                    $html .= '<input type="hidden" name="' . htmlspecialchars($key) . '" value="' . htmlspecialchars($value) . '">';
+                }
+            } elseif (strpos($key, 'filter_') !== 0) {
+                if (is_array($value)) {
+                    foreach ($value as $v) {
+                        $html .= '<input type="hidden" name="' . htmlspecialchars($key) . '[]" value="' . htmlspecialchars($v) . '">';
+                    }
+                } else {
+                    $html .= '<input type="hidden" name="' . htmlspecialchars($key) . '" value="' . htmlspecialchars($value) . '">';
+                }
+            }
+        }
+        
+        $html .= '<label class="text-sm font-medium text-gray-700">' . htmlspecialchars($filter['label']) . ':</label>';
+        
+        switch ($filter['type']) {
+            case 'select':
+                $html .= '<select name="filter_' . htmlspecialchars($field) . '" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">';
+                $html .= '<option value="">All</option>';
+                foreach ($filter['options'] as $value => $label) {
+                    $selected = $currentValue == $value ? 'selected' : '';
+                    $html .= '<option value="' . htmlspecialchars($value) . '" ' . $selected . '>' . htmlspecialchars($label) . '</option>';
+                }
+                $html .= '</select>';
+                break;
+                
+            case 'date_range':
+                $startValue = Request::get("filter_{$field}_start", '');
+                $endValue = Request::get("filter_{$field}_end", '');
+                
+                $html .= '<input type="date" name="filter_' . htmlspecialchars($field) . '_start" value="' . htmlspecialchars($startValue) . '" 
+                            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
+                            placeholder="Start Date">';
+                $html .= '<span class="text-gray-500">to</span>';
+                $html .= '<input type="date" name="filter_' . htmlspecialchars($field) . '_end" value="' . htmlspecialchars($endValue) . '" 
+                            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
+                            placeholder="End Date">';
+                break;
+                
+            case 'text':
+            default:
+                $html .= '<input type="text" name="filter_' . htmlspecialchars($field) . '" value="' . htmlspecialchars($currentValue) . '" 
+                            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
+                            placeholder="Filter ' . htmlspecialchars($filter['label']) . '">';
+                break;
+        }
+        
+        $html .= '</form>';
+        
         return $html;
     }
 

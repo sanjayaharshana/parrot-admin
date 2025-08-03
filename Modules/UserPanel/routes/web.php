@@ -7,6 +7,8 @@ use Modules\UserPanel\Http\Controllers\CallableOptionsController;
 use Modules\UserPanel\Http\Controllers\CustomContentController;
 use Modules\UserPanel\Http\Controllers\ModelBindingController;
 use Modules\UserPanel\Http\Controllers\DataViewController;
+use Modules\UserPanel\Http\Controllers\SimpleLayoutController;
+use Modules\UserPanel\Http\Controllers\TestController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Layout Service Demo
@@ -42,4 +44,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/data-view/{id}/edit', [DataViewController::class, 'edit'])->name('userpanel.data-view.edit');
     Route::delete('/data-view/{id}', [DataViewController::class, 'destroy'])->name('userpanel.data-view.destroy');
     Route::post('/data-view/bulk-action', [DataViewController::class, 'bulkAction'])->name('userpanel.data-view.bulk-action');
+
+    // Simple Layout Examples
+    Route::get('/simple-layout', [SimpleLayoutController::class, 'index'])->name('userpanel.simple-layout');
+
+    // Test Examples with Search & Filters
+    Route::get('/test', [TestController::class, 'index'])->name('userpanel.test');
+    Route::get('/test/debug', [TestController::class, 'debug'])->name('userpanel.test.debug');
+    Route::get('/test/users-with-search', [TestController::class, 'usersWithSearch'])->name('userpanel.test.users-with-search');
+    Route::get('/test/products-with-filters', [TestController::class, 'productsWithFilters'])->name('userpanel.test.products-with-filters');
+    Route::get('/test/advanced-example', [TestController::class, 'advancedExample'])->name('userpanel.test.advanced-example');
+    Route::get('/test/{id}', [TestController::class, 'show'])->name('userpanel.test.show');
+    Route::get('/test/{id}/edit', [TestController::class, 'edit'])->name('userpanel.test.edit');
 });

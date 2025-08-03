@@ -31,8 +31,8 @@ class DataViewController extends BaseController
         // ID column
         $grid->id('ID')->sortable();
 
-        // Name with avatar
-        $grid->column('name', 'User')->display(function($value, $user) {
+        // Name with avatar - make it searchable
+        $grid->column('name', 'User')->searchable()->display(function($value, $user) {
             $avatar = $user->profile_photo_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($value) . '&color=7C3AED&background=EBF4FF';
             return "
                 <div class='flex items-center'>
@@ -45,16 +45,16 @@ class DataViewController extends BaseController
             ";
         });
 
-        // Email with verification status
-        $grid->column('email', 'Email')->display(function($value, $user) {
+        // Email with verification status - make it searchable
+        $grid->column('email', 'Email')->searchable()->display(function($value, $user) {
             $verified = $user->email_verified_at ?
                 '<span class="text-green-600">✓</span>' :
                 '<span class="text-red-600">✗</span>';
             return "{$value} {$verified}";
         });
 
-        // Role (assuming you have a role field or relationship)
-        $grid->column('role', 'Role')->display(function($value) {
+        // Role (assuming you have a role field or relationship) - make it searchable and add filter
+        $grid->column('role', 'Role')->searchable()->display(function($value) {
             $colors = [
                 'admin' => 'bg-red-100 text-red-800',
                 'editor' => 'bg-blue-100 text-blue-800',
@@ -64,19 +64,19 @@ class DataViewController extends BaseController
             return "<span class='px-2 py-1 text-xs font-semibold rounded-full {$color}'>" . ucfirst($value) . "</span>";
         });
 
-        // Last login (assuming you have this field)
+        // Last login (assuming you have this field) - add date range filter
         $grid->column('last_login_at', 'Last Login')->display(function($value) {
             if (!$value) return '<span class="text-gray-400">Never</span>';
             return date('M d, Y H:i', strtotime($value));
         });
 
-        // Created date with relative time
+        // Created date with relative time - add date range filter
         $grid->column('created_at', 'Member Since')->display(function($value) {
             return date('M d, Y') . '<br><span class="text-xs text-gray-500">' .
                    \Carbon\Carbon::parse($value)->diffForHumans() . '</span>';
         });
 
-        // Status with toggle
+        // Status with toggle - add select filter
         $grid->column('is_active', 'Status')->display(function($value, $user) {
             $status = $value ? 'Active' : 'Inactive';
             $color = $value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
@@ -112,6 +112,22 @@ class DataViewController extends BaseController
             ]
         ]);
 
+        // Add filters
+        $grid->addFilter('role', 'Role', [
+            'admin' => 'Administrator',
+            'editor' => 'Editor',
+            'user' => 'User'
+        ], 'select');
+
+        $grid->addFilter('is_active', 'Status', [
+            '1' => 'Active',
+            '0' => 'Inactive'
+        ], 'select');
+
+        $grid->addDateRangeFilter('created_at', 'Member Since');
+        $grid->addDateRangeFilter('last_login_at', 'Last Login');
+        $grid->addTextFilter('name', 'Name');
+
         // Configure advanced settings
         $grid->perPage(15)
             ->defaultSort('created_at', 'desc')
@@ -122,7 +138,7 @@ class DataViewController extends BaseController
 
         return view('userpanel::data-view', [
             'grid' => $grid,
-            'title' => 'Advanced Users Data Grid'
+            'title' => 'Advanced Users Data Grid with Search & Filters'
         ]);
     }
 

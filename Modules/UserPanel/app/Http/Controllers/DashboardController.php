@@ -105,6 +105,14 @@ class DashboardController extends BaseController
             return '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">Unverified</span>';
         });
 
+        $grid->addTextFilter('name', 'Name');
+        $grid->addTextFilter('email', 'Email');
+        $grid->addDateRangeFilter('created_at', 'Member Since');
+        $grid->addFilter('email_verified_at', 'Email Status', [
+            'verified' => 'Verified',
+            'unverified' => 'Not Verified'
+        ], 'select');
+
         // Configure grid settings
         $grid->perPage(10)
             ->defaultSort('created_at', 'desc')

@@ -5,48 +5,61 @@ namespace Modules\UserPanel\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\UserPanel\Http\Base\BaseController;
-use Modules\UserPanel\Services\FormService;
-use Modules\UserPanel\Services\LayoutService;
+use Modules\UserPanel\Services\DataViewService;
+use App\Models\User;
 
 class SimpleLayoutController extends BaseController
 {
     // Set to true to show in sidebar
     public $showInSidebar = true;
+    public $model = User::class;
 
     public function index()
     {
-        // Create layout
-        $layout = new LayoutService();
+        // Create a simple grid with search and filters using only existing User fields
+        $grid = new DataViewService(new User);
 
-        // Create form
-        $form = new FormService();
+        // ID column
+        $grid->id('ID')->sortable();
 
-        // Simple layout with sections and fields
+        // Name column - make it searchable
+        $grid->column('name', 'Name')->searchable()->sortable();
 
-        // Row with two columns
-        $row = $layout->row();
-        $row->column(6)
-            ->addField(
-                $form->text()
-                    ->name('phone')
-                    ->label('Phone Number')
-                    ->placeholder('Enter your phone')
-                    ->required()
-            );
-        $row->column(6)
-            ->addField(
-                $form->text()
-                    ->name('website')
-                    ->label('Website')
-                    ->placeholder('Enter your website')
-            );
+        // Email column - make it searchable
+        $grid->column('email', 'Email')->searchable()->sortable();
 
+        // Created date - add date range filter
+        $grid->column('created_at', 'Created At')->sortable()->display(function($value) {
+            return date('M d, Y', strtotime($value));
+        });
 
+        // Email verification status
+        $grid->column('email_verified_at', 'Email Verified')->display(function($value) {
+            if ($value) {
+                return '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Verified</span>';
+            } else {
+                return '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Not Verified</span>';
+            }
+        });
 
+        // Add filters for existing fields
+        $grid->addTextFilter('name', 'Name');
+        $grid->addTextFilter('email', 'Email');
+        $grid->addDateRangeFilter('created_at', 'Created Date');
+        $grid->addFilter('email_verified_at', 'Email Status', [
+            'verified' => 'Verified',
+            'unverified' => 'Not Verified'
+        ], 'select');
 
+        // Configure settings
+        $grid->perPage(10)
+            ->defaultSort('created_at', 'desc')
+            ->search(true)
+            ->filters(true)
+            ->pagination(true);
 
-        return view('userpanel::simple-layout', [
-            'layout' => $layout->render()
+        return view('userpanel::index', [
+            'grid' => $grid
         ]);
     }
 }
