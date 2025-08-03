@@ -116,7 +116,7 @@ class DashboardController extends BaseController
         // Configure grid settings
         $grid->perPage(10)
             ->defaultSort('created_at', 'desc')
-            ->search(true)
+            ->search(false)
             ->pagination(true);
 
         return $grid->render();

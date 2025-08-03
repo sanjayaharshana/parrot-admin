@@ -409,7 +409,7 @@ class DataViewService
      */
     protected function renderHeader(array $data): string
     {
-        $html = '<div class="px-6 py-4 border-b border-gray-200">';
+        $html = '<div class="px-4 py-3 border-b border-gray-200">';
         
         // Search form
         if ($this->showSearch) {
@@ -434,8 +434,8 @@ class DataViewService
         $currentUrl = Request::url();
         $currentParams = Request::except(['search', 'page']);
         
-        $html = '<div class="mb-4">';
-        $html .= '<form method="GET" class="flex items-center space-x-4">';
+        $html = '<div class="mb-3">';
+        $html .= '<form method="GET" class="flex items-center space-x-2">';
         
         // Preserve other parameters
         foreach ($currentParams as $key => $value) {
@@ -448,25 +448,25 @@ class DataViewService
             }
         }
         
-        $html .= '<div class="flex-1 max-w-md">';
+        $html .= '<div class="flex-1 max-w-sm">';
         $html .= '<div class="relative">';
         $html .= '<input type="text" name="search" value="' . htmlspecialchars($currentSearch) . '" 
                     placeholder="Search..." 
-                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">';
-        $html .= '<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">';
-        $html .= '<svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
+                    class="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">';
+        $html .= '<div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">';
+        $html .= '<svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
         $html .= '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>';
         $html .= '</svg>';
         $html .= '</div>';
         $html .= '</div>';
         $html .= '</div>';
         
-        $html .= '<button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">';
+        $html .= '<button type="submit" class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500">';
         $html .= 'Search';
         $html .= '</button>';
         
         if ($currentSearch) {
-            $html .= '<a href="' . $currentUrl . '?' . http_build_query($currentParams) . '" class="px-4 py-2 text-gray-600 hover:text-gray-800">Clear</a>';
+            $html .= '<a href="' . $currentUrl . '?' . http_build_query($currentParams) . '" class="px-2 py-1.5 text-sm text-gray-600 hover:text-gray-800">Clear</a>';
         }
         
         $html .= '</form>';
@@ -480,16 +480,16 @@ class DataViewService
      */
     protected function renderFilters(): string
     {
-        $html = '<div class="border-t border-gray-200 pt-4">';
-        $html .= '<div class="flex items-center space-x-4 flex-wrap">';
+        $html = '<div class="border-t border-gray-200 pt-3">';
+        $html .= '<div class="flex items-center space-x-3 flex-wrap gap-y-2">';
         
         foreach ($this->filters as $field => $filter) {
             $html .= $this->renderFilter($field, $filter);
         }
         
-        $html .= '<div class="flex items-center space-x-2">';
-        $html .= '<button type="submit" form="filters-form" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm">Apply Filters</button>';
-        $html .= '<a href="' . Request::url() . '" class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm">Clear All</a>';
+        $html .= '<div class="flex items-center space-x-1">';
+        $html .= '<button type="submit" form="filters-form" class="px-2 py-1 text-xs bg-green-500 text-white rounded-md hover:bg-green-600">Apply</button>';
+        $html .= '<a href="' . Request::url() . '" class="px-2 py-1 text-xs text-gray-600 hover:text-gray-800">Clear</a>';
         $html .= '</div>';
         
         $html .= '</div>';
@@ -506,7 +506,7 @@ class DataViewService
         $currentValue = Request::get("filter_{$field}", '');
         $currentParams = Request::except(['page']);
         
-        $html = '<form id="filters-form" method="GET" class="flex items-center space-x-2">';
+        $html = '<form id="filters-form" method="GET" class="flex items-center space-x-1.5">';
         
         // Preserve other parameters
         foreach ($currentParams as $key => $value) {
@@ -529,11 +529,11 @@ class DataViewService
             }
         }
         
-        $html .= '<label class="text-sm font-medium text-gray-700">' . htmlspecialchars($filter['label']) . ':</label>';
+        $html .= '<label class="text-xs font-medium text-gray-600">' . htmlspecialchars($filter['label']) . ':</label>';
         
         switch ($filter['type']) {
             case 'select':
-                $html .= '<select name="filter_' . htmlspecialchars($field) . '" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">';
+                $html .= '<select name="filter_' . htmlspecialchars($field) . '" class="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">';
                 $html .= '<option value="">All</option>';
                 foreach ($filter['options'] as $value => $label) {
                     $selected = $currentValue == $value ? 'selected' : '';
@@ -547,19 +547,19 @@ class DataViewService
                 $endValue = Request::get("filter_{$field}_end", '');
                 
                 $html .= '<input type="date" name="filter_' . htmlspecialchars($field) . '_start" value="' . htmlspecialchars($startValue) . '" 
-                            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
-                            placeholder="Start Date">';
-                $html .= '<span class="text-gray-500">to</span>';
+                            class="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs" 
+                            placeholder="Start">';
+                $html .= '<span class="text-xs text-gray-500 px-1">to</span>';
                 $html .= '<input type="date" name="filter_' . htmlspecialchars($field) . '_end" value="' . htmlspecialchars($endValue) . '" 
-                            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
-                            placeholder="End Date">';
+                            class="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs" 
+                            placeholder="End">';
                 break;
                 
             case 'text':
             default:
                 $html .= '<input type="text" name="filter_' . htmlspecialchars($field) . '" value="' . htmlspecialchars($currentValue) . '" 
-                            class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
-                            placeholder="Filter ' . htmlspecialchars($filter['label']) . '">';
+                            class="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs" 
+                            placeholder="' . htmlspecialchars($filter['label']) . '">';
                 break;
         }
         

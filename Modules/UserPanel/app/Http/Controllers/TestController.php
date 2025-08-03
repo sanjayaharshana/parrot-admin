@@ -101,7 +101,7 @@ class TestController extends BaseController
         // Configure settings
         $grid->perPage(15)
             ->defaultSort('created_at', 'desc')
-            ->search(true)
+            ->search(false)
             ->filters(true)
             ->pagination(true);
 
