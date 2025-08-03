@@ -24,6 +24,9 @@ class DataViewService
     protected bool $showSearch = true;
     protected bool $showFilters = true;
     protected array $attributes = [];
+    protected string $title = '';
+    protected string $description = '';
+    protected bool $showTitle = true;
 
     public function __construct(Model $model)
     {
@@ -169,6 +172,33 @@ class DataViewService
     }
 
     /**
+     * Set grid title
+     */
+    public function title(string $title): self
+    {
+        $this->title = $title;
+        return $this;
+    }
+
+    /**
+     * Set grid description
+     */
+    public function description(string $description): self
+    {
+        $this->description = $description;
+        return $this;
+    }
+
+    /**
+     * Show/hide title section
+     */
+    public function showTitle(bool $show = true): self
+    {
+        $this->showTitle = $show;
+        return $this;
+    }
+
+    /**
      * Add custom attribute
      */
     public function attribute(string $key, string $value): self
@@ -196,7 +226,10 @@ class DataViewService
             'showSearch' => $this->showSearch,
             'showFilters' => $this->showFilters,
             'filters' => $this->filters,
-            'attributes' => $this->attributes
+            'attributes' => $this->attributes,
+            'title' => $this->title,
+            'description' => $this->description,
+            'showTitle' => $this->showTitle
         ];
     }
 
@@ -386,6 +419,11 @@ class DataViewService
         
         $html = '<div class="bg-white rounded-lg shadow-lg border border-gray-200">';
         
+        // Title and description section
+        if ($this->showTitle && ($this->title || $this->description)) {
+            $html .= $this->renderTitleSection($data);
+        }
+        
         // Header with search and filters
         if ($this->showSearch || $this->showFilters) {
             $html .= $this->renderHeader($data);
@@ -401,6 +439,25 @@ class DataViewService
         
         $html .= '</div>';
         
+        return $html;
+    }
+
+    /**
+     * Render title and description section
+     */
+    protected function renderTitleSection(array $data): string
+    {
+        $html = '<div class="px-4 py-3 border-b border-gray-200 bg-gray-50">';
+        
+        if ($this->title) {
+            $html .= '<h2 class="text-lg font-semibold text-gray-900">' . htmlspecialchars($this->title) . '</h2>';
+        }
+        
+        if ($this->description) {
+            $html .= '<p class="text-sm text-gray-600 mt-1">' . htmlspecialchars($this->description) . '</p>';
+        }
+        
+        $html .= '</div>';
         return $html;
     }
 

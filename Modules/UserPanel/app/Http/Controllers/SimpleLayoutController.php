@@ -56,7 +56,9 @@ class SimpleLayoutController extends BaseController
             ->defaultSort('created_at', 'desc')
             ->search(true)
             ->filters(true)
-            ->pagination(true);
+            ->pagination(true)
+            ->title('User Management')
+            ->description('Manage and view all registered users in the system');
 
         return view('userpanel::index', [
             'grid' => $grid

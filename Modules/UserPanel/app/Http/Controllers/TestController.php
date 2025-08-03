@@ -103,7 +103,9 @@ class TestController extends BaseController
             ->defaultSort('created_at', 'desc')
             ->search(false)
             ->filters(true)
-            ->pagination(true);
+            ->pagination(true)
+            ->title('Users Grid with Enhanced Search & Filters')
+            ->description('Advanced user management with comprehensive search and filtering capabilities');
 
         return view('userpanel::data-view', [
             'grid' => $grid,
@@ -163,7 +165,9 @@ class TestController extends BaseController
             ->defaultSort('created_at', 'desc')
             ->search(true)
             ->filters(true)
-            ->pagination(true);
+            ->pagination(true)
+            ->title('Products Grid with Multiple Filter Types')
+            ->description('Product management with various filter types including dropdowns and date ranges');
 
         return view('userpanel::data-view', [
             'grid' => $grid,

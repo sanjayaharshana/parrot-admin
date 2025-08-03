@@ -83,6 +83,9 @@ class DashboardController extends BaseController
     {
         $grid = new DataViewService(new Evest());
 
+        $grid->title('User Management');
+        $grid->description('Manage your users efficiently with this comprehensive grid view. You can sort, filter, and search through user data seamlessly.');
+
         // The first column displays the id field and sets the column as a sortable column
         $grid->id('ID')->sortable();
 
