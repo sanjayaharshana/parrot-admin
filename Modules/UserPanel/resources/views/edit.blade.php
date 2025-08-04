@@ -5,10 +5,8 @@
 
 @section('content')
     <div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-        <form method="POST" enctype="multipart/form-data" class="space-y-6">
-            @csrf
-            @method('PUT')
-            {!! $layout !!}
+        <form method="{{ $form->getMethod() }}" action="{{ $form->getAction() }}" enctype="multipart/form-data" class="space-y-6">
+            {!! $form->renderFormContent() !!}
             
             <div class="flex justify-end space-x-4 mt-6">
                 <a href="{{ url()->previous() }}" class="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">

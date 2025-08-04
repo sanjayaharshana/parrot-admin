@@ -59,10 +59,50 @@ class BaseController extends Controller
      */
     public function create()
     {
-        $layout = $this->createForm();
+        // Set the form route for store action
+        $this->form->routeForStore($this->getRouteName());
+
+        $this->createForm();
         return view('userpanel::create',[
-            'layout' => $layout
+            'form' => $this->form
         ]);
+    }
+
+
+
+    /**
+     * Get the store route for the current resource
+     */
+    protected function getStoreRoute()
+    {
+        $routeName = $this->getRouteName() . '.store';
+        return route($routeName);
+    }
+
+    /**
+     * Get the update route for the current resource
+     */
+    protected function getUpdateRoute($id)
+    {
+        $routeName = $this->getRouteName() . '.update';
+        return route($routeName, $id);
+    }
+
+    /**
+     * Get the route name prefix for the current resource
+     * Override this in child controllers if needed
+     */
+    protected function getRouteName()
+    {
+        // If routeName property is set, use it
+        if (isset($this->routeName)) {
+            return $this->routeName;
+        }
+        
+        // Otherwise, extract route name from the current controller class name
+        $className = class_basename($this);
+        $resourceName = str_replace('Controller', '', $className);
+        return strtolower($resourceName) . 's';
     }
 
     /**
@@ -85,7 +125,12 @@ class BaseController extends Controller
      */
     public function edit($id)
     {
-        return view('userpanel::edit');
+        // Set the form route for update action
+        $this->form->routeForUpdate($this->getRouteName(), $id);
+
+        return view('userpanel::edit', [
+            'form' => $this->form
+        ]);
     }
 
     /**

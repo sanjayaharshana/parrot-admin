@@ -43,6 +43,52 @@ class FormService
     }
 
     /**
+     * Set route for store action (create new record)
+     */
+    public function routeForStore(string $resourceName): self
+    {
+        $this->action = route($resourceName . '.store');
+        $this->method = 'POST';
+        return $this;
+    }
+
+    /**
+     * Set route for update action (edit existing record)
+     */
+    public function routeForUpdate(string $resourceName, $id): self
+    {
+        $this->action = route($resourceName . '.update', $id);
+        $this->method = 'PUT';
+        return $this;
+    }
+
+    /**
+     * Set route for any action
+     */
+    public function routeFor(string $resourceName, string $action, $id = null): self
+    {
+        $routeName = $resourceName . '.' . $action;
+        $this->action = $id ? route($routeName, $id) : route($routeName);
+        
+        // Set appropriate method based on action
+        switch ($action) {
+            case 'store':
+                $this->method = 'POST';
+                break;
+            case 'update':
+                $this->method = 'PUT';
+                break;
+            case 'destroy':
+                $this->method = 'DELETE';
+                break;
+            default:
+                $this->method = 'POST';
+        }
+        
+        return $this;
+    }
+
+    /**
      * Add form attributes
      */
     public function formAttribute(string $key, string $value): self
@@ -238,7 +284,7 @@ class FormService
         $method = $this->method;
         $action = $this->action ?: request()->url();
         
-        $formAttributes = 'method="POST" action="' . htmlspecialchars($action) . '" class="' . $this->formClass . '"';
+        $formAttributes = 'method="' . $method . '" action="' . htmlspecialchars($action) . '" class="' . $this->formClass . '"';
         
         // Add custom form attributes
         foreach ($this->formAttributes as $key => $value) {
@@ -278,6 +324,51 @@ class FormService
         $html .= '</form>' . PHP_EOL;
         
         return $html;
+    }
+
+    /**
+     * Render form content without the form wrapper
+     * This allows custom form wrappers in Blade templates
+     */
+    public function renderFormContent(): string
+    {
+        $html = '';
+        
+        // Add CSRF token
+        $html .= csrf_field() . PHP_EOL;
+        
+        // Add method spoofing for PUT/PATCH/DELETE
+        if (in_array($this->method, ['PUT', 'PATCH', 'DELETE'])) {
+            $html .= '<input type="hidden" name="_method" value="' . $this->method . '">' . PHP_EOL;
+        }
+
+        // If layout is defined, render with layout
+        if (!empty($this->layout)) {
+            $html .= $this->renderLayout();
+        } else {
+            // Render fields directly
+            foreach ($this->fields as $field) {
+                $html .= $field->render() . PHP_EOL;
+            }
+        }
+        
+        return $html;
+    }
+
+    /**
+     * Get form action URL
+     */
+    public function getAction(): string
+    {
+        return $this->action ?: request()->url();
+    }
+
+    /**
+     * Get form method
+     */
+    public function getMethod(): string
+    {
+        return $this->method;
     }
 
     protected function renderLayout(): string

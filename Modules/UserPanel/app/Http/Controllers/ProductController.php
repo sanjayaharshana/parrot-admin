@@ -15,15 +15,31 @@ class ProductController extends BaseController
     public $icon = 'fa fa-box';
     public $showInSidebar = true;
     public $model = Product::class;
+    public $routeName = 'products';
+
+    /**
+     * Show the form for creating a new product
+     */
+    public function create()
+    {
+        // Set the form route for store action
+        $this->form->routeForStore($this->getRouteName());
+
+        $this->createForm('create');
+        return view('userpanel::create', [
+            'form' => $this->form
+        ]);
+    }
 
     /**
      * Create form layout for creating/editing products
      */
-    public function createForm()
+    public function createForm($mode = 'create')
     {
         $layout = $this->layoutService;
         $layout->setFormService($this->form);
-        
+
+
         // First row with product basic info
         $basicRow = $layout->row();
         $basicRow->column(6, function ($form, $column) use ($layout) {
@@ -34,7 +50,7 @@ class ProductController extends BaseController
                     ->placeholder('Enter product name')
                     ->required()
             );
-            
+
             $column->addField(
                 $form->text()
                     ->name('sku')
@@ -43,7 +59,7 @@ class ProductController extends BaseController
                     ->required()
             );
         });
-        
+
         $basicRow->column(6, function ($form, $column) use ($layout) {
             $column->addField(
                 $form->number()
@@ -53,7 +69,7 @@ class ProductController extends BaseController
                     ->step('0.01')
                     ->required()
             );
-            
+
             $column->addField(
                 $form->number()
                     ->name('stock')
@@ -74,7 +90,7 @@ class ProductController extends BaseController
                     ->required()
             );
         });
-        
+
         $descRow->column(4, function ($form, $column) use ($layout) {
             $column->addField(
                 $form->select()
@@ -89,7 +105,7 @@ class ProductController extends BaseController
                     ])
                     ->required()
             );
-            
+
             $column->addField(
                 $form->checkbox()
                     ->name('is_active')
@@ -106,7 +122,7 @@ class ProductController extends BaseController
                     ->label('Product Image')
                     ->accept('image/*')
             );
-            
+
             $column->addHtml('<p class="text-sm text-gray-600 mt-2">Upload a product image (JPG, PNG, GIF up to 2MB)</p>');
         });
 
@@ -125,15 +141,15 @@ class ProductController extends BaseController
 
         // Define grid columns
         $grid->id('ID')->sortable();
-        
+
         $grid->column('name', 'Product Name')->sortable();
-        
+
         $grid->column('sku', 'SKU')->sortable();
-        
+
         $grid->column('price', 'Price')->display(function($value) {
             return '$' . number_format($value, 2);
         });
-        
+
         $grid->column('stock', 'Stock')->display(function($value) {
             if ($value > 10) {
                 return '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">' . $value . '</span>';
@@ -143,18 +159,18 @@ class ProductController extends BaseController
                 return '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">Out of Stock</span>';
             }
         });
-        
+
         $grid->column('category', 'Category')->display(function($value) {
             return ucfirst($value);
         });
-        
+
         $grid->column('is_active', 'Status')->display(function($value) {
             if ($value) {
                 return '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Active</span>';
             }
             return '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">Inactive</span>';
         });
-        
+
         $grid->column('created_at', 'Created')->display(function($value) {
             return $value ? date('M d, Y', strtotime($value)) : 'N/A';
         });
@@ -243,7 +259,7 @@ class ProductController extends BaseController
     public function show($id)
     {
         $product = Product::findOrFail($id);
-        
+
         return view('userpanel::show', [
             'product' => $product,
             'title' => 'Product Details'
@@ -256,14 +272,17 @@ class ProductController extends BaseController
     public function edit($id)
     {
         $product = Product::findOrFail($id);
-        
+
         // Bind the model to the form service
         $this->form->bindModel($product);
-        
-        $layout = $this->createForm();
-        
+
+        // Set the form route for update action
+        $this->form->routeForUpdate($this->getRouteName(), $id);
+
+        $this->createForm('edit');
+
         return view('userpanel::edit', [
-            'layout' => $layout,
+            'form' => $this->form,
             'product' => $product,
             'title' => 'Edit Product'
         ]);
@@ -308,7 +327,7 @@ class ProductController extends BaseController
                 if ($product->image && Storage::disk('public')->exists($product->image)) {
                     Storage::disk('public')->delete($product->image);
                 }
-                
+
                 $imagePath = $request->file('image')->store('products', 'public');
                 $product->image = $imagePath;
             }
@@ -332,12 +351,12 @@ class ProductController extends BaseController
     {
         try {
             $product = Product::findOrFail($id);
-            
+
             // Delete image if exists
             if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
-            
+
             $product->delete();
 
             return redirect()->route('products.index')
@@ -394,4 +413,4 @@ class ProductController extends BaseController
             return redirect()->back()->with('error', 'Error performing bulk action: ' . $e->getMessage());
         }
     }
-} 
+}

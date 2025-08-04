@@ -12,8 +12,10 @@ use Modules\UserPanel\Services\DataViewService;
 class DashboardController extends BaseController
 {
     public $icon = 'fa fa-dashboard';
+    public $model = Evest::class;
+    public $routeName = 'dashboard';
 
-    public function createForm()
+    public function createForm($mode = 'create')
     {
         $layout = $this->layoutService;
         $layout->setFormService($this->form);
@@ -126,5 +128,144 @@ class DashboardController extends BaseController
         return $grid->render();
     }
 
+    /**
+     * Show the form for creating a new resource
+     */
+    public function create()
+    {
+        // Set the form route for store action
+        $this->form->routeForStore($this->getRouteName());
+
+        $this->createForm('create');
+        return view('userpanel::create', [
+            'form' => $this->form
+        ]);
+    }
+
+    /**
+     * Display the specified resource
+     */
+    public function show($id)
+    {
+        $model = $this->model::findOrFail($id);
+
+        return view('userpanel::show', [
+            'model' => $model,
+            'title' => 'Dashboard Details'
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource
+     */
+    public function edit($id)
+    {
+        $model = $this->model::findOrFail($id);
+
+        // Bind the model to the form service
+        $this->form->bindModel($model);
+
+        // Set the form route for update action
+        $this->form->routeForUpdate($this->getRouteName(), $id);
+
+        $this->createForm('edit');
+
+        return view('userpanel::edit', [
+            'form' => $this->form,
+            'model' => $model
+        ]);
+    }
+
+    /**
+     * Store a newly created resource
+     */
+    public function store(Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'desc' => 'required|string',
+            'uploader_id' => 'required|exists:users,id',
+            'path' => 'nullable|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            $model = new $this->model();
+            $model->name = $request->title;
+            $model->description = $request->desc;
+            $model->type = $request->uploader_id;
+            $model->status = $request->path;
+            $model->save();
+
+            return redirect()->route($this->getRouteName() . '.index')
+                ->with('success', 'Record created successfully!');
+
+        } catch (\Exception $e) {
+            dd($e);
+            return redirect()->back()
+                ->with('error', 'Error creating record: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Update the specified resource
+     */
+    public function update(Request $request, $id)
+    {
+        $model = $this->model::findOrFail($id);
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'desc' => 'required|string',
+            'uploader_id' => 'required|exists:users,id',
+            'path' => 'nullable|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            $model->title = $request->title;
+            $model->desc = $request->desc;
+            $model->uploader_id = $request->uploader_id;
+            $model->path = $request->path;
+            $model->save();
+
+            return redirect()->route($this->getRouteName() . '.index')
+                ->with('success', 'Record updated successfully!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error updating record: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Remove the specified resource
+     */
+    public function destroy($id)
+    {
+        try {
+            $model = $this->model::findOrFail($id);
+            $model->delete();
+
+            return redirect()->route($this->getRouteName() . '.index')
+                ->with('success', 'Record deleted successfully!');
+
+        } catch (\Exception $e) {
+            return redirect()->route($this->getRouteName() . '.index')
+                ->with('error', 'Error deleting record: ' . $e->getMessage());
+        }
+    }
 
 }
