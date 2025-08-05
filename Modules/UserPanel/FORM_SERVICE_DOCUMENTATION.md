@@ -2,7 +2,7 @@
 
 ## Overview
 
-The FormService is a powerful backend-driven form builder for the UserPanel module that allows you to create beautiful, responsive forms programmatically using PHP. It supports advanced layout management, multiple field types, and modern Tailwind CSS styling.
+The FormService is a powerful backend-driven form builder for the UserPanel module that allows you to create beautiful, responsive forms programmatically using PHP. It supports advanced layout management, multiple field types, modern Tailwind CSS styling, and **integrated validation system**.
 
 ## Table of Contents
 
@@ -10,10 +10,11 @@ The FormService is a powerful backend-driven form builder for the UserPanel modu
 2. [Basic Usage](#basic-usage)
 3. [Field Types](#field-types)
 4. [Layout Management](#layout-management)
-5. [Advanced Features](#advanced-features)
-6. [Best Practices](#best-practices)
-7. [Examples](#examples)
-8. [API Reference](#api-reference)
+5. [Validation System](#validation-system)
+6. [Advanced Features](#advanced-features)
+7. [Best Practices](#best-practices)
+8. [Examples](#examples)
+9. [API Reference](#api-reference)
 
 ## Quick Start
 
@@ -70,6 +71,170 @@ $form->email()
 
 ```php
 $html = $form->renderForm();
+```
+
+## Validation System
+
+The FormService now includes a **built-in validation system** that eliminates the need for duplicate validation in controllers. This makes your code more maintainable and user-friendly.
+
+### Automatic Validation
+
+The system **automatically adds validation rules** based on field type and attributes:
+
+```php
+// Text field - automatically gets 'string' validation
+$form->text()
+    ->name('title')
+    ->label('Title')
+    ->required(); // Automatically adds 'required' and 'string' rules
+
+// Email field - automatically gets 'email' validation
+$form->email()
+    ->name('email')
+    ->label('Email')
+    ->required(); // Automatically adds 'required' and 'email' rules
+
+// Number field - automatically gets 'numeric' validation
+$form->number()
+    ->name('age')
+    ->label('Age')
+    ->required(); // Automatically adds 'required' and 'numeric' rules
+```
+
+### Field-Level Validation
+
+You can also add custom validation rules directly on fields using custom rule classes:
+
+```php
+// Custom rule class
+use App\Rules\MaxLengthRule;
+
+$form->text()
+    ->name('title')
+    ->label('Title')
+    ->rule(new MaxLengthRule(255))
+    ->required();
+
+// Multiple custom rules
+use App\Rules\UniqueTitleRule;
+use App\Rules\MaxLengthRule;
+
+$form->text()
+    ->name('title')
+    ->label('Title')
+    ->rules([new MaxLengthRule(255), new UniqueTitleRule()])
+    ->required();
+
+// Custom rule class with custom message
+use App\Rules\CustomValidationRule;
+
+$form->text()
+    ->name('username')
+    ->label('Username')
+    ->rule(new CustomValidationRule())
+    ->message('custom', 'Custom validation failed.')
+    ->required();
+```
+
+### Complete Form Example
+
+```php
+public function createForm($mode = 'create')
+{
+    $layout = $this->layoutService;
+    $layout->setFormService($this->form);
+    
+    $layoutRow = $layout->row();
+    $layoutRow->column(6, function ($form, $column) {
+        // Title - automatically gets 'string' validation
+        $column->addField(
+            $form->text()
+                ->name('title')
+                ->label('Title')
+                ->placeholder('Enter title')
+                ->rule('max:255') // Additional custom rule
+                ->message('required', 'Please enter a title.')
+                ->message('max', 'Title must not exceed 255 characters.')
+                ->required() // Automatically adds 'required' and 'string' rules
+        );
+        
+        // Description - automatically gets 'string' validation
+        $column->addField(
+            $form->textarea()
+                ->name('desc')
+                ->label('Description')
+                ->placeholder('Enter description')
+                ->message('required', 'Please enter a description.')
+                ->required() // Automatically adds 'required' and 'string' rules
+        );
+    });
+    
+    $layoutRow->column(6, function ($form, $column) {
+        // Email - automatically gets 'email' validation
+        $column->addField(
+            $form->email()
+                ->name('email')
+                ->label('Email')
+                ->placeholder('Enter email')
+                ->message('required', 'Please enter an email address.')
+                ->message('email', 'Please enter a valid email address.')
+                ->required() // Automatically adds 'required' and 'email' rules
+        );
+
+        // File upload - automatically gets 'file' validation
+        $column->addField(
+            $form->file()
+                ->name('document')
+                ->label('Document')
+                ->accept('.pdf,.doc,.docx')
+                ->message('required', 'Please select a document.')
+                ->required() // Automatically adds 'required' and 'file' rules
+        );
+    });
+    
+    return $layout->render();
+}
+```
+
+### Automatic Validation Rules
+
+| Field Type | Automatic Rules | Description |
+|------------|----------------|-------------|
+| `text()` | `string` | Automatically validates as string |
+| `textarea()` | `string` | Automatically validates as string |
+| `email()` | `email` | Automatically validates as email |
+| `number()` | `numeric` | Automatically validates as numeric |
+| `file()` | `file` | Automatically validates as file |
+| `password()` | `string` | Automatically validates as string |
+
+### Validation Methods
+
+| Method | Description | Example |
+|--------|-------------|---------|
+| `rule($ruleClass)` | Add a custom validation rule class | `->rule(new CustomRule())` |
+| `rules(array $ruleClasses)` | Add multiple custom validation rule classes | `->rules([new Rule1(), new Rule2()])` |
+| `message(string $rule, string $message)` | Add custom validation message | `->message('custom', 'Custom error message.')` |
+| `messages(array $messages)` | Add multiple validation messages | `->messages(['custom' => 'Error message'])` |
+| `required(bool $required = true)` | Mark field as required (auto-adds required rule) | `->required()` |
+
+### Handling Form Submission
+
+```php
+// In your controller
+public function store(Request $request)
+{
+    // Handle the form submission with validation
+    $result = $this->form->handle($request);
+
+    if (!$result['success']) {
+        return redirect()->back()
+            ->withErrors($result['errors'])
+            ->withInput();
+    }
+
+    return redirect()->route('dashboard.index')
+        ->with('success', 'Record created successfully!');
+}
 ```
 
 ## Field Types

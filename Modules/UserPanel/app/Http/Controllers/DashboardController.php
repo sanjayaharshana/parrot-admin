@@ -17,39 +17,23 @@ class DashboardController extends BaseController
 
     public function createForm($mode = 'create')
     {
-        $layout = $this->layoutService;
-        $layout->setFormService($this->form);
-        $stateRow  = $layout->row();
-        $stateRow->column(6, function ($form, $column) use ($layout) {
-            $column->addView('userpanel::components.custom-stats', [
-                'stats' => [
-                    ['label' => 'Total Users', 'value' => '1,234', 'icon' => 'users'],
-                    ['label' => 'Active Projects', 'value' => '56', 'icon' => 'folder'],
-                    ['label' => 'Completed Tasks', 'value' => '789', 'icon' => 'check']
-                ]
-            ]);
-        });
-        $stateRow->column(6, function ($form, $column) use ($layout) {
-            $column->addView('userpanel::components.custom-stats', [
-                'stats' => [
-                    ['label' => 'Total Users', 'value' => '1,234', 'icon' => 'users'],
-                    ['label' => 'Active Projects', 'value' => '56', 'icon' => 'folder'],
-                    ['label' => 'Completed Tasks', 'value' => '789', 'icon' => 'check']
-                ]
-            ]);
+        // Add header information using FormService's layout system
+        $headerRow = $this->form->row();
+        $headerRow->column(6, function ($form, $column) {
+            $column->addHtml('<h3 class="text-lg font-semibold">Create New Record</h3>');
+            $column->addHtml('<p class="text-sm text-gray-600">Fill in the details below to create a new record.</p>');
         });
 
-        $layoutRow = $layout->row();
-        $layoutRow->column(6,function ($form, $column) use ($layout) {
 
-            // How to make the first column occupy 1/2 of the page width
-
+        // Add form fields using FormService's layout system
+        $layoutRow = $this->form->row();
+        $layoutRow->column(6, function ($form, $column) {
             $column->addField(
                 $form->text()
                     ->name('title')
                     ->label('Title')
                     ->placeholder('Enter title')
-                    ->required()
+                    ->required() // Automatically adds 'required' and 'string' rules
             );
             $column->addHtml('<br><p class="text-muted">This is a custom HTML content block that can be used to display additional information or instructions.</p><br>');
             $column->addField(
@@ -57,10 +41,10 @@ class DashboardController extends BaseController
                     ->name('desc')
                     ->label('Description')
                     ->placeholder('Enter description')
-                    ->required()
+                    ->required() // Automatically adds 'required' and 'string' rules
             );
         });
-        $layoutRow->column(6, function ($form, $column) use ($layout) {
+        $layoutRow->column(6, function ($form, $column) {
             $column->addField(
                 $form->select()
                     ->name('uploader_id')
@@ -68,7 +52,7 @@ class DashboardController extends BaseController
                     ->options(function () {
                         return User::all()->pluck('name', 'id')->toArray();
                     })
-                    ->required()
+                    ->required() // Automatically adds 'required' rule
             );
 
             $column->addField(
@@ -78,7 +62,6 @@ class DashboardController extends BaseController
                     ->placeholder('Enter file path')
             );
         });
-        return $layout->render();
     }
 
     public function dataSetView()
@@ -131,16 +114,7 @@ class DashboardController extends BaseController
     /**
      * Show the form for creating a new resource
      */
-    public function create()
-    {
-        // Set the form route for store action
-        $this->form->routeForStore($this->getRouteName());
 
-        $this->createForm('create');
-        return view('userpanel::create', [
-            'form' => $this->form
-        ]);
-    }
 
     /**
      * Display the specified resource
@@ -179,39 +153,7 @@ class DashboardController extends BaseController
     /**
      * Store a newly created resource
      */
-    public function store(Request $request)
-    {
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'desc' => 'required|string',
-            'uploader_id' => 'required|exists:users,id',
-            'path' => 'nullable|string|max:255'
-        ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        try {
-            $model = new $this->model();
-            $model->name = $request->title;
-            $model->description = $request->desc;
-            $model->type = $request->uploader_id;
-            $model->status = $request->path;
-            $model->save();
-
-            return redirect()->route($this->getRouteName() . '.index')
-                ->with('success', 'Record created successfully!');
-
-        } catch (\Exception $e) {
-            dd($e);
-            return redirect()->back()
-                ->with('error', 'Error creating record: ' . $e->getMessage())
-                ->withInput();
-        }
-    }
 
     /**
      * Update the specified resource
@@ -220,26 +162,19 @@ class DashboardController extends BaseController
     {
         $model = $this->model::findOrFail($id);
 
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'desc' => 'required|string',
-            'uploader_id' => 'required|exists:users,id',
-            'path' => 'nullable|string|max:255'
-        ]);
+        // Bind the model to the form service
+        $this->form->bindModel($model);
 
-        if ($validator->fails()) {
+        // Handle the form submission with validation
+        $result = $this->form->handle($request);
+
+        if (!$result['success']) {
             return redirect()->back()
-                ->withErrors($validator)
+                ->withErrors($result['errors'])
                 ->withInput();
         }
 
         try {
-            $model->title = $request->title;
-            $model->desc = $request->desc;
-            $model->uploader_id = $request->uploader_id;
-            $model->path = $request->path;
-            $model->save();
-
             return redirect()->route($this->getRouteName() . '.index')
                 ->with('success', 'Record updated successfully!');
 

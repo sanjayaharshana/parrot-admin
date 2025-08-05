@@ -62,8 +62,8 @@ class BaseController extends Controller
         // Set the form route for store action
         $this->form->routeForStore($this->getRouteName());
 
-        $this->createForm();
-        return view('userpanel::create',[
+        $this->createForm('create');
+        return view('userpanel::create', [
             'form' => $this->form
         ]);
     }
@@ -98,7 +98,7 @@ class BaseController extends Controller
         if (isset($this->routeName)) {
             return $this->routeName;
         }
-        
+
         // Otherwise, extract route name from the current controller class name
         $className = class_basename($this);
         $resourceName = str_replace('Controller', '', $className);
@@ -108,8 +108,26 @@ class BaseController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
+        // Handle the form submission with validation
+        $result = $this->form->handle($request);
 
+        if (!$result['success']) {
+            return redirect()->back()
+                ->withErrors($result['errors'])
+                ->withInput();
+        }
+
+        try {
+            return redirect()->route($this->getRouteName() . '.index')
+                ->with('success', 'Record created successfully!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error creating record: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**

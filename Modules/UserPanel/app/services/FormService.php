@@ -14,6 +14,8 @@ class FormService
     protected string $method = 'POST';
     protected string $action = '';
     protected array $formAttributes = [];
+    protected array $validationRules = [];
+    protected array $validationMessages = [];
 
     /**
      * Bind a model to the form
@@ -98,6 +100,197 @@ class FormService
     }
 
     /**
+     * Set validation rules for the form
+     */
+    public function setValidationRules(array $rules): self
+    {
+        $this->validationRules = $rules;
+        return $this;
+    }
+
+    /**
+     * Add a single validation rule
+     */
+    public function addValidationRule(string $field, $rule): self
+    {
+        if (!isset($this->validationRules[$field])) {
+            $this->validationRules[$field] = [];
+        }
+        
+        // Handle custom rule classes
+        if (is_object($rule) && method_exists($rule, 'passes')) {
+            $this->validationRules[$field][] = $rule;
+        } else {
+            // String rule - check if it's already added
+            if (!in_array($rule, $this->validationRules[$field])) {
+                $this->validationRules[$field][] = $rule;
+            }
+        }
+        
+        return $this;
+    }
+
+    /**
+     * Set custom validation messages
+     */
+    public function setValidationMessages(array $messages): self
+    {
+        $this->validationMessages = $messages;
+        return $this;
+    }
+
+    /**
+     * Add a single validation message
+     */
+    public function addValidationMessage(string $field, string $rule, string $message): self
+    {
+        $this->validationMessages[$field . '.' . $rule] = $message;
+        return $this;
+    }
+
+    /**
+     * Get validation rules
+     */
+    public function getValidationRules(): array
+    {
+        return $this->validationRules;
+    }
+
+    /**
+     * Get validation messages
+     */
+    public function getValidationMessages(): array
+    {
+        return $this->validationMessages;
+    }
+
+    /**
+     * Validate request using stored rules
+     */
+    public function validate(Request $request): array
+    {
+        if (empty($this->validationRules)) {
+            return [
+                'success' => true,
+                'data' => $request->all()
+            ];
+        }
+
+        // Convert array rules to Laravel format
+        $laravelRules = [];
+        foreach ($this->validationRules as $field => $rules) {
+            if (is_array($rules)) {
+                $laravelRules[$field] = $rules;
+            } else {
+                $laravelRules[$field] = $rules;
+            }
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make(
+            $request->all(), 
+            $laravelRules, 
+            $this->validationMessages
+        );
+
+        if ($validator->fails()) {
+            return [
+                'success' => false,
+                'errors' => $validator->errors(),
+                'data' => $request->all()
+            ];
+        }
+
+        return [
+            'success' => true,
+            'data' => $validator->validated()
+        ];
+    }
+
+    /**
+     * Handle form submission with stored validation rules
+     */
+    public function handle(Request $request): array
+    {
+        // Validate using stored rules
+        $validation = $this->validate($request);
+        
+        if (!$validation['success']) {
+            return $validation;
+        }
+
+        $validated = $validation['data'];
+
+        if ($this->model) {
+            // Update existing model
+            $this->model->fill($validated);
+            $this->model->save();
+            
+            return [
+                'success' => true,
+                'message' => 'Data saved successfully!',
+                'model' => $this->model
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Data validated successfully!',
+            'data' => $validated
+        ];
+    }
+
+    /**
+     * Handle form submission with custom rules (overrides stored rules)
+     */
+    public function handleWithRules(Request $request, array $rules = [], array $messages = []): array
+    {
+        // Use custom rules if provided, otherwise use stored rules
+        $validationRules = !empty($rules) ? $rules : $this->validationRules;
+        $validationMessages = !empty($messages) ? $messages : $this->validationMessages;
+
+        if (empty($validationRules)) {
+            return [
+                'success' => true,
+                'data' => $request->all()
+            ];
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make(
+            $request->all(), 
+            $validationRules, 
+            $validationMessages
+        );
+
+        if ($validator->fails()) {
+            return [
+                'success' => false,
+                'errors' => $validator->errors(),
+                'data' => $request->all()
+            ];
+        }
+
+        $validated = $validator->validated();
+
+        if ($this->model) {
+            // Update existing model
+            $this->model->fill($validated);
+            $this->model->save();
+            
+            return [
+                'success' => true,
+                'message' => 'Data saved successfully!',
+                'model' => $this->model
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Data validated successfully!',
+            'data' => $validated
+        ];
+    }
+
+    /**
      * Get model value for a field
      */
     public function getModelValue(string $fieldName)
@@ -136,33 +329,6 @@ class FormService
         }
 
         return $this->model->getAttribute($fieldName);
-    }
-
-    /**
-     * Handle form submission and save data
-     */
-    public function handle(Request $request, array $rules = [], array $messages = []): array
-    {
-        // Validate request
-        $validated = $request->validate($rules, $messages);
-
-        if ($this->model) {
-            // Update existing model
-            $this->model->fill($validated);
-            $this->model->save();
-            
-            return [
-                'success' => true,
-                'message' => 'Data saved successfully!',
-                'model' => $this->model
-            ];
-        }
-
-        return [
-            'success' => true,
-            'message' => 'Data validated successfully!',
-            'data' => $validated
-        ];
     }
 
     /**
@@ -240,6 +406,10 @@ class FormService
     {
         $field = new Field($type, $this);
         $this->fields[] = $field;
+        
+        // Apply validation rules from the field to the form service
+        $field->applyValidationRules();
+        
         return $field;
     }
 
@@ -393,10 +563,16 @@ class Row
         $this->formService = $formService;
     }
 
-    public function column(int $width = 12): Column
+    public function column(int $width = 12, callable $callback = null): Column
     {
         $column = new Column($width, $this->formService);
         $this->columns[] = $column;
+        
+        // Execute callback if provided
+        if ($callback) {
+            $callback($this->formService, $column);
+        }
+        
         return $column;
     }
 
@@ -415,6 +591,7 @@ class Column
 {
     protected int $width;
     protected array $fields = [];
+    protected array $htmlContent = [];
     protected string $classes = '';
     protected FormService $formService;
 
@@ -455,12 +632,26 @@ class Column
         return $this;
     }
 
+    public function addHtml(string $html): self
+    {
+        $this->htmlContent[] = $html;
+        return $this;
+    }
+
     public function render(): string
     {
         $html = '<div class="' . $this->classes . '">' . PHP_EOL;
+        
+        // Render HTML content first
+        foreach ($this->htmlContent as $content) {
+            $html .= $content . PHP_EOL;
+        }
+        
+        // Then render fields
         foreach ($this->fields as $field) {
             $html .= $field->render() . PHP_EOL;
         }
+        
         $html .= '</div>' . PHP_EOL;
         return $html;
     }
@@ -630,6 +821,9 @@ class Field
     protected $optionsCallback = null;
     protected bool $required = false;
     protected ?FormService $formService = null;
+    protected array $validationRules = [];
+    protected array $validationMessages = [];
+    protected bool $autoValidationApplied = false;
 
     public function __construct(string $type, ?FormService $formService = null)
     {
@@ -647,6 +841,22 @@ class Field
             if ($modelValue !== null) {
                 $this->value = $modelValue;
             }
+        }
+        
+        // Apply pending validation rules if any
+        if (isset($this->validationRules['pending'])) {
+            foreach ($this->validationRules['pending'] as $rule) {
+                $this->addValidationRule($rule);
+            }
+            unset($this->validationRules['pending']);
+        }
+        
+        // Apply automatic validation rules based on field type
+        $this->applyAutomaticValidation();
+        
+        // Apply validation rules if we have any
+        if (!empty($this->validationRules) || !empty($this->validationMessages)) {
+            $this->applyValidationRules();
         }
         
         return $this;
@@ -673,6 +883,239 @@ class Field
     public function required(bool $required = true): self
     {
         $this->required = $required;
+        
+        // Automatically add required validation rule
+        if ($required && $this->name) {
+            $this->addValidationRule('required');
+        }
+        
+        return $this;
+    }
+
+    /**
+     * Add validation rule to this field (only custom rule classes)
+     */
+    public function rule($rule): self
+    {
+        // Only accept custom rule classes
+        if (is_object($rule) && method_exists($rule, 'passes')) {
+            $this->addValidationRule($rule);
+        } else {
+            throw new \InvalidArgumentException('The rule() method only accepts custom validation rule classes that implement the passes() method.');
+        }
+        
+        return $this;
+    }
+
+    /**
+     * Add multiple validation rules to this field (only custom rule classes)
+     */
+    public function rules(array $rules): self
+    {
+        foreach ($rules as $rule) {
+            $this->rule($rule);
+        }
+        return $this;
+    }
+
+    /**
+     * Add validation rule to this field (for custom rule classes)
+     */
+    protected function addValidationRule($rule): self
+    {
+        if ($this->name) {
+            if (!isset($this->validationRules[$this->name])) {
+                $this->validationRules[$this->name] = [];
+            }
+            
+            // Handle custom rule classes
+            if (is_object($rule) && method_exists($rule, 'passes')) {
+                $this->validationRules[$this->name][] = $rule;
+            }
+            
+            // Also add to FormService if available
+            if ($this->formService) {
+                $this->formService->addValidationRule($this->name, $rule);
+            }
+        } else {
+            // Store the rule to be applied when name is set
+            if (!isset($this->validationRules['pending'])) {
+                $this->validationRules['pending'] = [];
+            }
+            $this->validationRules['pending'][] = $rule;
+        }
+        return $this;
+    }
+
+    /**
+     * Add validation message for this field
+     */
+    public function message(string $rule, string $message): self
+    {
+        if ($this->name) {
+            $this->validationMessages[$this->name . '.' . $rule] = $message;
+        }
+        return $this;
+    }
+
+    /**
+     * Add validation messages for this field
+     */
+    public function messages(array $messages): self
+    {
+        if ($this->name) {
+            foreach ($messages as $rule => $message) {
+                $this->validationMessages[$this->name . '.' . $rule] = $message;
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Apply automatic validation rules based on field type
+     */
+    protected function applyAutomaticValidation(): self
+    {
+        if ($this->autoValidationApplied || !$this->name) {
+            return $this;
+        }
+
+        // Apply type-specific validation rules
+        switch ($this->type) {
+            case 'text':
+            case 'textarea':
+                $this->addValidationRuleDirectly('string');
+                break;
+                
+            case 'email':
+                $this->addValidationRuleDirectly('email');
+                break;
+                
+            case 'number':
+                $this->addValidationRuleDirectly('numeric');
+                break;
+                
+            case 'file':
+                $this->addValidationRuleDirectly('file');
+                break;
+                
+            case 'password':
+                $this->addValidationRuleDirectly('string');
+                break;
+        }
+
+        // Apply common validation rules based on field type
+        $this->applyCommonValidationRules();
+
+        $this->autoValidationApplied = true;
+        return $this;
+    }
+
+    /**
+     * Apply common validation rules based on field type and attributes
+     */
+    protected function applyCommonValidationRules(): self
+    {
+        // Add max length validation for text fields if maxlength attribute is set
+        if (in_array($this->type, ['text', 'textarea']) && isset($this->attributes['maxlength'])) {
+            $this->addValidationRuleDirectly('max:' . $this->attributes['maxlength']);
+        }
+
+        // Add min length validation for text fields if minlength attribute is set
+        if (in_array($this->type, ['text', 'textarea']) && isset($this->attributes['minlength'])) {
+            $this->addValidationRuleDirectly('min:' . $this->attributes['minlength']);
+        }
+
+        // Add file type validation for file fields if accept attribute is set
+        if ($this->type === 'file' && isset($this->attributes['accept'])) {
+            $this->addFileTypeValidation();
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add file type validation based on accept attribute
+     */
+    protected function addFileTypeValidation(): self
+    {
+        $accept = $this->attributes['accept'];
+        
+        if (strpos($accept, 'image/') !== false) {
+            $this->addValidationRuleDirectly('image');
+        }
+        
+        // Extract file extensions from accept attribute
+        if (preg_match_all('/\.([a-zA-Z0-9]+)/', $accept, $matches)) {
+            $extensions = implode(',', $matches[1]);
+            $this->addValidationRuleDirectly('mimes:' . $extensions);
+        }
+    }
+
+    /**
+     * Add validation rule directly (for internal use)
+     */
+    protected function addValidationRuleDirectly($rule): self
+    {
+        if ($this->name) {
+            if (!isset($this->validationRules[$this->name])) {
+                $this->validationRules[$this->name] = [];
+            }
+            
+            // String rule - check if it's already added
+            if (!in_array($rule, $this->validationRules[$this->name])) {
+                $this->validationRules[$this->name][] = $rule;
+            }
+            
+            // Also add to FormService if available
+            if ($this->formService) {
+                $this->formService->addValidationRule($this->name, $rule);
+            }
+        } else {
+            // Store the rule to be applied when name is set
+            if (!isset($this->validationRules['pending'])) {
+                $this->validationRules['pending'] = [];
+            }
+            $this->validationRules['pending'][] = $rule;
+        }
+        return $this;
+    }
+
+    /**
+     * Get validation rules for this field
+     */
+    public function getValidationRules(): array
+    {
+        return $this->validationRules;
+    }
+
+    /**
+     * Get validation messages for this field
+     */
+    public function getValidationMessages(): array
+    {
+        return $this->validationMessages;
+    }
+
+    /**
+     * Apply validation rules to FormService
+     */
+    public function applyValidationRules(): self
+    {
+        if ($this->formService && $this->name) {
+            // Add validation rules
+            foreach ($this->validationRules as $fieldName => $rules) {
+                $this->formService->addValidationRule($fieldName, $rules);
+            }
+            
+            // Add validation messages
+            foreach ($this->validationMessages as $fieldRule => $message) {
+                $parts = explode('.', $fieldRule);
+                if (count($parts) === 2) {
+                    $this->formService->addValidationMessage($parts[0], $parts[1], $message);
+                }
+            }
+        }
         return $this;
     }
 
