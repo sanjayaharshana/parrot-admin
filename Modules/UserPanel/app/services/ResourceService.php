@@ -399,135 +399,218 @@ class ResourceService
     {
         $form->clear();
 
-        // Collect validation rules
+        // Create form layout with sections and cards
+        $this->buildFormLayout($form);
+    }
+
+    /**
+     * Build the form layout with sections, cards, rows, and columns
+     */
+    protected function buildFormLayout(FormService $form): void
+    {
+        // Group fields by sections if specified
+        $sections = $this->groupFieldsBySections();
         $validationRules = [];
 
-        // Create form layout
-        $row = $form->row();
-
-        foreach ($this->fields as $name => $field) {
-            if ($field['type'] === 'password' && $form->getModel() && $form->getModel()->exists) {
-                continue; // Skip password field on edit if model exists
-            }
-
-            $column = $row->column(6);
-
-            // Get the current value from the model if it exists
-            $currentValue = null;
-            if ($form->getModel() && $form->getModel()->exists) {
-                $currentValue = $form->getModelValue($name);
-            }
-
-            switch ($field['type']) {
-                case 'text':
-                    $formField = $form->text()
-                        ->name($name)
-                        ->label($field['label'])
-                        ->placeholder("Enter {$field['label']}");
-                    if ($currentValue !== null) {
-                        $formField->value($currentValue);
-                    }
-                    break;
-
-                case 'textarea':
-                    $formField = $form->textarea()
-                        ->name($name)
-                        ->label($field['label'])
-                        ->placeholder("Enter {$field['label']}");
-                    if ($currentValue !== null) {
-                        $formField->value($currentValue);
-                    }
-                    break;
-
-                case 'email':
-                    $formField = $form->email()
-                        ->name($name)
-                        ->label($field['label'])
-                        ->placeholder("Enter {$field['label']}");
-                    if ($currentValue !== null) {
-                        $formField->value($currentValue);
-                    }
-                    break;
-
-                case 'password':
-                    $formField = $form->password()
-                        ->name($name)
-                        ->label($field['label'])
-                        ->placeholder("Enter {$field['label']}");
-                    break;
-
-                case 'number':
-                    $formField = $form->number()
-                        ->name($name)
-                        ->label($field['label'])
-                        ->placeholder("Enter {$field['label']}");
-                    if ($currentValue !== null) {
-                        $formField->value($currentValue);
-                    }
-                    break;
-
-                case 'select':
-                    $formField = $form->select()
-                        ->name($name)
-                        ->label($field['label'])
-                        ->options($field['options'] ?? []);
-                    if ($currentValue !== null) {
-                        $formField->value($currentValue);
-                    }
-                    break;
-
-                case 'checkbox':
-                    $formField = $form->checkbox()
-                        ->name($name)
-                        ->label($field['label']);
-                    if ($currentValue !== null) {
-                        $formField->value($currentValue);
-                    }
-                    break;
-
-                case 'radio':
-                    $formField = $form->radio()
-                        ->name($name)
-                        ->label($field['label'])
-                        ->options($field['options'] ?? []);
-                    if ($currentValue !== null) {
-                        $formField->value($currentValue);
-                    }
-                    break;
-
-                case 'file':
-                    $formField = $form->file()
-                        ->name($name)
-                        ->label($field['label']);
-                    break;
-
-                default:
-                    $formField = $form->text()
-                        ->name($name)
-                        ->label($field['label'])
-                        ->placeholder("Enter {$field['label']}");
-                    if ($currentValue !== null) {
-                        $formField->value($currentValue);
-                    }
-            }
-
-            // Add validation rules to the field and collect them for FormService
-            if (!empty($field['validation'])) {
-                foreach ($field['validation'] as $rule) {
-                    $formField->rule($rule);
+        foreach ($sections as $sectionName => $sectionFields) {
+            // Create a section for each group
+            $section = $form->section($sectionName);
+            
+            // Create a row for the section
+            $row = $form->row();
+            
+            foreach ($sectionFields as $name => $field) {
+                if ($field['type'] === 'password' && $form->getModel() && $form->getModel()->exists) {
+                    continue; // Skip password field on edit if model exists
                 }
-                $validationRules[$name] = $field['validation'];
-            }
 
-            $column->addField($formField);
+                // Determine column width based on field type
+                $columnWidth = $this->getColumnWidthForField($field);
+                $column = $row->column($columnWidth);
+
+                // Get the current value from the model if it exists
+                $currentValue = null;
+                if ($form->getModel() && $form->getModel()->exists) {
+                    $currentValue = $form->getModelValue($name);
+                }
+
+                // Create the form field
+                $formField = $this->createFormField($form, $name, $field, $currentValue);
+                
+                // Add validation rules
+                if (!empty($field['validation'])) {
+                    foreach ($field['validation'] as $rule) {
+                        $formField->rule($rule);
+                    }
+                    $validationRules[$name] = $field['validation'];
+                }
+
+                $column->addField($formField);
+            }
+            
+            $section->addField($row);
+            $form->addLayoutItem($section);
         }
 
         // Set validation rules on the form
         if (!empty($validationRules)) {
             $form->setValidationRules($validationRules);
         }
+    }
 
-        $form->addLayoutItem($row);
+    /**
+     * Group fields by sections for better organization
+     */
+    protected function groupFieldsBySections(): array
+    {
+        $sections = [];
+        
+        foreach ($this->fields as $name => $field) {
+            $sectionName = $field['section'] ?? 'General Information';
+            $sections[$sectionName][$name] = $field;
+        }
+        
+        return $sections;
+    }
+
+    /**
+     * Get the appropriate column width for a field
+     */
+    protected function getColumnWidthForField(array $field): int
+    {
+        // Default width is 6 (half width)
+        $defaultWidth = 6;
+        
+        // Full width for textarea and file fields
+        if (in_array($field['type'], ['textarea', 'file'])) {
+            return 12;
+        }
+        
+        // Custom width if specified
+        if (isset($field['width'])) {
+            return $field['width'];
+        }
+        
+        return $defaultWidth;
+    }
+
+    /**
+     * Create a form field based on the field configuration
+     */
+    protected function createFormField(FormService $form, string $name, array $field, $currentValue = null)
+    {
+        switch ($field['type']) {
+            case 'text':
+                $formField = $form->text()
+                    ->name($name)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}");
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+
+            case 'textarea':
+                $formField = $form->textarea()
+                    ->name($name)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}");
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+
+            case 'email':
+                $formField = $form->email()
+                    ->name($name)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}");
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+
+            case 'password':
+                $formField = $form->password()
+                    ->name($name)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}");
+                break;
+
+            case 'number':
+                $formField = $form->number()
+                    ->name($name)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}");
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+
+            case 'select':
+                $formField = $form->select()
+                    ->name($name)
+                    ->label($field['label'])
+                    ->options($field['options'] ?? []);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+
+            case 'checkbox':
+                $formField = $form->checkbox()
+                    ->name($name)
+                    ->label($field['label']);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+
+            case 'radio':
+                $formField = $form->radio()
+                    ->name($name)
+                    ->label($field['label'])
+                    ->options($field['options'] ?? []);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+
+            case 'file':
+                $formField = $form->file()
+                    ->name($name)
+                    ->label($field['label']);
+                break;
+
+            case 'date':
+                $formField = $form->date()
+                    ->name($name)
+                    ->label($field['label']);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+
+            case 'datetime':
+                $formField = $form->datetime()
+                    ->name($name)
+                    ->label($field['label']);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+
+            default:
+                $formField = $form->text()
+                    ->name($name)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}");
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+        }
+
+        return $formField;
     }
 
     /**
@@ -682,6 +765,24 @@ class FieldBuilder
         $field = $this->resource->getField($this->fieldName);
         $validation = array_merge($field['validation'] ?? [], $rules);
         $this->resource->updateField($this->fieldName, ['validation' => $validation]);
+        return $this;
+    }
+
+    /**
+     * Set the section for this field
+     */
+    public function section(string $sectionName): self
+    {
+        $this->resource->updateField($this->fieldName, ['section' => $sectionName]);
+        return $this;
+    }
+
+    /**
+     * Set the column width for this field
+     */
+    public function width(int $width): self
+    {
+        $this->resource->updateField($this->fieldName, ['width' => $width]);
         return $this;
     }
 

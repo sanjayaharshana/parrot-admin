@@ -21,24 +21,23 @@ class UserResourceController extends ResourceController
         return (new ResourceService(User::class, 'users'))
             ->title('User Management')
             ->description('Manage users with full CRUD operations')
-            
+
             // Define fields
             ->text('name')
                 ->required()
                 ->searchable()
                 ->sortable()
                 ->rules(['max:255'])
-            
             ->email('email')
                 ->required()
                 ->searchable()
                 ->sortable()
                 ->rules(['email', 'unique:users,email'])
-            
+
             ->password('password')
                 ->required()
                 ->rules(['min:8'])
-            
+
             ->select('email_verified_at')
                 ->filterable([
                     'type' => 'select',
@@ -53,13 +52,13 @@ class UserResourceController extends ResourceController
                     }
                     return '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">Unverified</span>';
                 })
-            
+
             ->date('created_at')
                 ->sortable()
                 ->display(function($value) {
                     return $value ? date('M d, Y', strtotime($value)) : 'N/A';
                 })
-            
+
             // Configure actions
             ->actions([
                 'view' => [
@@ -83,7 +82,7 @@ class UserResourceController extends ResourceController
                     'confirm' => true
                 ]
             ])
-            
+
             // Configure bulk actions
             ->bulkActions([
                 'delete' => [
@@ -99,4 +98,4 @@ class UserResourceController extends ResourceController
                 ]
             ]);
     }
-} 
+}

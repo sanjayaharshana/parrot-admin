@@ -22,23 +22,28 @@ class ShipController extends ResourceController
             ->title('Ship Management')
             ->description('Manage ships with full CRUD operations')
             
-            // Define fields
+            // Basic Information Section
             ->text('name')
                 ->required()
                 ->searchable()
                 ->sortable()
                 ->rules(['max:255'])
-            
-            ->textarea('address')
-                ->required()
-                ->searchable()
-                ->rules(['max:1000'])
+                ->section('Basic Information')
             
             ->text('ship')
                 ->required()
                 ->searchable()
                 ->sortable()
                 ->rules(['max:255'])
+                ->section('Basic Information')
+            
+            // Address Section
+            ->textarea('address')
+                ->required()
+                ->searchable()
+                ->rules(['max:1000'])
+                ->section('Location Details')
+                ->width(12) // Full width for textarea
             
             // Configure actions
             ->actions([
