@@ -2,100 +2,66 @@
 
 namespace Modules\UserPanel\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
-use Modules\UserPanel\Http\Base\BaseController;
-use Modules\UserPanel\Services\DataViewService;
+use Modules\UserPanel\Http\Base\ResourceController;
+use Modules\UserPanel\Services\ResourceService;
 
-class ProductController extends BaseController
+class ProductController extends ResourceController
 {
     public $icon = 'fa fa-box';
-    public $showInSidebar = true;
     public $model = Product::class;
     public $routeName = 'products';
 
     /**
-     * Show the form for creating a new product
+     * Make the resource instance
      */
-    public function create()
+    protected function makeResource(): ResourceService
     {
-        // Set the form route for store action
-        $this->form->routeForStore($this->getRouteName());
+        return (new ResourceService(Product::class, 'products'))
+            ->title('Product Management')
+            ->description('Manage your product catalog with comprehensive information')
 
-        $this->createForm('create');
-        return view('userpanel::create', [
-            'form' => $this->form
-        ]);
-    }
+            // Enable tabs for better organization
+            ->enableTabs()
 
-    /**
-     * Create form layout for creating/editing products
-     */
-    public function createForm($mode = 'create')
-    {
-        $layout = $this->layoutService;
-        $layout->setFormService($this->form);
-
-
-        // First row with product basic info
-        $basicRow = $layout->row();
-        $basicRow->column(6, function ($form, $column) use ($layout) {
-            $column->addField(
-                $form->text()
-                    ->name('name')
-                    ->label('Product Name')
-                    ->placeholder('Enter product name')
+            // Basic Information Tab
+            ->tab('basic', 'Basic Information', 'fa fa-info-circle')
+                ->text('name')
                     ->required()
-            );
-
-            $column->addField(
-                $form->text()
-                    ->name('sku')
-                    ->label('SKU')
-                    ->placeholder('Enter product SKU')
+                    ->searchable()
+                    ->sortable()
+                    ->rules(['max:255'])
+                ->text('sku')
                     ->required()
-            );
-        });
-
-        $basicRow->column(6, function ($form, $column) use ($layout) {
-            $column->addField(
-                $form->number()
-                    ->name('price')
-                    ->label('Price')
-                    ->placeholder('0.00')
-                    ->step('0.01')
+                    ->searchable()
+                    ->sortable()
+                    ->rules(['max:100', 'unique:products,sku'])
+                ->number('price')
                     ->required()
-            );
-
-            $column->addField(
-                $form->number()
-                    ->name('stock')
-                    ->label('Stock Quantity')
-                    ->placeholder('0')
+                    ->searchable()
+                    ->sortable()
+                    ->rules(['numeric', 'min:0'])
+                ->number('stock')
                     ->required()
-            );
-        });
+                    ->searchable()
+                    ->sortable()
+                    ->rules(['integer', 'min:0'])
+                ->divider('Product Guidelines')
+                ->alert('Product names should be descriptive and SKUs should be unique identifiers.', 'info')
+                ->end()
 
-        // Second row with description and category
-        $descRow = $layout->row();
-        $descRow->column(8, function ($form, $column) use ($layout) {
-            $column->addField(
-                $form->textarea()
-                    ->name('description')
-                    ->label('Description')
-                    ->placeholder('Enter product description')
+            // Description & Category Tab
+            ->tab('details', 'Description & Category', 'fa fa-tags')
+                ->textarea('description')
                     ->required()
-            );
-        });
-
-        $descRow->column(4, function ($form, $column) use ($layout) {
-            $column->addField(
-                $form->select()
-                    ->name('category')
-                    ->label('Category')
+                    ->searchable()
+                    ->rules(['string'])
+                ->select('category')
+                    ->required()
+                    ->searchable()
+                    ->sortable()
                     ->options([
                         'electronics' => 'Electronics',
                         'clothing' => 'Clothing',
@@ -103,269 +69,244 @@ class ProductController extends BaseController
                         'home' => 'Home & Garden',
                         'sports' => 'Sports & Outdoors'
                     ])
-                    ->required()
-            );
+                    ->rules(['in:electronics,clothing,books,home,sports'])
+                ->checkbox('is_active')
+                    ->searchable()
+                    ->sortable()
+                ->divider('Category Information')
+                ->customHtml(
+                    '<p class="text-sm text-gray-600">Choose the most appropriate category for your product. This helps customers find your products more easily.</p>',
+                    'Category Help',
+                    'bg-blue-50 border border-blue-200 rounded-lg p-4'
+                )
+                ->end()
 
-            $column->addField(
-                $form->checkbox()
-                    ->name('is_active')
-                    ->label('Active')
-            );
-        });
-
-        // Third row with image upload
-        $imageRow = $layout->row();
-        $imageRow->column(12, function ($form, $column) use ($layout) {
-            $column->addField(
-                $form->file()
-                    ->name('image')
-                    ->label('Product Image')
+            // Media & Files Tab
+            ->tab('media', 'Media & Files', 'fa fa-image')
+                ->file('image')
                     ->accept('image/*')
-            );
+                    ->rules(['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'])
+                ->divider('Image Guidelines')
+                ->alert('Upload high-quality product images (JPG, PNG, GIF up to 2MB) for better customer experience.', 'info')
+                ->customHtml(
+                    '<div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900 mb-2">Image Requirements:</h4>
+                        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+                            <li>Minimum resolution: 800x600 pixels</li>
+                            <li>Maximum file size: 2MB</li>
+                            <li>Supported formats: JPG, PNG, GIF</li>
+                            <li>Use clear, well-lit product photos</li>
+                        </ul>
+                    </div>',
+                    'Image Requirements',
+                    'bg-gray-50 border border-gray-200 rounded-lg p-4'
+                )
+                ->end()
 
-            $column->addHtml('<p class="text-sm text-gray-600 mt-2">Upload a product image (JPG, PNG, GIF up to 2MB)</p>');
-        });
+            // Settings & Actions Tab
+            ->tab('settings', 'Settings & Actions', 'fa fa-cog')
+                ->customHtml(
+                    '<div class="flex space-x-4 mb-4">
+                        <button type="button" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                            <i class="fa fa-eye mr-2"></i>Preview Product
+                        </button>
+                        <button type="button" class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                            <i class="fa fa-save mr-2"></i>Save Draft
+                        </button>
+                    </div>',
+                    'Quick Actions',
+                    'bg-gray-50 border border-gray-200 rounded-lg p-4'
+                )
+                ->divider('Support Information')
+                ->customHtml(
+                    '<p class="text-sm text-gray-600">Need help? Contact our support team at
+                    <a href="mailto:support@example.com" class="text-blue-600 hover:text-blue-800">support@example.com</a>
+                    or call us at <span class="font-medium">+1-555-123-4567</span></p>',
+                    'Need Help?',
+                    'bg-gray-50 border border-gray-200 rounded-lg p-4'
+                )
+                ->end()
 
-        return $layout->render();
+            // Configure actions
+            ->actions([
+                'view' => [
+                    'label' => 'View',
+                    'icon' => 'fa fa-eye',
+                    'class' => 'btn-sm btn-info',
+                    'route' => 'show'
+                ],
+                'edit' => [
+                    'label' => 'Edit',
+                    'icon' => 'fa fa-edit',
+                    'class' => 'btn-sm btn-primary',
+                    'route' => 'edit'
+                ],
+                'delete' => [
+                    'label' => 'Delete',
+                    'icon' => 'fa fa-trash',
+                    'class' => 'btn-sm btn-danger',
+                    'route' => 'destroy',
+                    'method' => 'DELETE',
+                    'confirm' => true
+                ]
+            ])
+
+            // Configure bulk actions
+            ->bulkActions([
+                'delete' => [
+                    'label' => 'Delete Selected',
+                    'icon' => 'fa fa-trash',
+                    'class' => 'btn-danger',
+                    'confirm' => true
+                ],
+                'activate' => [
+                    'label' => 'Activate Selected',
+                    'icon' => 'fa fa-check',
+                    'class' => 'btn-success'
+                ],
+                'deactivate' => [
+                    'label' => 'Deactivate Selected',
+                    'icon' => 'fa fa-times',
+                    'class' => 'btn-warning'
+                ]
+            ]);
     }
 
-    /**
-     * Data grid view for listing products
-     */
-    public function dataSetView()
+    public function dataView()
     {
-        $grid = new DataViewService(new Product());
+        $dataView = new \Modules\UserPanel\Services\DataViewService(new Product());
 
-        $grid->title('Product Management');
-        $grid->description('Manage your product catalog with this comprehensive grid view. You can sort, filter, and search through product data seamlessly.');
+        // Configure the data view
+        $dataView->title('Product Management')
+            ->description('Manage your product catalog with this comprehensive grid view. You can sort, filter, and search through product data seamlessly.')
+            ->routePrefix('products')
+            ->perPage(15)
+            ->defaultSort('created_at', 'desc')
+            ->pagination(true)
+            ->search(true)
+            ->filters(true);
 
-        // Define grid columns
-        $grid->id('ID')->sortable();
+        // Add ID column
+        $dataView->id('ID')->sortable();
 
-        $grid->column('name', 'Product Name')->sortable();
+        // Add name column
+        $dataView->column('name', 'Product Name')
+            ->sortable()
+            ->searchable();
 
-        $grid->column('sku', 'SKU')->sortable();
+        // Add SKU column
+        $dataView->column('sku', 'SKU')
+            ->sortable()
+            ->searchable();
 
-        $grid->column('price', 'Price')->display(function($value) {
-            return '$' . number_format($value, 2);
-        });
+        // Add price column with formatting
+        $dataView->column('price', 'Price')
+            ->display(function($value) {
+                return '$' . number_format($value, 2);
+            })
+            ->sortable();
 
-        $grid->column('stock', 'Stock')->display(function($value) {
-            if ($value > 10) {
-                return '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">' . $value . '</span>';
-            } elseif ($value > 0) {
-                return '<span class="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full">' . $value . '</span>';
-            } else {
-                return '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">Out of Stock</span>';
-            }
-        });
+        // Add stock column with status indicators
+        $dataView->column('stock', 'Stock')
+            ->display(function($value) {
+                if ($value > 10) {
+                    return '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">' . $value . '</span>';
+                } elseif ($value > 0) {
+                    return '<span class="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full">' . $value . '</span>';
+                } else {
+                    return '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">Out of Stock</span>';
+                }
+            })
+            ->sortable();
 
-        $grid->column('category', 'Category')->display(function($value) {
-            return ucfirst($value);
-        });
+        // Add category column
+        $dataView->column('category', 'Category')
+            ->display(function($value) {
+                return ucfirst($value);
+            })
+            ->sortable();
 
-        $grid->column('is_active', 'Status')->display(function($value) {
-            if ($value) {
-                return '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Active</span>';
-            }
-            return '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">Inactive</span>';
-        });
+        // Add status column
+        $dataView->column('is_active', 'Status')
+            ->display(function($value) {
+                if ($value) {
+                    return '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Active</span>';
+                }
+                return '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">Inactive</span>';
+            })
+            ->sortable();
 
-        $grid->column('created_at', 'Created')->display(function($value) {
-            return $value ? date('M d, Y', strtotime($value)) : 'N/A';
-        });
+        // Add created date column
+        $dataView->column('created_at', 'Created Date')
+            ->display(function($value) {
+                return $value ? date('M d, Y', strtotime($value)) : 'N/A';
+            })
+            ->sortable();
+
+        // Add actions column
+        $dataView->actions([
+            'view' => [
+                'label' => 'View',
+                'icon' => 'fa fa-eye',
+                'class' => 'btn-sm btn-info',
+                'route' => 'show'
+            ],
+            'edit' => [
+                'label' => 'Edit',
+                'icon' => 'fa fa-edit',
+                'class' => 'btn-sm btn-primary',
+                'route' => 'edit'
+            ],
+            'delete' => [
+                'label' => 'Delete',
+                'icon' => 'fa fa-trash',
+                'class' => 'btn-sm btn-danger',
+                'route' => 'destroy',
+                'method' => 'DELETE',
+                'confirm' => true
+            ]
+        ]);
+
+        // Add bulk actions
+        $dataView->bulkActions([
+            'delete' => [
+                'label' => 'Delete Selected',
+                'icon' => 'fa fa-trash',
+                'class' => 'btn-danger',
+                'confirm' => true
+            ],
+            'activate' => [
+                'label' => 'Activate Selected',
+                'icon' => 'fa fa-check',
+                'class' => 'btn-success'
+            ],
+            'deactivate' => [
+                'label' => 'Deactivate Selected',
+                'icon' => 'fa fa-times',
+                'class' => 'btn-warning'
+            ]
+        ]);
 
         // Add filters
-        $grid->addTextFilter('name', 'Product Name');
-        $grid->addTextFilter('sku', 'SKU');
-        $grid->addFilter('category', 'Category', [
+        $dataView->addTextFilter('name', 'Product Name');
+        $dataView->addTextFilter('sku', 'SKU');
+        $dataView->addFilter('category', 'Category', [
             'electronics' => 'Electronics',
             'clothing' => 'Clothing',
             'books' => 'Books',
             'home' => 'Home & Garden',
             'sports' => 'Sports & Outdoors'
         ], 'select');
-        $grid->addFilter('is_active', 'Status', [
+        $dataView->addFilter('is_active', 'Status', [
             '1' => 'Active',
             '0' => 'Inactive'
         ], 'select');
-        $grid->addDateRangeFilter('created_at', 'Created Date');
+        $dataView->addDateRangeFilter('created_at', 'Created Date');
 
         // Add create button
-        $grid->createButton(url('products/create'), 'Add Product', 'fa fa-plus', 'btn-primary');
+        $dataView->createButton(route('products.create'), 'Create New Product');
 
-        // Configure grid settings
-        $grid->perPage(15)
-            ->defaultSort('created_at', 'desc')
-            ->search(true)
-            ->pagination(true);
-
-        return $grid->render();
-    }
-
-    /**
-     * Store a newly created product
-     */
-    public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:100|unique:products,sku',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'description' => 'required|string',
-            'category' => 'required|string|in:electronics,clothing,books,home,sports',
-            'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        try {
-            $product = new Product();
-            $product->name = $request->name;
-            $product->sku = $request->sku;
-            $product->price = $request->price;
-            $product->stock = $request->stock;
-            $product->description = $request->description;
-            $product->category = $request->category;
-            $product->is_active = $request->has('is_active');
-
-            // Handle image upload
-            if ($request->hasFile('image')) {
-                $imagePath = $request->file('image')->store('products', 'public');
-                $product->image = $imagePath;
-            }
-
-            $product->save();
-
-            return redirect()->route('products.index')
-                ->with('success', 'Product created successfully!');
-
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Error creating product: ' . $e->getMessage())
-                ->withInput();
-        }
-    }
-
-    /**
-     * Show the specified product
-     */
-    public function show($id)
-    {
-        $product = Product::findOrFail($id);
-
-        return view('userpanel::show', [
-            'product' => $product,
-            'title' => 'Product Details'
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified product
-     */
-    public function edit($id)
-    {
-        $product = Product::findOrFail($id);
-
-        // Bind the model to the form service
-        $this->form->bindModel($product);
-
-        // Set the form route for update action
-        $this->form->routeForUpdate($this->getRouteName(), $id);
-
-        $this->createForm('edit');
-
-        return view('userpanel::edit', [
-            'form' => $this->form,
-            'product' => $product,
-            'title' => 'Edit Product'
-        ]);
-    }
-
-    /**
-     * Update the specified product
-     */
-    public function update(Request $request, $id)
-    {
-        $product = Product::findOrFail($id);
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:100|unique:products,sku,' . $id,
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'description' => 'required|string',
-            'category' => 'required|string|in:electronics,clothing,books,home,sports',
-            'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        try {
-            $product->name = $request->name;
-            $product->sku = $request->sku;
-            $product->price = $request->price;
-            $product->stock = $request->stock;
-            $product->description = $request->description;
-            $product->category = $request->category;
-            $product->is_active = $request->has('is_active');
-
-            // Handle image upload
-            if ($request->hasFile('image')) {
-                // Delete old image if exists
-                if ($product->image && Storage::disk('public')->exists($product->image)) {
-                    Storage::disk('public')->delete($product->image);
-                }
-
-                $imagePath = $request->file('image')->store('products', 'public');
-                $product->image = $imagePath;
-            }
-
-            $product->save();
-
-            return redirect()->route('products.index')
-                ->with('success', 'Product updated successfully!');
-
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Error updating product: ' . $e->getMessage())
-                ->withInput();
-        }
-    }
-
-    /**
-     * Remove the specified product
-     */
-    public function destroy($id)
-    {
-        try {
-            $product = Product::findOrFail($id);
-
-            // Delete image if exists
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
-            }
-
-            $product->delete();
-
-            return redirect()->route('products.index')
-                ->with('success', 'Product deleted successfully!');
-
-        } catch (\Exception $e) {
-            return redirect()->route('products.index')
-                ->with('error', 'Error deleting product: ' . $e->getMessage());
-        }
+        return $dataView;
     }
 
     /**

@@ -31,6 +31,10 @@ class ResourceService
     protected array $formLayout = [];
     protected array $gridLayout = [];
     protected array $customHtml = [];
+    
+    // Tab functionality properties
+    protected array $tabs = [];
+    protected bool $useTabs = false;
 
     public function __construct(string $modelClass, string $resourceName = null)
     {
@@ -393,12 +397,84 @@ class ResourceService
         }
     }
 
+
+
+    /**
+     * Enable tabs for the form
+     */
+    public function enableTabs(): self
+    {
+        $this->useTabs = true;
+        return $this;
+    }
+
+    /**
+     * Add a tab to the resource
+     */
+    public function tab(string $id, string $label, string $icon = null): TabBuilder
+    {
+        $this->tabs[$id] = [
+            'id' => $id,
+            'label' => $label,
+            'icon' => $icon,
+            'fields' => [],
+            'content' => []
+        ];
+        return new TabBuilder($this, $id);
+    }
+
+    /**
+     * Check if tabs are enabled
+     */
+    public function hasTabs(): bool
+    {
+        return $this->useTabs && !empty($this->tabs);
+    }
+
+    /**
+     * Get all tabs
+     */
+    public function getTabs(): array
+    {
+        return $this->tabs;
+    }
+
+    /**
+     * Add a field to a specific tab
+     */
+    public function addFieldToTab(string $tabId, string $fieldName): self
+    {
+        if (isset($this->tabs[$tabId])) {
+            $this->tabs[$tabId]['fields'][] = $fieldName;
+        }
+        return $this;
+    }
+
+    /**
+     * Add content to a specific tab
+     */
+    public function addContentToTab(string $tabId, string $type, array $data): self
+    {
+        if (isset($this->tabs[$tabId])) {
+            $this->tabs[$tabId]['content'][] = [
+                'type' => $type,
+                'data' => $data
+            ];
+        }
+        return $this;
+    }
+
     /**
      * Build the form using FormService
      */
     protected function buildForm(FormService $form): void
     {
         $form->clear();
+
+        // Enable tabs if configured
+        if ($this->hasTabs()) {
+            $form->enableTabs();
+        }
 
         // Add custom HTML to the form
         foreach ($this->customHtml as $customHtml) {
@@ -408,15 +484,19 @@ class ResourceService
         // Collect validation rules
         $validationRules = [];
 
-        // Create form layout
-        $row = $form->row();
+        // Build form based on tabs or regular layout
+        if ($this->hasTabs()) {
+            $this->buildFormWithTabs($form);
+        } else {
+            // Create form layout
+            $row = $form->row();
 
-        foreach ($this->fields as $name => $field) {
-            if ($field['type'] === 'password' && $form->getModel() && $form->getModel()->exists) {
-                continue; // Skip password field on edit if model exists
-            }
+            foreach ($this->fields as $name => $field) {
+                if ($field['type'] === 'password' && $form->getModel() && $form->getModel()->exists) {
+                    continue; // Skip password field on edit if model exists
+                }
 
-            $column = $row->column(6);
+                $column = $row->column(6);
 
             // Get the current value from the model if it exists
             $currentValue = null;
@@ -534,6 +614,169 @@ class ResourceService
         }
 
         $form->addLayoutItem($row);
+        }
+    }
+
+    /**
+     * Build form with tabs
+     */
+    protected function buildFormWithTabs(FormService $form): void
+    {
+        foreach ($this->tabs as $tabId => $tab) {
+            $formTab = $form->tab($tabId, $tab['label'], $tab['icon']);
+            
+            // Add fields to the tab
+            foreach ($tab['fields'] as $fieldName) {
+                if (isset($this->fields[$fieldName])) {
+                    $field = $this->fields[$fieldName];
+                    
+                    // Get the current value from the model if it exists
+                    $currentValue = null;
+                    if ($form->getModel() && $form->getModel()->exists) {
+                        $currentValue = $form->getModelValue($fieldName);
+                    }
+                    
+                    $this->addFieldToFormTab($formTab, $field, $fieldName, $currentValue);
+                }
+            }
+            
+            // Add custom content to the tab
+            foreach ($tab['content'] as $content) {
+                $this->addContentToFormTab($formTab, $content);
+            }
+        }
+    }
+
+    /**
+     * Add a field to a form tab
+     */
+    protected function addFieldToFormTab($formTab, array $field, string $fieldName, $currentValue): void
+    {
+        switch ($field['type']) {
+            case 'text':
+                $formField = $formTab->field($formTab->text()
+                    ->name($fieldName)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}"));
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+                
+            case 'textarea':
+                $formField = $formTab->field($formTab->textarea()
+                    ->name($fieldName)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}"));
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+                
+            case 'email':
+                $formField = $formTab->field($formTab->email()
+                    ->name($fieldName)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}"));
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+                
+            case 'password':
+                $formField = $formTab->field($formTab->password()
+                    ->name($fieldName)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}"));
+                break;
+                
+            case 'number':
+                $formField = $formTab->field($formTab->number()
+                    ->name($fieldName)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}"));
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+                
+            case 'select':
+                $formField = $formTab->field($formTab->select()
+                    ->name($fieldName)
+                    ->label($field['label'])
+                    ->options($field['options'] ?? []));
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+                
+            case 'checkbox':
+                $formField = $formTab->field($formTab->checkbox()
+                    ->name($fieldName)
+                    ->label($field['label']));
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+                
+            case 'radio':
+                $formField = $formTab->field($formTab->radio()
+                    ->name($fieldName)
+                    ->label($field['label'])
+                    ->options($field['options'] ?? []));
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+                
+            case 'file':
+                $formField = $formTab->field($formTab->file()
+                    ->name($fieldName)
+                    ->label($field['label']));
+                break;
+                
+            case 'date':
+                $formField = $formTab->field($formTab->date()
+                    ->name($fieldName)
+                    ->label($field['label']));
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+                
+            case 'datetime':
+                $formField = $formTab->field($formTab->datetime()
+                    ->name($fieldName)
+                    ->label($field['label']));
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                break;
+        }
+    }
+
+    /**
+     * Add content to a form tab
+     */
+    protected function addContentToFormTab($formTab, array $content): void
+    {
+        switch ($content['type']) {
+            case 'divider':
+                $formTab->divider($content['data']['text'] ?? null, $content['data']['class'] ?? 'my-6');
+                break;
+                
+            case 'alert':
+                $formTab->alert($content['data']['message'], $content['data']['type'] ?? 'info');
+                break;
+                
+            case 'customHtml':
+                $formTab->customHtml(
+                    $content['data']['html'], 
+                    $content['data']['position'] ?? 'before', 
+                    ['class' => $content['data']['class'] ?? 'bg-white shadow rounded-lg p-6']
+                );
+                break;
+        }
     }
 
     /**
@@ -596,6 +839,14 @@ class ResourceService
     public function getField(string $name): ?array
     {
         return $this->fields[$name] ?? null;
+    }
+
+    /**
+     * Get all fields
+     */
+    public function getFields(): array
+    {
+        return $this->fields;
     }
 
     /**
@@ -771,6 +1022,15 @@ class FieldBuilder
     public function options($options): self
     {
         $this->resource->updateField($this->fieldName, ['options' => $options]);
+        return $this;
+    }
+
+    /**
+     * Make the field accept multiple values (for file fields)
+     */
+    public function multiple(): self
+    {
+        $this->resource->updateField($this->fieldName, ['multiple' => true]);
         return $this;
     }
 

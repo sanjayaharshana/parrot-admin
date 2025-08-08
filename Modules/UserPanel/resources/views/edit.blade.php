@@ -19,4 +19,31 @@
             </div>
         </form>
     </div>
+
+    <style>
+        .tabs-container {
+            @apply w-full;
+        }
+        
+        .tab-button {
+            @apply transition-all duration-200;
+        }
+        
+        .tab-button:hover {
+            @apply transform scale-105;
+        }
+        
+        .tab-panel {
+            @apply animate-fade-in;
+        }
+        
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+    </style>
 @endsection 

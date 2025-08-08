@@ -13,23 +13,7 @@ class ShipController extends ResourceController
     public $model = Ship::class;
     public $routeName = 'ships';
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        $dataView = $this->dataView();
-        $gridContent = $dataView->render();
 
-        // Get title and description from the data view
-        $data = $dataView->getData();
-
-        return view('userpanel::index', [
-            'grid' => $gridContent,
-            'title' => $data['title'] ?? 'Ship Management',
-            'description' => $data['description'] ?? 'Manage ships with full CRUD operations'
-        ]);
-    }
 
     /**
      * Make the resource instance
@@ -40,63 +24,66 @@ class ShipController extends ResourceController
             ->title('Ship Management')
             ->description('Manage ships with full CRUD operations')
 
-            // Welcome message with custom HTML
-            ->alert('Welcome to the Ship Management System. Please provide accurate information for all fields.', 'info')
+            // Enable tabs for better organization
+            ->enableTabs()
 
-            // Basic Information Section
-            ->divider('Basic Information')
-            ->text('name')
-                ->required()
-                ->searchable()
-                ->sortable()
-                ->rules(['max:255'])
+            // General Information Tab
+            ->tab('general', 'General Information', 'fa fa-info-circle')
+                ->text('name')
+                    ->required()
+                    ->searchable()
+                    ->sortable()
+                    ->rules(['max:255'])
+                ->text('ship')
+                    ->required()
+                    ->searchable()
+                    ->sortable()
+                    ->rules(['max:255'])
+                ->divider('Important Notes')
+                ->customHtml(
+                    '<ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+                        <li>Ship name should be unique and descriptive</li>
+                        <li>All fields marked with * are required</li>
+                        <li>Address should be complete and accurate for shipping purposes</li>
+                    </ul>',
+                    'Important Notes',
+                    'bg-blue-50 border border-blue-200 rounded-lg p-4'
+                )
+                ->end()
 
-            ->text('ship')
-                ->required()
-                ->searchable()
-                ->sortable()
-                ->rules(['max:255'])
+            // Location Details Tab
+            ->tab('location', 'Location Details', 'fa fa-map-marker-alt')
+                ->textarea('address')
+                    ->required()
+                    ->searchable()
+                    ->rules(['max:1000'])
+                ->divider('Location Guidelines')
+                ->alert('Please provide complete and accurate address information for shipping and logistics purposes.', 'info')
+                ->end()
 
-            // Important note card
-            ->customCard(
-                '<ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
-                    <li>Ship name should be unique and descriptive</li>
-                    <li>All fields marked with * are required</li>
-                    <li>Address should be complete and accurate for shipping purposes</li>
-                </ul>',
-                'Important Notes',
-                'bg-blue-50 border border-blue-200 rounded-lg p-4'
-            )
-
-            // Location Details Section
-            ->divider('Location Details')
-            ->textarea('address')
-                ->required()
-                ->searchable()
-                ->rules(['max:1000'])
-
-            // Help section with custom HTML
-            ->customCard(
-                '<p class="text-sm text-gray-600">Need help? Contact our support team at
-                <a href="mailto:support@example.com" class="text-blue-600 hover:text-blue-800">support@example.com</a>
-                or call us at <span class="font-medium">+1-555-123-4567</span></p>',
-                'Need Help?',
-                'bg-gray-50 border border-gray-200 rounded-lg p-4'
-            )
-
-            // Action buttons section
-            ->customCard(
-                '<div class="flex space-x-4">
-                    <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-                        <i class="fa fa-eye mr-2"></i>Preview
-                    </button>
-                    <button type="button" class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-                        <i class="fa fa-save mr-2"></i>Save Draft
-                    </button>
-                </div>',
-                'Quick Actions',
-                'bg-gray-50 border border-gray-200 rounded-lg p-4'
-            )
+            // Additional Information Tab
+            ->tab('additional', 'Additional Information', 'fa fa-plus-circle')
+                ->customHtml(
+                    '<p class="text-sm text-gray-600">Need help? Contact our support team at
+                    <a href="mailto:support@example.com" class="text-blue-600 hover:text-blue-800">support@example.com</a>
+                    or call us at <span class="font-medium">+1-555-123-4567</span></p>',
+                    'Need Help?',
+                    'bg-gray-50 border border-gray-200 rounded-lg p-4'
+                )
+                ->divider('Quick Actions')
+                ->customHtml(
+                    '<div class="flex space-x-4">
+                        <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                            <i class="fa fa-eye mr-2"></i>Preview
+                        </button>
+                        <button type="button" class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                            <i class="fa fa-save mr-2"></i>Save Draft
+                        </button>
+                    </div>',
+                    'Quick Actions',
+                    'bg-gray-50 border border-gray-200 rounded-lg p-4'
+                )
+                ->end()
 
             // Configure actions
             ->actions([

@@ -123,6 +123,14 @@ class DataViewService
     }
 
     /**
+     * Add a select filter with options
+     */
+    public function addSelectFilter(string $field, string $label, array $options): self
+    {
+        return $this->addFilter($field, $label, $options, 'select');
+    }
+
+    /**
      * Add date range filter
      */
     public function addDateRangeFilter(string $field, string $label): self
@@ -415,7 +423,8 @@ class DataViewService
         
         // Use custom display callback if provided
         if ($column->hasDisplayCallback()) {
-            return $column->getDisplayCallback()($item->$field, $item);
+            $value = $column->getDisplayCallback()($item->$field, $item);
+            return (string) $value;
         }
         
         // Handle nested attributes
@@ -436,15 +445,17 @@ class DataViewService
                 }
             }
             
-            return $value ?? '';
+            return (string) ($value ?? '');
         }
         
         // Handle direct attributes
         if (method_exists($item, $field)) {
-            return $item->$field();
+            $value = $item->$field();
+            return (string) ($value ?? '');
         }
         
-        return $item->$field ?? '';
+        $value = $item->$field ?? '';
+        return (string) $value;
     }
 
     /**

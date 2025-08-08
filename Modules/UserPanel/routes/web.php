@@ -41,6 +41,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'destroy' => 'ships.destroy',
     ]);
     
+    Route::resource('/users', \Modules\UserPanel\Http\Controllers\UserResourceController::class)->names([
+        'index' => 'users.index',
+        'create' => 'users.create',
+        'store' => 'users.store',
+        'show' => 'users.show',
+        'edit' => 'users.edit',
+        'update' => 'users.update',
+        'destroy' => 'users.destroy',
+    ]);
+    
     Route::post('/products/bulk-action', [\Modules\UserPanel\Http\Controllers\ProductController::class, 'bulkAction'])
         ->name('userpanel.products.bulk-action');
+});
+
+// Example Tab Controller Routes (for demonstration)
+Route::prefix('example-tabs')->name('example-tabs.')->group(function () {
+    Route::get('/', [\Modules\UserPanel\Http\Controllers\ExampleTabController::class, 'index'])->name('index');
+    Route::get('/create', [\Modules\UserPanel\Http\Controllers\ExampleTabController::class, 'create'])->name('create');
+    Route::post('/', [\Modules\UserPanel\Http\Controllers\ExampleTabController::class, 'store'])->name('store');
+    Route::get('/{user}', [\Modules\UserPanel\Http\Controllers\ExampleTabController::class, 'show'])->name('show');
+    Route::get('/{user}/edit', [\Modules\UserPanel\Http\Controllers\ExampleTabController::class, 'edit'])->name('edit');
+    Route::put('/{user}', [\Modules\UserPanel\Http\Controllers\ExampleTabController::class, 'update'])->name('update');
+    Route::delete('/{user}', [\Modules\UserPanel\Http\Controllers\ExampleTabController::class, 'destroy'])->name('destroy');
 });

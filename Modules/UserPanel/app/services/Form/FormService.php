@@ -19,6 +19,11 @@ class FormService
     protected array $validationRules = [];
     protected array $validationMessages = [];
     protected array $beforeSubmitCallbacks = [];
+    
+    // Tab functionality properties
+    protected array $tabs = [];
+    protected string $activeTab = 'general';
+    protected bool $useTabs = false;
 
     /**
      * Bind a model to the form
@@ -720,7 +725,62 @@ class FormService
         $this->layout = [];
         $this->fields = [];
         $this->customHtml = [];
+        $this->tabs = [];
+        $this->useTabs = false;
+        $this->activeTab = 'general';
         return $this;
+    }
+
+    /**
+     * Enable tabs for the form
+     */
+    public function enableTabs(): self
+    {
+        $this->useTabs = true;
+        return $this;
+    }
+
+    /**
+     * Add a tab to the form
+     */
+    public function tab(string $id, string $label, string $icon = null): Tab
+    {
+        $tab = new Tab($id, $label, $icon);
+        $this->tabs[$id] = $tab;
+        return $tab;
+    }
+
+    /**
+     * Set the active tab
+     */
+    public function setActiveTab(string $tabId): self
+    {
+        $this->activeTab = $tabId;
+        return $this;
+    }
+
+    /**
+     * Get all tabs
+     */
+    public function getTabs(): array
+    {
+        return $this->tabs;
+    }
+
+    /**
+     * Check if tabs are enabled
+     */
+    public function hasTabs(): bool
+    {
+        return $this->useTabs && !empty($this->tabs);
+    }
+
+    /**
+     * Get the active tab
+     */
+    public function getActiveTab(): string
+    {
+        return $this->activeTab;
     }
 
     /**
@@ -779,15 +839,20 @@ class FormService
             }
         }
 
-        // If we have layout items, render only the layout
-        if (!empty($this->layout)) {
-            foreach ($this->layout as $layoutItem) {
-                $html .= $layoutItem->render();
-            }
+        // Render tabs if enabled
+        if ($this->hasTabs()) {
+            $html .= $this->renderTabs();
         } else {
-            // Only render individual fields if no layout items exist
-            foreach ($this->fields as $field) {
-                $html .= '<div class="mb-4">' . $field->render() . '</div>' . PHP_EOL;
+            // If we have layout items, render only the layout
+            if (!empty($this->layout)) {
+                foreach ($this->layout as $layoutItem) {
+                    $html .= $layoutItem->render();
+                }
+            } else {
+                // Only render individual fields if no layout items exist
+                foreach ($this->fields as $field) {
+                    $html .= '<div class="mb-4">' . $field->render() . '</div>' . PHP_EOL;
+                }
             }
         }
 
@@ -798,6 +863,62 @@ class FormService
             }
         }
 
+        return $html;
+    }
+
+    /**
+     * Render the tabs structure
+     */
+    protected function renderTabs(): string
+    {
+        if (empty($this->tabs)) {
+            return '';
+        }
+
+        $html = '<div class="tabs-container" x-data="{ activeTab: \'' . $this->activeTab . '\' }">';
+        
+        // Tab navigation
+        $html .= '<div class="border-b border-gray-200 mb-6">';
+        $html .= '<nav class="-mb-px flex space-x-8" aria-label="Tabs">';
+        
+        foreach ($this->tabs as $tab) {
+            $isActive = $tab->getId() === $this->activeTab;
+            $activeClasses = $isActive 
+                ? 'border-blue-500 text-blue-600 bg-blue-50' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300';
+            
+            $html .= '<button type="button" 
+                                @click="activeTab = \'' . $tab->getId() . '\'" 
+                                :class="activeTab === \'' . $tab->getId() . '\' ? \'border-blue-500 text-blue-600 bg-blue-50\' : \'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300\'"
+                                class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                            ' . $tab->renderHeader() . '
+                        </button>';
+        }
+        
+        $html .= '</nav>';
+        $html .= '</div>';
+        
+        // Tab content panels
+        $html .= '<div class="tab-content">';
+        foreach ($this->tabs as $tab) {
+            $isActive = $tab->getId() === $this->activeTab;
+            $activeClasses = $isActive ? 'block' : 'hidden';
+            
+            $html .= '<div x-show="activeTab === \'' . $tab->getId() . '\'" 
+                            x-transition:enter="transition ease-out duration-200" 
+                            x-transition:enter-start="opacity-0 transform scale-95" 
+                            x-transition:enter-end="opacity-100 transform scale-100" 
+                            x-transition:leave="transition ease-in duration-150" 
+                            x-transition:leave-start="opacity-100 transform scale-100" 
+                            x-transition:leave-end="opacity-0 transform scale-95"
+                            class="tab-panel space-y-6">
+                            ' . $tab->renderContent() . '
+                        </div>';
+        }
+        $html .= '</div>';
+        
+        $html .= '</div>';
+        
         return $html;
     }
 
