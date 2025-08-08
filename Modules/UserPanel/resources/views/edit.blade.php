@@ -6,6 +6,7 @@
 @section('content')
     <div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
         <form method="{{ $form->getMethod() }}" action="{{ $form->getAction() }}" enctype="multipart/form-data" class="space-y-6">
+            @method('PUT')
             {!! $form->renderFormContent() !!}
             
             <div class="flex justify-end space-x-4 mt-6">

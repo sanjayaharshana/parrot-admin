@@ -55,7 +55,7 @@ class ResourceService
     {
         $this->title = ucfirst($this->resourceName);
         $this->description = "Manage {$this->resourceName}";
-        
+
         // Default actions
         $this->actions = [
             'view' => [
@@ -241,33 +241,33 @@ class ResourceService
     public function index(): string
     {
         $dataView = new DataViewService($this->model);
-        
+
         // Configure the data view
         $dataView->title($this->title);
         $dataView->description($this->description);
         $dataView->routePrefix($this->routePrefix);
-        
+
         // Add columns based on fields
         foreach ($this->fields as $name => $field) {
             if ($field['type'] !== 'password' && $name !== 'id') {
                 $column = $dataView->column($name, $field['label']);
-                
+
                 if ($field['sortable']) {
                     $column->sortable();
                 }
-                
+
                 if ($field['display']) {
                     $column->display($field['display']);
                 }
             }
         }
-        
+
         // Add ID column
         $dataView->id('ID');
-        
+
         // Add actions column
         $dataView->actions($this->actions);
-        
+
         // Add filters
         foreach ($this->filters as $name => $filter) {
             switch ($filter['type']) {
@@ -286,17 +286,17 @@ class ResourceService
                     $dataView->addTextFilter($name, $filter['label']);
             }
         }
-        
+
         // Configure settings
         $dataView->perPage(15)
             ->defaultSort('id', 'desc')
             ->pagination(true)
             ->search(true);
-        
+
         if ($this->showCreateButton) {
             $dataView->createButton(route($this->routePrefix . '.create'), 'Create New');
         }
-        
+
         return $dataView->render();
     }
 
@@ -307,9 +307,9 @@ class ResourceService
     {
         $form = new FormService();
         $form->routeForStore($this->routePrefix);
-        
+
         $this->buildForm($form);
-        
+
         return [
             'form' => $form,
             'title' => "Create {$this->title}",
@@ -326,9 +326,9 @@ class ResourceService
         $form = new FormService();
         $form->bindModel($model);
         $form->routeForUpdate($this->routePrefix, $id);
-        
+
         $this->buildForm($form);
-        
+
         return [
             'form' => $form,
             'model' => $model,
@@ -344,9 +344,13 @@ class ResourceService
     {
         $form = new FormService();
         $form->routeForStore($this->routePrefix);
-        
+
+        // Create a new model instance for storing
+        $model = new $this->model();
+        $form->bindModel($model);
+
         $this->buildForm($form);
-        
+
         return $form->handle($request);
     }
 
@@ -355,14 +359,37 @@ class ResourceService
      */
     public function update(Request $request, $id): array
     {
-        $model = $this->model::findOrFail($id);
-        $form = new FormService();
-        $form->bindModel($model);
-        $form->routeForUpdate($this->routePrefix, $id);
-        
-        $this->buildForm($form);
-        
-        return $form->handle($request);
+        try {
+            $model = $this->model::findOrFail($id);
+            $form = new FormService();
+            $form->bindModel($model);
+            $form->routeForUpdate($this->routePrefix, $id);
+
+            $this->buildForm($form);
+
+            // Debug: Check if validation rules are set
+            $validationRules = $form->getValidationRules();
+
+            $result = $form->handle($request);
+
+            // If the form handling failed, return the error
+            if (!$result['success']) {
+                return $result;
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Record updated successfully!',
+                'model' => $model
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Error updating record: ' . $e->getMessage(),
+                'errors' => ['general' => $e->getMessage()]
+            ];
+        }
     }
 
     /**
@@ -371,96 +398,135 @@ class ResourceService
     protected function buildForm(FormService $form): void
     {
         $form->clear();
-        
+
+        // Collect validation rules
+        $validationRules = [];
+
         // Create form layout
         $row = $form->row();
-        
+
         foreach ($this->fields as $name => $field) {
             if ($field['type'] === 'password' && $form->getModel() && $form->getModel()->exists) {
                 continue; // Skip password field on edit if model exists
             }
-            
+
             $column = $row->column(6);
-            
+
+            // Get the current value from the model if it exists
+            $currentValue = null;
+            if ($form->getModel() && $form->getModel()->exists) {
+                $currentValue = $form->getModelValue($name);
+            }
+
             switch ($field['type']) {
                 case 'text':
                     $formField = $form->text()
                         ->name($name)
                         ->label($field['label'])
                         ->placeholder("Enter {$field['label']}");
+                    if ($currentValue !== null) {
+                        $formField->value($currentValue);
+                    }
                     break;
-                    
+
                 case 'textarea':
                     $formField = $form->textarea()
                         ->name($name)
                         ->label($field['label'])
                         ->placeholder("Enter {$field['label']}");
+                    if ($currentValue !== null) {
+                        $formField->value($currentValue);
+                    }
                     break;
-                    
+
                 case 'email':
                     $formField = $form->email()
                         ->name($name)
                         ->label($field['label'])
                         ->placeholder("Enter {$field['label']}");
+                    if ($currentValue !== null) {
+                        $formField->value($currentValue);
+                    }
                     break;
-                    
+
                 case 'password':
                     $formField = $form->password()
                         ->name($name)
                         ->label($field['label'])
                         ->placeholder("Enter {$field['label']}");
                     break;
-                    
+
                 case 'number':
                     $formField = $form->number()
                         ->name($name)
                         ->label($field['label'])
                         ->placeholder("Enter {$field['label']}");
+                    if ($currentValue !== null) {
+                        $formField->value($currentValue);
+                    }
                     break;
-                    
+
                 case 'select':
                     $formField = $form->select()
                         ->name($name)
                         ->label($field['label'])
                         ->options($field['options'] ?? []);
+                    if ($currentValue !== null) {
+                        $formField->value($currentValue);
+                    }
                     break;
-                    
+
                 case 'checkbox':
                     $formField = $form->checkbox()
                         ->name($name)
                         ->label($field['label']);
+                    if ($currentValue !== null) {
+                        $formField->value($currentValue);
+                    }
                     break;
-                    
+
                 case 'radio':
                     $formField = $form->radio()
                         ->name($name)
                         ->label($field['label'])
                         ->options($field['options'] ?? []);
+                    if ($currentValue !== null) {
+                        $formField->value($currentValue);
+                    }
                     break;
-                    
+
                 case 'file':
                     $formField = $form->file()
                         ->name($name)
                         ->label($field['label']);
                     break;
-                    
+
                 default:
                     $formField = $form->text()
                         ->name($name)
                         ->label($field['label'])
                         ->placeholder("Enter {$field['label']}");
+                    if ($currentValue !== null) {
+                        $formField->value($currentValue);
+                    }
             }
-            
-            // Add validation rules
+
+            // Add validation rules to the field and collect them for FormService
             if (!empty($field['validation'])) {
                 foreach ($field['validation'] as $rule) {
                     $formField->rule($rule);
                 }
+                $validationRules[$name] = $field['validation'];
             }
-            
+
             $column->addField($formField);
         }
-        
+
+        // Set validation rules on the form
+        if (!empty($validationRules)) {
+            $form->setValidationRules($validationRules);
+        }
+
         $form->addLayoutItem($row);
     }
 
@@ -654,7 +720,7 @@ class FieldBuilder
         if (method_exists($this->resource, $method)) {
             return call_user_func_array([$this->resource, $method], $arguments);
         }
-        
+
         throw new \BadMethodCallException("Method {$method} does not exist on FieldBuilder or ResourceService");
     }
-} 
+}

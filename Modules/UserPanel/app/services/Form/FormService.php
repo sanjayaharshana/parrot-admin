@@ -62,7 +62,7 @@ class FormService
     public function routeForUpdate(string $resourceName, $id): self
     {
         $this->action = route($resourceName . '.update', $id);
-        $this->method = 'PUT';
+        $this->method = 'POST';
         return $this;
     }
 
@@ -73,7 +73,7 @@ class FormService
     {
         $routeName = $resourceName . '.' . $action;
         $this->action = $id ? route($routeName, $id) : route($routeName);
-        
+
         // Set appropriate method based on action
         switch ($action) {
             case 'store':
@@ -88,7 +88,7 @@ class FormService
             default:
                 $this->method = 'POST';
         }
-        
+
         return $this;
     }
 
@@ -118,7 +118,7 @@ class FormService
         if (!isset($this->validationRules[$field])) {
             $this->validationRules[$field] = [];
         }
-        
+
         // Handle custom rule classes
         if (is_object($rule) && method_exists($rule, 'passes')) {
             $this->validationRules[$field][] = $rule;
@@ -128,7 +128,7 @@ class FormService
                 $this->validationRules[$field][] = $rule;
             }
         }
-        
+
         return $this;
     }
 
@@ -201,13 +201,13 @@ class FormService
             if (is_array($rules)) {
                 $laravelRules[$field] = $rules;
             } else {
-                $laravelRules[$field] = $rules;
+                $laravelRules[$field] = [$rules];
             }
         }
 
         $validator = \Illuminate\Support\Facades\Validator::make(
-            $request->all(), 
-            $laravelRules, 
+            $request->all(),
+            $laravelRules,
             $this->validationMessages
         );
 
@@ -238,7 +238,7 @@ class FormService
 
         // Validate using stored rules
         $validation = $this->validate($request);
-        
+
         if (!$validation['success']) {
             return $validation;
         }
@@ -246,15 +246,38 @@ class FormService
         $validated = $validation['data'];
 
         if ($this->model) {
-            // Update existing model
-            $this->model->fill($validated);
-            $this->model->save();
-            
-            return [
-                'success' => true,
-                'message' => 'Data saved successfully!',
-                'model' => $this->model
-            ];
+            try {
+                // Update existing model
+                $this->model->fill($validated);
+
+                // Check if the model was actually changed
+                if ($this->model->isDirty()) {
+                    $saved = $this->model->save();
+
+                    if (!$saved) {
+                        return [
+                            'success' => false,
+                            'message' => 'Failed to save data!',
+                            'errors' => ['general' => 'Failed to save data to database']
+                        ];
+                    }
+                } else {
+                    // Model wasn't changed, but that's okay
+                    $saved = true;
+                }
+
+                return [
+                    'success' => true,
+                    'message' => 'Data saved successfully!',
+                    'model' => $this->model
+                ];
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'message' => 'Error saving data: ' . $e->getMessage(),
+                    'errors' => ['general' => $e->getMessage()]
+                ];
+            }
         }
 
         return [
@@ -276,13 +299,13 @@ class FormService
         foreach ($this->beforeSubmitCallbacks as $callback) {
             try {
                 $result = call_user_func($callback, $request);
-                
+
                 // If callback returns an error, stop processing
                 if (is_array($result) && isset($result['success']) && !$result['success']) {
                     // Create a proper Laravel validation error
                     $validator = \Illuminate\Support\Facades\Validator::make([], []);
                     $validator->errors()->add('beforeSubmit', $result['error'] ?? 'Before submit validation failed');
-                    
+
                     return [
                         'success' => false,
                         'errors' => $validator->errors(),
@@ -293,7 +316,7 @@ class FormService
                 // Create a proper Laravel validation error for exceptions
                 $validator = \Illuminate\Support\Facades\Validator::make([], []);
                 $validator->errors()->add('beforeSubmit', $e->getMessage());
-                
+
                 return [
                     'success' => false,
                     'errors' => $validator->errors(),
@@ -301,7 +324,7 @@ class FormService
                 ];
             }
         }
-        
+
         return ['success' => true];
     }
 
@@ -328,8 +351,8 @@ class FormService
         }
 
         $validator = \Illuminate\Support\Facades\Validator::make(
-            $request->all(), 
-            $validationRules, 
+            $request->all(),
+            $validationRules,
             $validationMessages
         );
 
@@ -347,7 +370,7 @@ class FormService
             // Update existing model
             $this->model->fill($validated);
             $this->model->save();
-            
+
             return [
                 'success' => true,
                 'message' => 'Data saved successfully!',
@@ -375,7 +398,7 @@ class FormService
         if (strpos($fieldName, '.') !== false) {
             $parts = explode('.', $fieldName);
             $value = $this->model;
-            
+
             foreach ($parts as $part) {
                 if (is_object($value) && method_exists($value, $part)) {
                     $value = $value->$part;
@@ -385,7 +408,7 @@ class FormService
                     return null;
                 }
             }
-            
+
             return $value;
         }
 
@@ -396,6 +419,11 @@ class FormService
 
         if (isset($this->model->$fieldName)) {
             return $this->model->$fieldName;
+        }
+
+        // Try to get the value using getAttribute method
+        if (method_exists($this->model, 'getAttribute')) {
+            return $this->model->getAttribute($fieldName);
         }
 
         return null;
@@ -506,7 +534,7 @@ class FormService
     {
         $field = new Field($type, $this);
         $this->fields[] = $field;
-        
+
         return $field;
     }
 
@@ -593,28 +621,28 @@ class FormService
     public function renderForm(): string
     {
         $html = '<form method="' . $this->method . '" action="' . $this->action . '" class="' . $this->formClass . '"';
-        
+
         foreach ($this->formAttributes as $key => $value) {
             $html .= ' ' . $key . '="' . htmlspecialchars($value) . '"';
         }
-        
+
         $html .= '>' . PHP_EOL;
-        
+
         // Add CSRF token for non-GET requests
         if ($this->method !== 'GET') {
             $html .= csrf_field() . PHP_EOL;
         }
-        
+
         // Add method spoofing for PUT/PATCH/DELETE
         if (in_array($this->method, ['PUT', 'PATCH', 'DELETE'])) {
             $html .= method_field($this->method) . PHP_EOL;
         }
-        
+
         $html .= $this->renderFormContent();
-        
+
         // Add submit button
         $html .= '<button type="submit" class="' . $this->buttonClass . '">Submit</button>' . PHP_EOL;
-        
+
         $html .= '</form>';
         return $html;
     }
@@ -625,17 +653,17 @@ class FormService
     public function renderFormContent(): string
     {
         $html = '';
-        
+
         // Add CSRF token for non-GET requests
         if ($this->method !== 'GET') {
             $html .= csrf_field() . PHP_EOL;
         }
-        
+
         // Add method spoofing for PUT/PATCH/DELETE
         if (in_array($this->method, ['PUT', 'PATCH', 'DELETE'])) {
             $html .= method_field($this->method) . PHP_EOL;
         }
-        
+
         // If we have layout items, render only the layout
         if (!empty($this->layout)) {
             foreach ($this->layout as $layoutItem) {
@@ -647,7 +675,7 @@ class FormService
                 $html .= '<div class="mb-4">' . $field->render() . '</div>' . PHP_EOL;
             }
         }
-        
+
         return $html;
     }
 
@@ -678,4 +706,4 @@ class FormService
         }
         return $html;
     }
-} 
+}

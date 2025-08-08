@@ -45,9 +45,14 @@ class Field
         return $this;
     }
 
-    public function value(string $value): self
+    public function value($value): self
     {
-        $this->value = $value;
+        // Convert value to string if it's not null
+        if ($value !== null) {
+            $this->value = (string) $value;
+        } else {
+            $this->value = null;
+        }
         return $this;
     }
 

@@ -31,6 +31,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'destroy' => 'products.destroy',
     ]);
     
+    Route::resource('/ships', \Modules\UserPanel\Http\Controllers\ShipController::class)->names([
+        'index' => 'ships.index',
+        'create' => 'ships.create',
+        'store' => 'ships.store',
+        'show' => 'ships.show',
+        'edit' => 'ships.edit',
+        'update' => 'ships.update',
+        'destroy' => 'ships.destroy',
+    ]);
+    
     Route::post('/products/bulk-action', [\Modules\UserPanel\Http\Controllers\ProductController::class, 'bulkAction'])
         ->name('userpanel.products.bulk-action');
 });
