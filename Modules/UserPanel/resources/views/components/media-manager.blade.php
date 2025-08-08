@@ -17,15 +17,50 @@
 
       <div class="p-4">
         <div x-show="tab==='upload'">
-          <form @submit.prevent="upload" class="space-y-3">
-            <input type="file" x-ref="uploadInput" class="block w-full text-sm" accept="image/*">
-            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-              <i class="fa fa-upload mr-2"></i> Upload
-            </button>
-          </form>
-          <template x-if="uploading">
-            <div class="mt-3 text-sm text-gray-600">Uploading...</div>
-          </template>
+          <div class="space-y-3">
+            <div class="relative">
+              <div
+                x-ref="dropzone"
+                @dragover.prevent="dragOver = true"
+                @dragleave.prevent="dragOver = false"
+                @drop.prevent="handleDrop($event)"
+                :class="dragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white'"
+                class="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 text-center cursor-pointer">
+                <i class="fa fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                <p class="text-sm text-gray-600">Drag & drop images here, or click to select</p>
+                <input multiple type="file" x-ref="uploadInput" class="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" @change="handleFileSelect($event)">
+              </div>
+            </div>
+
+            <template x-if="queue.length">
+              <div class="space-y-2">
+                <template x-for="(item, idx) in queue" :key="item.id">
+                  <div class="border rounded-md p-2">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                        <template x-if="item.preview">
+                          <img :src="item.preview" class="w-10 h-10 rounded object-cover border" />
+                        </template>
+                        <div>
+                          <div class="text-sm font-medium" x-text="item.name"></div>
+                          <div class="text-xs text-gray-500" x-text="formatSize(item.size)"></div>
+                        </div>
+                      </div>
+                      <div class="text-xs text-gray-500" x-text="item.progress + '%'"></div>
+                    </div>
+                    <div class="mt-2 bg-gray-200 rounded h-2 overflow-hidden">
+                      <div class="bg-blue-600 h-2" :style="'width:' + item.progress + '%' "></div>
+                    </div>
+                  </div>
+                </template>
+                <div class="flex justify-end">
+                  <button @click="uploadQueue()" :disabled="uploading || !queue.length" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+                    Upload
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
         </div>
 
         <div x-show="tab==='library'">
@@ -61,6 +96,8 @@
         nextPageUrl: null,
         search: '',
         uploading: false,
+        dragOver: false,
+        queue: [],
         indexUrl: '{{ route('media.index') }}',
         storeUrl: '{{ route('media.store') }}',
         csrf: document.head.querySelector('meta[name="csrf-token"]').content,
@@ -74,20 +111,55 @@
           this.nextPageUrl = data.next_page_url;
         },
         async loadMore() { if (this.nextPageUrl) { await this.fetchLibrary(this.nextPageUrl); } },
-        async upload() {
-          const file = this.$refs.uploadInput.files[0];
-          if (!file) return;
+        handleFileSelect(e) {
+          const files = Array.from(e.target.files || []);
+          this.addToQueue(files);
+        },
+        handleDrop(e) {
+          this.dragOver = false;
+          const files = Array.from(e.dataTransfer.files || []);
+          this.addToQueue(files);
+        },
+        addToQueue(files) {
+          const accepted = files.filter(f => /^image\//.test(f.type));
+          for (const file of accepted) {
+            const id = Math.random().toString(36).slice(2);
+            const item = { id, file, name: file.name, size: file.size, progress: 0, preview: '' };
+            try {
+              item.preview = URL.createObjectURL(file);
+            } catch (e) {}
+            this.queue.push(item);
+          }
+        },
+        formatSize(bytes) {
+          if (bytes < 1024) return bytes + ' B';
+          if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+          return (bytes/1024/1024).toFixed(1) + ' MB';
+        },
+        async uploadQueue() {
+          if (!this.queue.length) return;
           this.uploading = true;
-          const form = new FormData();
-          form.append('file', file);
-          const res = await fetch(this.storeUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': this.csrf }, body: form });
-          this.uploading = false;
-          if (res.ok) {
-            const item = await res.json();
+          try {
+            const form = new FormData();
+            for (const item of this.queue) form.append('files[]', item.file);
+            const res = await fetch(this.storeUrl, {
+              method: 'POST',
+              headers: { 'X-CSRF-TOKEN': this.csrf },
+              body: form,
+            });
+            if (!res.ok) throw new Error('Upload failed');
+            const data = await res.json();
+            const created = Array.isArray(data.data) ? data.data : [data];
+            // Simulate full progress for now
+            this.queue.forEach(it => it.progress = 100);
+            // Push into library
+            for (const m of created) this.items.unshift(m);
+            this.queue = [];
             this.tab = 'library';
-            this.items.unshift(item);
-          } else {
-            alert('Upload failed');
+          } catch (e) {
+            alert(e.message || 'Upload failed');
+          } finally {
+            this.uploading = false;
           }
         },
         select(item) {
