@@ -5,8 +5,15 @@
         <ul class="nav-menu">
             <li><a href="#features">Features</a></li>
             <li><a href="#pricing">Pricing</a></li>
+            <li><a href="{{ route('documentation.index') }}" class="nav-link {{ request()->routeIs('documentation.*') ? 'active' : '' }}">Documentation</a></li>
             <li><a href="/about">About</a></li>
             <li><a href="#contact">Contact</a></li>
+            @if(request()->routeIs('documentation.*'))
+                <li><a href="{{ route('documentation.create') }}" class="btn-get-started">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add Page
+                </a></li>
+            @endif
             @guest
                 <li><a href="/login" class="btn-get-started">Get Started</a></li>
             @else
@@ -93,6 +100,15 @@
     }
 
     .nav-menu a:hover {
+        color: #667eea;
+    }
+
+    .nav-menu a.active {
+        color: #667eea;
+        font-weight: 600;
+    }
+
+    .header.scrolled .nav-menu a.active {
         color: #667eea;
     }
 

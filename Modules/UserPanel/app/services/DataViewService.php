@@ -249,6 +249,22 @@ class DataViewService
     }
 
     /**
+     * Get the title
+     */
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+
+    /**
+     * Get the description
+     */
+    public function getDescription(): string
+    {
+        return $this->description;
+    }
+
+    /**
      * Get formatted data for the grid
      */
     public function getData(): array

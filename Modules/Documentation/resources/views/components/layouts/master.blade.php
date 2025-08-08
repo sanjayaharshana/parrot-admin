@@ -94,26 +94,8 @@
 
 <body class="bg-gray-50">
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex">
-                    <div class="flex-shrink-0 flex items-center">
-                        <a href="{{ route('documentation.index') }}" class="text-xl font-bold text-gray-900">
-                            <i class="fas fa-book-open mr-2"></i>
-                            Documentation
-                        </a>
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    <a href="{{ route('documentation.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
-                        <i class="fas fa-plus mr-2"></i>
-                        Add Page
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <x-landing::partials.header />
+    <div class="h-16"></div> <!-- Spacer for fixed header -->
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
