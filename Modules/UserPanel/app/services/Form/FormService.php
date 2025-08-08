@@ -9,6 +9,7 @@ class FormService
 {
     protected array $fields = [];
     protected array $layout = [];
+    protected array $customHtml = [];
     protected string $formClass = 'space-y-6';
     protected string $buttonClass = 'w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50';
     protected ?Model $model = null;
@@ -579,6 +580,112 @@ class FormService
     }
 
     /**
+     * Add custom HTML to the form
+     */
+    public function customHtml(string $html, string $position = 'before', array $attributes = []): CustomHtml
+    {
+        $customHtml = new CustomHtml($html, $position, $attributes);
+        $this->customHtml[] = $customHtml;
+        return $customHtml;
+    }
+
+    /**
+     * Add an alert message to the form
+     */
+    public function alert(string $message, string $type = 'info'): CustomHtml
+    {
+        $customHtml = CustomHtml::alert($message, $type);
+        $this->customHtml[] = $customHtml;
+        return $customHtml;
+    }
+
+    /**
+     * Add a card with custom content to the form
+     */
+    public function customCard(string $content, string $title = null, string $class = 'bg-white shadow rounded-lg p-6'): CustomHtml
+    {
+        $customHtml = CustomHtml::card($content, $title, $class);
+        $this->customHtml[] = $customHtml;
+        return $customHtml;
+    }
+
+    /**
+     * Add a divider to the form
+     */
+    public function divider(string $text = null, string $class = 'my-6'): CustomHtml
+    {
+        $customHtml = CustomHtml::divider($text, $class);
+        $this->customHtml[] = $customHtml;
+        return $customHtml;
+    }
+
+    /**
+     * Add a button to the form
+     */
+    public function customButton(string $text, string $type = 'button', string $class = 'bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg'): CustomHtml
+    {
+        $customHtml = CustomHtml::button($text, $type, $class);
+        $this->customHtml[] = $customHtml;
+        return $customHtml;
+    }
+
+    /**
+     * Add a link to the form
+     */
+    public function customLink(string $text, string $url, string $class = 'text-blue-600 hover:text-blue-800 underline'): CustomHtml
+    {
+        $customHtml = CustomHtml::link($text, $url, $class);
+        $this->customHtml[] = $customHtml;
+        return $customHtml;
+    }
+
+    /**
+     * Add raw HTML to the form
+     */
+    public function rawHtml(string $html): CustomHtml
+    {
+        $customHtml = CustomHtml::raw($html);
+        $this->customHtml[] = $customHtml;
+        return $customHtml;
+    }
+
+    /**
+     * Add custom HTML to a specific column
+     */
+    public function addCustomHtmlToColumn(Column $column, string $html): self
+    {
+        $column->addHtml($html);
+        return $this;
+    }
+
+    /**
+     * Add custom HTML to a specific section
+     */
+    public function addCustomHtmlToSection(Section $section, string $html): self
+    {
+        $customHtml = new CustomHtml($html);
+        $section->addField($customHtml);
+        return $this;
+    }
+
+    /**
+     * Get all custom HTML elements
+     */
+    public function getCustomHtml(): array
+    {
+        return $this->customHtml;
+    }
+
+    /**
+     * Clear all custom HTML elements
+     */
+    public function clearCustomHtml(): self
+    {
+        $this->customHtml = [];
+        return $this;
+    }
+
+    /**
      * Add a layout item to the form's layout
      */
     public function addLayoutItem($layoutItem): self
@@ -612,6 +719,7 @@ class FormService
     {
         $this->layout = [];
         $this->fields = [];
+        $this->customHtml = [];
         return $this;
     }
 
@@ -664,6 +772,13 @@ class FormService
             $html .= method_field($this->method) . PHP_EOL;
         }
 
+        // Render custom HTML before form content
+        foreach ($this->customHtml as $customHtml) {
+            if ($customHtml->getPosition() === 'before') {
+                $html .= $customHtml->render() . PHP_EOL;
+            }
+        }
+
         // If we have layout items, render only the layout
         if (!empty($this->layout)) {
             foreach ($this->layout as $layoutItem) {
@@ -673,6 +788,13 @@ class FormService
             // Only render individual fields if no layout items exist
             foreach ($this->fields as $field) {
                 $html .= '<div class="mb-4">' . $field->render() . '</div>' . PHP_EOL;
+            }
+        }
+
+        // Render custom HTML after form content
+        foreach ($this->customHtml as $customHtml) {
+            if ($customHtml->getPosition() === 'after') {
+                $html .= $customHtml->render() . PHP_EOL;
             }
         }
 

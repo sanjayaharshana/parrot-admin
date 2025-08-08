@@ -22,28 +22,63 @@ class ShipController extends ResourceController
             ->title('Ship Management')
             ->description('Manage ships with full CRUD operations')
             
+            // Welcome message with custom HTML
+            ->alert('Welcome to the Ship Management System. Please provide accurate information for all fields.', 'info')
+            
             // Basic Information Section
+            ->divider('Basic Information')
             ->text('name')
                 ->required()
                 ->searchable()
                 ->sortable()
                 ->rules(['max:255'])
-                ->section('Basic Information')
             
             ->text('ship')
                 ->required()
                 ->searchable()
                 ->sortable()
                 ->rules(['max:255'])
-                ->section('Basic Information')
             
-            // Address Section
+            // Important note card
+            ->customCard(
+                '<ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+                    <li>Ship name should be unique and descriptive</li>
+                    <li>All fields marked with * are required</li>
+                    <li>Address should be complete and accurate for shipping purposes</li>
+                </ul>',
+                'Important Notes',
+                'bg-blue-50 border border-blue-200 rounded-lg p-4'
+            )
+            
+            // Location Details Section
+            ->divider('Location Details')
             ->textarea('address')
                 ->required()
                 ->searchable()
                 ->rules(['max:1000'])
-                ->section('Location Details')
-                ->width(12) // Full width for textarea
+            
+            // Help section with custom HTML
+            ->customCard(
+                '<p class="text-sm text-gray-600">Need help? Contact our support team at 
+                <a href="mailto:support@example.com" class="text-blue-600 hover:text-blue-800">support@example.com</a> 
+                or call us at <span class="font-medium">+1-555-123-4567</span></p>',
+                'Need Help?',
+                'bg-gray-50 border border-gray-200 rounded-lg p-4'
+            )
+            
+            // Action buttons section
+            ->customCard(
+                '<div class="flex space-x-4">
+                    <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                        <i class="fa fa-eye mr-2"></i>Preview
+                    </button>
+                    <button type="button" class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                        <i class="fa fa-save mr-2"></i>Save Draft
+                    </button>
+                </div>',
+                'Quick Actions',
+                'bg-gray-50 border border-gray-200 rounded-lg p-4'
+            )
             
             // Configure actions
             ->actions([

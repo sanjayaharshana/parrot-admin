@@ -7,7 +7,7 @@ class Section
     protected ?string $title;
     protected ?string $description;
     protected ?FormService $formService;
-    protected array $items = [];
+    protected array $fields = [];
 
     public function __construct(string $title = null, string $description = null, FormService $formService = null)
     {
@@ -16,21 +16,10 @@ class Section
         $this->formService = $formService;
     }
 
-    /**
-     * Add any layout item to the section (Field, Row, Column, etc.)
-     */
-    public function addField($item): self
+    public function addField(Field $field): self
     {
-        $this->items[] = $item;
+        $this->fields[] = $field;
         return $this;
-    }
-
-    /**
-     * Alias for addField for clarity
-     */
-    public function addItem($item): self
-    {
-        return $this->addField($item);
     }
 
     public function render(): string
@@ -45,8 +34,8 @@ class Section
             $html .= '<p class="text-sm text-gray-600 mb-4">' . htmlspecialchars($this->description) . '</p>';
         }
         
-        foreach ($this->items as $item) {
-            $html .= $item->render();
+        foreach ($this->fields as $field) {
+            $html .= $field->render();
         }
         
         $html .= '</div>';
