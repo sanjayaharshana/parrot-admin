@@ -77,11 +77,15 @@ class Field
 
     public function rule($rule): self
     {
-        // Only accept custom rule classes
+        // Accept both custom rule classes and string rules
         if (is_object($rule) && method_exists($rule, 'passes')) {
+            // Custom validation rule class
+            $this->addValidationRule($rule);
+        } elseif (is_string($rule)) {
+            // String validation rule
             $this->addValidationRule($rule);
         } else {
-            throw new \InvalidArgumentException('The rule() method only accepts custom validation rule classes that implement the passes() method.');
+            throw new \InvalidArgumentException('The rule() method accepts custom validation rule classes that implement the passes() method or string validation rules.');
         }
         
         return $this;

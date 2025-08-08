@@ -2,55 +2,63 @@
 
 namespace Modules\UserPanel\Http\Controllers;
 
-use App\Models\Evest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Modules\UserPanel\Http\Base\ResourceController;
 use Modules\UserPanel\Services\ResourceService;
 
-class DashboardController extends ResourceController
+class UserResourceController extends ResourceController
 {
-    public $icon = 'fa fa-dashboard';
-    public $model = Evest::class;
-    public $routeName = 'dashboard';
+    public $icon = 'fa fa-users';
+    public $model = User::class;
+    public $routeName = 'users';
 
     /**
      * Make the resource instance
      */
     protected function makeResource(): ResourceService
     {
-        return (new ResourceService(Evest::class, 'dashboard'))
-            ->title('Dashboard Management')
-            ->description('Manage dashboard records with full CRUD operations')
+        return (new ResourceService(User::class, 'users'))
+            ->title('User Management')
+            ->description('Manage users with full CRUD operations')
             
             // Define fields
-            ->text('title')
+            ->text('name')
                 ->required()
                 ->searchable()
                 ->sortable()
                 ->rules(['max:255'])
             
-            ->textarea('desc')
+            ->email('email')
                 ->required()
                 ->searchable()
-                ->rules(['max:1000'])
+                ->sortable()
+                ->rules(['email', 'unique:users,email'])
             
-            ->select('uploader_id')
+            ->password('password')
                 ->required()
-                ->options(function() {
-                    return User::all()->pluck('name', 'id')->toArray();
-                })
+                ->rules(['min:8'])
+            
+            ->select('email_verified_at')
                 ->filterable([
                     'type' => 'select',
-                    'options' => function() {
-                        return User::all()->pluck('name', 'id')->toArray();
-                    }
+                    'options' => [
+                        'verified' => 'Verified',
+                        'unverified' => 'Not Verified'
+                    ]
                 ])
-                ->rules(['exists:users,id'])
+                ->display(function($value) {
+                    if ($value) {
+                        return '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Verified</span>';
+                    }
+                    return '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">Unverified</span>';
+                })
             
-            ->text('path')
-                ->searchable()
-                ->rules(['nullable', 'max:500'])
+            ->date('created_at')
+                ->sortable()
+                ->display(function($value) {
+                    return $value ? date('M d, Y', strtotime($value)) : 'N/A';
+                })
             
             // Configure actions
             ->actions([
@@ -83,27 +91,12 @@ class DashboardController extends ResourceController
                     'icon' => 'fa fa-trash',
                     'class' => 'btn-danger',
                     'confirm' => true
+                ],
+                'verify' => [
+                    'label' => 'Verify Selected',
+                    'icon' => 'fa fa-check',
+                    'class' => 'btn-success'
                 ]
             ]);
     }
-
-    /**
-     * Override the createForm method for custom form layout if needed
-     */
-    public function createForm($mode = 'create')
-    {
-        // This method is now handled by the ResourceService
-        // You can override it here if you need custom form logic
-        return parent::createForm($mode);
-    }
-
-    /**
-     * Override the dataSetView method for custom grid layout if needed
-     */
-    public function dataSetView()
-    {
-        // This method is now handled by the ResourceService
-        // You can override it here if you need custom grid logic
-        return $this->resource->index();
-    }
-}
+} 

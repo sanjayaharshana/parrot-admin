@@ -30,10 +30,28 @@ class DataViewService
     protected string $createButtonUrl = '';
     protected string $createButtonText = 'Create New';
     protected bool $showCreateButton = false;
+    protected string $routePrefix = '';
 
     public function __construct(Model $model)
     {
         $this->model = $model;
+    }
+
+    /**
+     * Set the route prefix for generating URLs
+     */
+    public function routePrefix(string $prefix): self
+    {
+        $this->routePrefix = $prefix;
+        return $this;
+    }
+
+    /**
+     * Get the route prefix
+     */
+    public function getRoutePrefix(): string
+    {
+        return $this->routePrefix;
     }
 
     /**
@@ -425,15 +443,87 @@ class DataViewService
 
         $html = '<div class="flex space-x-2">';
         foreach ($actions as $action) {
-            $url = is_callable($action['url']) ? $action['url']($item) : $action['url'];
+            // Handle both 'url' and 'route' keys
+            $url = null;
+            if (isset($action['url'])) {
+                $url = is_callable($action['url']) ? $action['url']($item) : $action['url'];
+            } elseif (isset($action['route'])) {
+                // Convert route to URL
+                $routeName = $action['route'];
+                $routeParams = [];
+                
+                // Add the model ID using the correct parameter name for route model binding
+                if (method_exists($item, 'getKey')) {
+                    $routeParams[$this->getRouteParameterName()] = $item->getKey();
+                } elseif (isset($item->id)) {
+                    $routeParams[$this->getRouteParameterName()] = $item->id;
+                }
+                
+                // Handle special routes
+                switch ($routeName) {
+                    case 'show':
+                        $url = route($this->getRoutePrefix() . '.show', $routeParams);
+                        break;
+                    case 'edit':
+                        $url = route($this->getRoutePrefix() . '.edit', $routeParams);
+                        break;
+                    case 'destroy':
+                        $url = route($this->getRoutePrefix() . '.destroy', $routeParams);
+                        break;
+                    default:
+                        $url = route($routeName, $routeParams);
+                        break;
+                }
+            } else {
+                continue; // Skip action if no URL or route is provided
+            }
+            
             $class = $action['class'] ?? 'px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600';
             $icon = isset($action['icon']) ? "<i class=\"{$action['icon']}\"></i> " : '';
+            $label = $action['label'] ?? 'Action';
             
-            $html .= "<a href=\"{$url}\" class=\"{$class}\">{$icon}{$action['label']}</a>";
+            // Handle different action types
+            if (isset($action['method']) && strtoupper($action['method']) === 'DELETE') {
+                // Create a form for DELETE method
+                $html .= "<form method=\"POST\" action=\"{$url}\" class=\"inline\" onsubmit=\"return confirm('Are you sure?')\">";
+                $html .= csrf_field();
+                $html .= method_field('DELETE');
+                $html .= "<button type=\"submit\" class=\"{$class}\">{$icon}{$label}</button>";
+                $html .= "</form>";
+            } else {
+                $html .= "<a href=\"{$url}\" class=\"{$class}\">{$icon}{$label}</a>";
+            }
         }
         $html .= '</div>';
         
         return $html;
+    }
+
+    /**
+     * Get the route parameter name for route model binding
+     */
+    protected function getRouteParameterName(): string
+    {
+        // Convert route prefix to singular form for route model binding
+        // e.g., 'dashboard' -> 'dashboard', 'products' -> 'product'
+        $prefix = $this->routePrefix;
+        
+        // If it's already singular (ends with a consonant), return as is
+        if (substr($prefix, -1) !== 's') {
+            return $prefix;
+        }
+        
+        // If it ends with 'ies', replace with 'y'
+        if (substr($prefix, -3) === 'ies') {
+            return substr($prefix, 0, -3) . 'y';
+        }
+        
+        // If it ends with 's', remove it
+        if (substr($prefix, -1) === 's') {
+            return substr($prefix, 0, -1);
+        }
+        
+        return $prefix;
     }
 
     /**
