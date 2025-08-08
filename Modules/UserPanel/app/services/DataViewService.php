@@ -468,8 +468,8 @@ class DataViewService
             return '';
         }
 
-        $html = '<div class="flex space-x-2">';
-        foreach ($actions as $action) {
+        $html = '<div class="inline-flex items-center gap-2">';
+        foreach ($actions as $actionKey => $action) {
             // Handle both 'url' and 'route' keys
             $url = null;
             if (isset($action['url'])) {
@@ -504,21 +504,51 @@ class DataViewService
             } else {
                 continue; // Skip action if no URL or route is provided
             }
-            
-            $class = $action['class'] ?? 'px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600';
-            $icon = isset($action['icon']) ? "<i class=\"{$action['icon']}\"></i> " : '';
+            // Determine styling
+            $baseClass = 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full shadow-sm transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1';
+            $variant = $action['variant'] ?? (is_string($actionKey) ? $actionKey : 'default');
+            switch ($variant) {
+                case 'view':
+                    $colorClass = 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 focus:ring-indigo-500';
+                    break;
+                case 'edit':
+                    $colorClass = 'bg-amber-50 text-amber-700 hover:bg-amber-100 focus:ring-amber-500';
+                    break;
+                case 'delete':
+                case 'destroy':
+                    $colorClass = 'bg-rose-50 text-rose-700 hover:bg-rose-100 focus:ring-rose-500';
+                    break;
+                default:
+                    $colorClass = 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-400';
+                    break;
+            }
+            $classFromConfig = $action['class'] ?? '';
+            if ($classFromConfig !== '' && preg_match('/(^|\s)btn(?!-group)(-|\s|$)/', $classFromConfig)) {
+                // Ignore legacy Bootstrap-like classes; use our Tailwind variant instead
+                $class = trim($baseClass . ' ' . $colorClass);
+            } else {
+                $class = trim($baseClass . ' ' . ($classFromConfig !== '' ? $classFromConfig : $colorClass));
+            }
+
+            $icon = isset($action['icon']) ? "<i class=\"{$action['icon']}\"></i>" : '';
             $label = $action['label'] ?? 'Action';
+            $titleAttr = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
             
             // Handle different action types
             if (isset($action['method']) && strtoupper($action['method']) === 'DELETE') {
                 // Create a form for DELETE method
-                $html .= "<form method=\"POST\" action=\"{$url}\" class=\"inline\" onsubmit=\"return confirm('Are you sure?')\">";
+                $confirmMessage = '';
+                if (isset($action['confirm'])) {
+                    $confirmText = is_string($action['confirm']) ? $action['confirm'] : 'Are you sure?';
+                    $confirmMessage = " onsubmit=\"return confirm('" . addslashes($confirmText) . "')\"";
+                }
+                $html .= "<form method=\"POST\" action=\"{$url}\" class=\"inline\"{$confirmMessage}>";
                 $html .= csrf_field();
                 $html .= method_field('DELETE');
-                $html .= "<button type=\"submit\" class=\"{$class}\">{$icon}{$label}</button>";
+                $html .= "<button type=\"submit\" class=\"{$class}\" title=\"{$titleAttr}\" aria-label=\"{$titleAttr}\">{$icon}<span>{$label}</span></button>";
                 $html .= "</form>";
             } else {
-                $html .= "<a href=\"{$url}\" class=\"{$class}\">{$icon}{$label}</a>";
+                $html .= "<a href=\"{$url}\" class=\"{$class}\" title=\"{$titleAttr}\" aria-label=\"{$titleAttr}\">{$icon}<span>{$label}</span></a>";
             }
         }
         $html .= '</div>';
