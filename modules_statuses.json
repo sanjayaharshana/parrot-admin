@@ -4,5 +4,6 @@
     "Landing": true,
     "Auth": true,
     "UserPanel": true,
-    "PluginManager": true
+    "PluginManager": true,
+    "Documentation": true
 }
