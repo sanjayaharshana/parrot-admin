@@ -118,6 +118,7 @@
                 @endif
 
                 @yield('content')
+                @include('userpanel::components.media-manager')
             </main>
         </div>
     </div>

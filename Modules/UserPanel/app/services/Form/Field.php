@@ -15,6 +15,7 @@ class Field
     protected array $validationRules = [];
     protected array $validationMessages = [];
     protected array $options = [];
+    protected bool $useMediaManager = false;
 
     public function __construct(string $type, ?FormService $formService = null)
     {
@@ -176,7 +177,12 @@ class Field
                 break;
                 
             case 'file':
-                $this->addValidationRuleDirectly('file');
+                if ($this->useMediaManager) {
+                    // Store selected media id
+                    $this->addValidationRuleDirectly('integer');
+                } else {
+                    $this->addValidationRuleDirectly('file');
+                }
                 break;
                 
             case 'password':
@@ -205,6 +211,11 @@ class Field
 
     protected function addFileTypeValidation(): self
     {
+        if ($this->type === 'file' && $this->useMediaManager) {
+            // Media manager stores an id; skip file-type validation
+            return $this;
+        }
+
         if ($this->type === 'file' && isset($this->attributes['accept'])) {
             $accept = $this->attributes['accept'];
             
@@ -300,6 +311,12 @@ class Field
         return $this;
     }
 
+    public function imageManager(bool $use = true): self
+    {
+        $this->useMediaManager = $use;
+        return $this;
+    }
+
     public function step(string $step): self
     {
         $this->attributes['step'] = $step;
@@ -368,6 +385,23 @@ class Field
                 return '<label class="flex items-center"><input type="radio" ' . $attributes . $checked . ' class="rounded-full border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"> <span class="ml-2 text-sm text-gray-700">' . htmlspecialchars($this->label) . '</span></label>';
                 
             case 'file':
+                if ($this->useMediaManager) {
+                    $name = htmlspecialchars($this->name);
+                    $html = $label;
+                    $html .= '<div class="space-y-2">';
+                    $html .= '<div class="flex items-center gap-3">';
+                    $html .= '<img data-media-preview="' . $name . '" src="#" alt="preview" class="hidden w-16 h-16 rounded object-cover border" />';
+                    $html .= '<span class="text-sm text-gray-600" data-media-filename="' . $name . '"></span>';
+                    $html .= '</div>';
+                    $html .= '<div class="flex items-center gap-2">';
+                    $html .= '<button type="button" onclick="openMediaManager(\'' . $name . '\')" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700">';
+                    $html .= '<i class="fa fa-image mr-2"></i>Select Image';
+                    $html .= '</button>';
+                    $html .= '</div>';
+                    $html .= '<input type="hidden" name="' . $name . '" data-media-hidden="' . $name . '">';
+                    $html .= '</div>';
+                    return $html;
+                }
                 return $label . '<input type="file" ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">';
                 
             default:

@@ -761,6 +761,10 @@ class ResourceService
             case 'file':
                 $formField = $formTab->file($fieldName)
                     ->label($field['label']);
+                if (!empty($field['image_manager'])) {
+                    // Tell Field renderer to use media manager UI
+                    $formField->imageManager();
+                }
                 if (isset($field['accept'])) {
                     $formField->accept($field['accept']);
                 }

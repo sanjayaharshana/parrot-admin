@@ -9,8 +9,13 @@ use Modules\UserPanel\Http\Controllers\ModelBindingController;
 use Modules\UserPanel\Http\Controllers\DataViewController;
 use Modules\UserPanel\Http\Controllers\SimpleLayoutController;
 use Modules\UserPanel\Http\Controllers\TestController;
+use Modules\UserPanel\Http\Controllers\MediaController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    // Media manager endpoints
+    Route::get('/media', [MediaController::class, 'index'])->name('media.index');
+    Route::post('/media', [MediaController::class, 'store'])->name('media.store');
+    Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
     Route::resource('/dashboard', \Modules\UserPanel\Http\Controllers\DashboardController::class)->names([
         'index' => 'dashboard.index',
         'create' => 'dashboard.create',

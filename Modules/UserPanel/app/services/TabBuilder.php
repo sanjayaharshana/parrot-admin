@@ -264,6 +264,17 @@ class TabBuilder
     }
 
     /**
+     * Enable media manager UI for the last added file field
+     */
+    public function imageManager(bool $use = true): self
+    {
+        if ($this->lastFieldName) {
+            $this->resource->updateField($this->lastFieldName, ['image_manager' => $use]);
+        }
+        return $this;
+    }
+
+    /**
      * Mark the last added field as required
      */
     public function required(): self

@@ -61,6 +61,13 @@ class ShipController extends ResourceController
                 ->alert('Please provide complete and accurate address information for shipping and logistics purposes.', 'info')
                 ->end()
 
+            // Media & Files Tab
+            ->tab('media', 'Media & Files', 'fa fa-image')
+                ->file('ship_image')
+                    ->imageManager()
+                    ->required()
+                ->end()
+
             // Additional Information Tab
             ->tab('additional', 'Additional Information', 'fa fa-plus-circle')
                 ->customHtml(
@@ -136,6 +143,14 @@ class ShipController extends ResourceController
 
         // Add ID column
         $dataView->id('ID')->sortable();
+
+        // Add ship image thumbnail column
+        $dataView->column('ship_image', 'Image')
+            ->display(function($value) {
+                if (!$value) return '';
+                $media = \Modules\UserPanel\App\Models\Media::find($value);
+                return $media ? '<img src="' . $media->url . '" class="w-10 h-10 rounded object-cover" />' : '';
+            });
 
         // Add name column
         $dataView->column('name', 'Ship Name')
