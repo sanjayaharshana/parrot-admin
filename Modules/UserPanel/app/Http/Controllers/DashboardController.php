@@ -17,6 +17,9 @@ class DashboardController extends BaseController
 
     public function createForm($mode = 'create')
     {
+        // Clear any existing layout items and fields to prevent duplication
+        $this->form->clear();
+
         // Add header information using FormService's layout system
         $headerRow = $this->form->row();
         $headerRow->column(6, function ($form, $column) {
@@ -24,6 +27,8 @@ class DashboardController extends BaseController
             $column->addHtml('<p class="text-sm text-gray-600">Fill in the details below to create a new record.</p>');
         });
 
+        // Add the header row to the form's layout
+        $this->form->addLayoutItem($headerRow);
 
         // Add form fields using FormService's layout system
         $layoutRow = $this->form->row();
@@ -62,6 +67,9 @@ class DashboardController extends BaseController
                     ->placeholder('Enter file path')
             );
         });
+
+        // Add the layout row to the form's layout
+        $this->form->addLayoutItem($layoutRow);
     }
 
     public function dataSetView()
@@ -164,6 +172,12 @@ class DashboardController extends BaseController
 
         // Bind the model to the form service
         $this->form->bindModel($model);
+
+        // Set the form route for update action
+        $this->form->routeForUpdate($this->getRouteName(), $id);
+
+        // Set up the form with validation rules
+        $this->createForm('edit');
 
         // Handle the form submission with validation
         $result = $this->form->handle($request);

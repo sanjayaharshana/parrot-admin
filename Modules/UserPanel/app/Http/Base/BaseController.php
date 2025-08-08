@@ -110,6 +110,12 @@ class BaseController extends Controller
      */
     public function store(Request $request)
     {
+        // Set the form route for store action
+        $this->form->routeForStore($this->getRouteName());
+        
+        // Set up the form with validation rules
+        $this->createForm('create');
+        
         // Handle the form submission with validation
         $result = $this->form->handle($request);
 
