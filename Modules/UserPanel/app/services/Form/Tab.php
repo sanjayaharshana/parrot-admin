@@ -306,11 +306,7 @@ class Tab
     public function renderHeader(): string
     {
         $iconHtml = $this->icon ? "<i class=\"{$this->icon} mr-2\"></i>" : '';
-        return "<button type=\"button\" 
-                        class=\"tab-button px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50\" 
-                        data-tab=\"{$this->id}\">
-                    {$iconHtml}{$this->label}
-                </button>";
+        return "<span class=\"tab-header-content\">{$iconHtml}{$this->label}</span>";
     }
 
     /**

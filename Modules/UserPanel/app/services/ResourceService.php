@@ -622,29 +622,42 @@ class ResourceService
      */
     protected function buildFormWithTabs(FormService $form): void
     {
+        // First, create all tabs in the FormService
         foreach ($this->tabs as $tabId => $tab) {
-            $formTab = $form->tab($tabId, $tab['label'], $tab['icon']);
-            
-            // Add fields to the tab
-            foreach ($tab['fields'] as $fieldName) {
-                if (isset($this->fields[$fieldName])) {
-                    $field = $this->fields[$fieldName];
-                    
-                    // Get the current value from the model if it exists
-                    $currentValue = null;
-                    if ($form->getModel() && $form->getModel()->exists) {
-                        $currentValue = $form->getModelValue($fieldName);
+            $form->tab($tabId, $tab['label'], $tab['icon']);
+        }
+        
+        // Now get the created tabs and add fields to them
+        $formTabs = $form->getTabs();
+        
+        foreach ($this->tabs as $tabId => $tab) {
+            if (isset($formTabs[$tabId])) {
+                $formTab = $formTabs[$tabId];
+                
+                // Add fields to the tab
+                foreach ($tab['fields'] as $fieldName) {
+                    if (isset($this->fields[$fieldName])) {
+                        $field = $this->fields[$fieldName];
+                        
+                        // Get the current value from the model if it exists
+                        $currentValue = null;
+                        if ($form->getModel() && $form->getModel()->exists) {
+                            $currentValue = $form->getModelValue($fieldName);
+                        }
+                        
+                        $this->addFieldToFormTab($formTab, $field, $fieldName, $currentValue);
                     }
-                    
-                    $this->addFieldToFormTab($formTab, $field, $fieldName, $currentValue);
+                }
+                
+                // Add custom content to the tab
+                foreach ($tab['content'] as $content) {
+                    $this->addContentToFormTab($formTab, $content);
                 }
             }
-            
-            // Add custom content to the tab
-            foreach ($tab['content'] as $content) {
-                $this->addContentToFormTab($formTab, $content);
-            }
         }
+
+        // Ensure validation rules collected on ResourceService are applied to the FormService
+        $form->setValidationRules($this->getValidationRules());
     }
 
     /**
@@ -654,102 +667,139 @@ class ResourceService
     {
         switch ($field['type']) {
             case 'text':
-                $formField = $formTab->field($formTab->text()
-                    ->name($fieldName)
+                $formField = $formTab->text($fieldName)
                     ->label($field['label'])
-                    ->placeholder("Enter {$field['label']}"));
+                    ->placeholder("Enter {$field['label']}");
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
                 }
                 break;
                 
             case 'textarea':
-                $formField = $formTab->field($formTab->textarea()
-                    ->name($fieldName)
+                $formField = $formTab->textarea($fieldName)
                     ->label($field['label'])
-                    ->placeholder("Enter {$field['label']}"));
+                    ->placeholder("Enter {$field['label']}");
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
                 }
                 break;
                 
             case 'email':
-                $formField = $formTab->field($formTab->email()
-                    ->name($fieldName)
+                $formField = $formTab->email($fieldName)
                     ->label($field['label'])
-                    ->placeholder("Enter {$field['label']}"));
+                    ->placeholder("Enter {$field['label']}");
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
                 }
                 break;
                 
             case 'password':
-                $formField = $formTab->field($formTab->password()
-                    ->name($fieldName)
+                $formField = $formTab->password($fieldName)
                     ->label($field['label'])
-                    ->placeholder("Enter {$field['label']}"));
+                    ->placeholder("Enter {$field['label']}");
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
                 break;
                 
             case 'number':
-                $formField = $formTab->field($formTab->number()
-                    ->name($fieldName)
+                $formField = $formTab->number($fieldName)
                     ->label($field['label'])
-                    ->placeholder("Enter {$field['label']}"));
+                    ->placeholder("Enter {$field['label']}");
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
                 }
                 break;
                 
             case 'select':
-                $formField = $formTab->field($formTab->select()
-                    ->name($fieldName)
+                $formField = $formTab->select($fieldName)
                     ->label($field['label'])
-                    ->options($field['options'] ?? []));
+                    ->options($field['options'] ?? []);
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
                 }
                 break;
                 
             case 'checkbox':
-                $formField = $formTab->field($formTab->checkbox()
-                    ->name($fieldName)
-                    ->label($field['label']));
+                $formField = $formTab->checkbox($fieldName)
+                    ->label($field['label']);
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
                 }
                 break;
                 
             case 'radio':
-                $formField = $formTab->field($formTab->radio()
-                    ->name($fieldName)
+                $formField = $formTab->radio($fieldName)
                     ->label($field['label'])
-                    ->options($field['options'] ?? []));
+                    ->options($field['options'] ?? []);
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
                 }
                 break;
                 
             case 'file':
-                $formField = $formTab->field($formTab->file()
-                    ->name($fieldName)
-                    ->label($field['label']));
+                $formField = $formTab->file($fieldName)
+                    ->label($field['label']);
+                if (isset($field['accept'])) {
+                    $formField->accept($field['accept']);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
                 break;
                 
             case 'date':
-                $formField = $formTab->field($formTab->date()
-                    ->name($fieldName)
-                    ->label($field['label']));
+                $formField = $formTab->date($fieldName)
+                    ->label($field['label']);
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
                 }
                 break;
                 
             case 'datetime':
-                $formField = $formTab->field($formTab->datetime()
-                    ->name($fieldName)
-                    ->label($field['label']));
+                $formField = $formTab->datetime($fieldName)
+                    ->label($field['label']);
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                break;
+                
+            default:
+                // Fallback to text field for unknown types
+                $formField = $formTab->text($fieldName)
+                    ->label($field['label']);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
                 }
                 break;
         }

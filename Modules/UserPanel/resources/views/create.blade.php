@@ -36,6 +36,14 @@
             @apply animate-fade-in;
         }
         
+        .tab-header-content {
+            @apply flex items-center;
+        }
+        
+        [x-cloak] {
+            display: none !important;
+        }
+        
         @keyframes fade-in {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
