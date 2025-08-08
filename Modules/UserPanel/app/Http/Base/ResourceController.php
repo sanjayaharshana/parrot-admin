@@ -25,14 +25,21 @@ abstract class ResourceController extends BaseController
     /**
      * Display a listing of the resource.
      */
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
-        $gridContent = $this->resource->index();
-        
+        $dataView = $this->dataView();
+        $gridContent = $dataView->render();
+
+        // Get title and description from the data view
+        $data = $dataView->getData();
+
         return view('userpanel::index', [
             'grid' => $gridContent,
-            'title' => $this->resource->getTitle(),
-            'description' => $this->resource->getDescription()
+            'title' => $data['title'] ?? 'Ship Management',
+            'description' => $data['description'] ?? 'Manage ships with full CRUD operations'
         ]);
     }
 
@@ -42,7 +49,7 @@ abstract class ResourceController extends BaseController
     public function create()
     {
         $data = $this->resource->create();
-        
+
         return view('userpanel::create', $data);
     }
 
@@ -90,7 +97,7 @@ abstract class ResourceController extends BaseController
     public function edit($id)
     {
         $data = $this->resource->edit($id);
-        
+
         return view('userpanel::edit', $data);
     }
 
@@ -143,4 +150,4 @@ abstract class ResourceController extends BaseController
     {
         return $this->resource;
     }
-} 
+}
