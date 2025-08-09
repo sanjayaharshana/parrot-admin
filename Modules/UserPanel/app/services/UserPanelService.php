@@ -80,9 +80,11 @@ class UserPanelService {
         $webRoutes = [];
 
         foreach ($allRoutes as $route) {
+
             // Check if the route has 'web' middleware (web.php routes usually do)
             if (in_array('web', $route->gatherMiddleware())) {
                 if(self::checkControllerString($route->getActionName())) {
+
                     // Extract controller class from action name
                     $actionName = $route->getActionName();
                     $controllerClass = explode('@', $actionName)[0];
