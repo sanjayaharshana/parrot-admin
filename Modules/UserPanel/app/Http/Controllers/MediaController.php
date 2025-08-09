@@ -9,6 +9,8 @@ use Modules\UserPanel\Models\Media;
 
 class MediaController extends Controller
 {
+    public $showInSidebar = false; // Set to false to exclude from sidebar, true by default
+
     public function index(Request $request)
     {
         $query = Media::query()->orderByDesc('id');

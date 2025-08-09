@@ -22,19 +22,19 @@ class DashboardController extends ResourceController
         return (new ResourceService(Evest::class, 'dashboard'))
             ->title('Dashboard Management')
             ->description('Manage dashboard records with full CRUD operations')
-            
+
             // Define fields
             ->text('title')
                 ->required()
                 ->searchable()
                 ->sortable()
                 ->rules(['max:255'])
-            
+
             ->textarea('desc')
                 ->required()
                 ->searchable()
                 ->rules(['max:1000'])
-            
+
             ->select('uploader_id')
                 ->required()
                 ->options(function() {
@@ -47,11 +47,11 @@ class DashboardController extends ResourceController
                     }
                 ])
                 ->rules(['exists:users,id'])
-            
+
             ->text('path')
                 ->searchable()
                 ->rules(['nullable', 'max:500'])
-            
+
             // Configure actions
             ->actions([
                 'view' => [
@@ -75,7 +75,7 @@ class DashboardController extends ResourceController
                     'confirm' => true
                 ]
             ])
-            
+
             // Configure bulk actions
             ->bulkActions([
                 'delete' => [
