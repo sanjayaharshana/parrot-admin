@@ -125,5 +125,26 @@
 
     <!-- Alpine.js -->
     <script src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
+    <script>
+      window.formDataGrid = window.formDataGrid || function(name, columns, endpoint){
+        return {
+          name: name,
+          columns: columns,
+          endpoint: endpoint,
+          rows: [],
+          open: false,
+          search: "",
+          results: [],
+          grandTotal: 0,
+          serialized: "[]",
+          currency: function(v){ try { return new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"}).format(Number(v||0)); } catch(e){ return Number(v||0).toFixed(2); } },
+          recalc: function(){ this.grandTotal = this.rows.reduce(function(s,r){ return s + ((Number(r.quantity)||0) * (Number(r.price)||0)); }, 0); this.serialized = JSON.stringify(this.rows); },
+          remove: function(idx){ this.rows.splice(idx,1); this.recalc(); },
+          openPicker: function(){ this.open = true; this.loadResults(); },
+          loadResults: async function(){ if(!this.endpoint) return; const url = this.endpoint + (this.search ? (this.endpoint.indexOf('?')>=0?'&':'?') + 'q=' + encodeURIComponent(this.search) : ''); const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } }); this.results = res.ok ? await res.json() : []; },
+          add: function(item){ const row = { __id: Math.random().toString(36).slice(2), id: item.id, item_name: item.name || item.item_name, quantity: 1, price: Number(item.price)||0, purchase_date: (new Date()).toISOString().slice(0,10) }; this.rows.push(row); this.recalc(); }
+        };
+      };
+    </script>
 </body>
 </html>

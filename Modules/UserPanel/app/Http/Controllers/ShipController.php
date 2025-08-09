@@ -92,6 +92,20 @@ class ShipController extends ResourceController
                 )
                 ->end()
 
+            // POS/Stock: bind products to ship with inline grid
+            ->tab('purchases', 'Purchased Items', 'fa fa-shopping-cart')
+                ->dataGrid('purchased_items', 'Purchased Items', 'fa fa-shopping-cart')
+                    ->columns([
+                        'id' => ['label' => 'ID'],
+                        'item_name' => ['label' => 'Item'],
+                        'quantity' => ['label' => 'Qty'],
+                        'price' => ['label' => 'Price'],
+                        'total' => ['label' => 'Total'],
+                        'purchase_date' => ['label' => 'Date'],
+                    ])
+                    ->searchEndpoint(route('products.index') . '?json=1')
+                ->end()
+
             // Configure actions
             ->actions([
                 'view' => [

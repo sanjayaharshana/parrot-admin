@@ -17,6 +17,19 @@ class ProductController extends ResourceController
     /**
      * Make the resource instance
      */
+    public function index()
+    {
+        if (request()->boolean('json')) {
+            $query = Product::query();
+            if ($q = request('q')) {
+                $query->where('name', 'like', "%{$q}%");
+            }
+            return response()->json($query->limit(50)->get(['id','name','price']));
+        }
+
+        return parent::index();
+    }
+
     protected function makeResource(): ResourceService
     {
         return (new ResourceService(Product::class, 'products'))

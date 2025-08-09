@@ -465,6 +465,21 @@ class ResourceService
     }
 
     /**
+     * Helper for TabBuilder: append data to the last content entry of a tab
+     */
+    public function appendToLastTabContent(string $tabId, callable $mutator): self
+    {
+        if (!isset($this->tabs[$tabId]) || empty($this->tabs[$tabId]['content'])) {
+            return $this;
+        }
+        $lastIndex = count($this->tabs[$tabId]['content']) - 1;
+        $entry = $this->tabs[$tabId]['content'][$lastIndex];
+        $mutator($entry);
+        $this->tabs[$tabId]['content'][$lastIndex] = $entry;
+        return $this;
+    }
+
+    /**
      * Build the form using FormService
      */
     protected function buildForm(FormService $form): void
@@ -829,6 +844,16 @@ class ResourceService
                     $content['data']['position'] ?? 'before', 
                     ['class' => $content['data']['class'] ?? 'bg-white shadow rounded-lg p-6']
                 );
+                break;
+            case 'dataGrid':
+                $grid = new \Modules\UserPanel\Services\Form\DataGrid($content['data']['name'], $content['data']['label'] ?? $content['data']['name'], $content['data']['icon'] ?? null);
+                if (!empty($content['data']['columns'])) {
+                    $grid->columns($content['data']['columns']);
+                }
+                if (!empty($content['data']['searchEndpoint'])) {
+                    $grid->searchEndpoint($content['data']['searchEndpoint']);
+                }
+                $formTab->addContent($grid);
                 break;
         }
     }

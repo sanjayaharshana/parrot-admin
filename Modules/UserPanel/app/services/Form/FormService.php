@@ -585,6 +585,16 @@ class FormService
     }
 
     /**
+     * Create an inline data grid (for POS-style line items)
+     */
+    public function dataGrid(string $name, string $label, ?string $icon = null): \Modules\UserPanel\Services\Form\DataGrid
+    {
+        $grid = new \Modules\UserPanel\Services\Form\DataGrid($name, $label, $icon);
+        $this->fields[] = $grid; // treat as a renderable field-like item
+        return $grid;
+    }
+
+    /**
      * Add custom HTML to the form
      */
     public function customHtml(string $html, string $position = 'before', array $attributes = []): CustomHtml
@@ -851,7 +861,9 @@ class FormService
             } else {
                 // Only render individual fields if no layout items exist
                 foreach ($this->fields as $field) {
-                    $html .= '<div class="mb-4">' . $field->render() . '</div>' . PHP_EOL;
+                    if (method_exists($field, 'render')) {
+                        $html .= '<div class="mb-4">' . $field->render() . '</div>' . PHP_EOL;
+                    }
                 }
             }
         }

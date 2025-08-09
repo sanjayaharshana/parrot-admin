@@ -68,4 +68,11 @@ class Product extends Model
         
         return 'https://via.placeholder.com/300x300?text=No+Image';
     }
+
+    public function ships()
+    {
+        return $this->belongsToMany(Ship::class, 'ship_products')
+            ->withPivot(['quantity', 'price'])
+            ->withTimestamps();
+    }
 } 

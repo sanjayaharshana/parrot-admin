@@ -330,6 +330,43 @@ class TabBuilder
     }
 
     /**
+     * Add a data grid into the tab
+     */
+    public function dataGrid(string $name, string $label, ?string $icon = null): self
+    {
+        $this->resource->addContentToTab($this->tabId, 'dataGrid', [
+            'name' => $name,
+            'label' => $label,
+            'icon' => $icon,
+        ]);
+        return $this;
+    }
+
+    /**
+     * Configure columns for the last added data grid (call immediately after dataGrid)
+     */
+    public function columns(array $columns): self
+    {
+        // Attach columns to the latest content entry for this tab
+        $this->resource->appendToLastTabContent($this->tabId, function (&$entry) use ($columns) {
+            if (($entry['type'] ?? '') === 'dataGrid') {
+                $entry['data']['columns'] = $columns;
+            }
+        });
+        return $this;
+    }
+
+    public function searchEndpoint(string $url): self
+    {
+        $this->resource->appendToLastTabContent($this->tabId, function (&$entry) use ($url) {
+            if (($entry['type'] ?? '') === 'dataGrid') {
+                $entry['data']['searchEndpoint'] = $url;
+            }
+        });
+        return $this;
+    }
+
+    /**
      * Apply field configuration options
      */
     protected function applyFieldConfiguration(string $fieldName, array $options): void

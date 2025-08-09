@@ -19,4 +19,11 @@ class Ship extends Model
     {
         return $this->name . ' (' . $this->ship . ')';
     }
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'ship_products')
+            ->withPivot(['quantity', 'price'])
+            ->withTimestamps();
+    }
 }
