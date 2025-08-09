@@ -11,17 +11,16 @@ class UserPanelService {
 
 
     public static function checkControllerString($input) {
-        // Extract parts - check for any module controller with index method
-        $hasModule = strpos($input, 'Modules\\UserPanel') !== false;
+        // Only consider index routes for sidebar
         $hasAtIndex = str_ends_with($input, '@index');
-
-        // Check if controller should be shown in sidebar
-        $controllerClass = explode('@', $input)[0];
-        if (!$hasModule || !$hasAtIndex) {
+        if (!$hasAtIndex) {
             return false;
         }
 
-        // Check if controller has showInSidebar property set to false
+        // Extract controller class from action
+        $controllerClass = explode('@', $input)[0];
+
+        // If controller explicitly opts out/in via showInSidebar, respect it
         try {
             $reflection = new ReflectionClass($controllerClass);
             if ($reflection->hasProperty('showInSidebar')) {
@@ -31,13 +30,24 @@ class UserPanelService {
                 if ($defaultValue === false) {
                     return false;
                 }
+                if ($defaultValue === true) {
+                    return true;
+                }
             }
         } catch (\ReflectionException $e) {
-            // If reflection fails, continue with default behavior
+            // If reflection fails, fall through to subclass checks
         }
 
-        // Return true if both conditions met
-        return true;
+        // Allow any controller that extends the UserPanel base Page/Resource controllers (cross-module)
+        if (class_exists($controllerClass)) {
+            if (is_subclass_of($controllerClass, \Modules\UserPanel\Http\Base\ResourceController::class) ||
+                is_subclass_of($controllerClass, \Modules\UserPanel\Http\Base\PageController::class)) {
+                return true;
+            }
+        }
+
+        // Default: do not include in sidebar
+        return false;
     }
 
     public static function getControllerIcon($controllerClass) {
