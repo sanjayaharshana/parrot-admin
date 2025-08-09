@@ -479,23 +479,28 @@ class DataViewService
                 $routeName = $action['route'];
                 $routeParams = [];
                 
-                // Add the model ID using the correct parameter name for route model binding
-                if (method_exists($item, 'getKey')) {
-                    $routeParams[$this->getRouteParameterName()] = $item->getKey();
-                } elseif (isset($item->id)) {
-                    $routeParams[$this->getRouteParameterName()] = $item->id;
+                // Prefer passing the model directly to leverage implicit route model binding
+                if (is_object($item)) {
+                    $routeParams = [$item];
+                } else {
+                    if (method_exists($item, 'getKey')) {
+                        $routeParams[$this->getRouteParameterName()] = $item->getKey();
+                    } elseif (isset($item->id)) {
+                        $routeParams[$this->getRouteParameterName()] = $item->id;
+                    }
                 }
                 
                 // Handle special routes
                 switch ($routeName) {
                     case 'show':
-                        $url = route($this->getRoutePrefix() . '.show', $routeParams);
+                        // Pass the model instance to let Laravel infer the route param name
+                        $url = route($this->getRoutePrefix() . '.show', $item);
                         break;
                     case 'edit':
-                        $url = route($this->getRoutePrefix() . '.edit', $routeParams);
+                        $url = route($this->getRoutePrefix() . '.edit', $item);
                         break;
                     case 'destroy':
-                        $url = route($this->getRoutePrefix() . '.destroy', $routeParams);
+                        $url = route($this->getRoutePrefix() . '.destroy', $item);
                         break;
                     default:
                         $url = route($routeName, $routeParams);

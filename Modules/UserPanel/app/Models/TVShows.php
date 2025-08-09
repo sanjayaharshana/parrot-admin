@@ -13,7 +13,8 @@ class TVShows extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    // Prefer guarding nothing but filtering at service layer
+    protected $guarded = [];
 
     // protected static function newFactory(): TVShowsFactory
     // {

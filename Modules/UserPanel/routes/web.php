@@ -13,8 +13,12 @@ use Modules\UserPanel\Http\Controllers\MediaController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::resource('/t-v-shows', \Modules\UserPanel\Http\Controllers\TVShowsController::class)->names([ 'index'=>'t-v-shows.index','create'=>'t-v-shows.create','store'=>'t-v-shows.store','show'=>'t-v-shows.sh
-ow','edit'=>'t-v-shows.edit','update'=>'t-v-shows.update','destroy'=>'t-v-shows.destroy']);
+    Route::resource('/t-v-shows', \Modules\UserPanel\Http\Controllers\TVShowsController::class)->names([
+        'index'=>'t-v-shows.index',
+        'create'=>'t-v-shows.create',
+        'store'=>'t-v-shows.store',
+        'show'=>'t-v-shows.show',
+        'edit'=>'t-v-shows.edit','update'=>'t-v-shows.update','destroy'=>'t-v-shows.destroy']);
 
 
 

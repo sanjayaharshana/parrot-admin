@@ -4,6 +4,8 @@ namespace Modules\UserPanel\Services\Form;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Schema;
 
 class FormService
 {
@@ -253,8 +255,15 @@ class FormService
 
         if ($this->model) {
             try {
-                // Update existing model
-                $this->model->fill($validated);
+                // Update existing model (only fill real DB columns)
+                $dataToFill = $validated;
+                try {
+                    $columns = Schema::getColumnListing($this->model->getTable());
+                    $dataToFill = Arr::only($validated, $columns);
+                } catch (\Throwable $e) {
+                    // Fallback to validated
+                }
+                $this->model->fill($dataToFill);
 
                 // Check if the model was actually changed
                 if ($this->model->isDirty()) {
@@ -373,8 +382,15 @@ class FormService
         $validated = $validator->validated();
 
         if ($this->model) {
-            // Update existing model
-            $this->model->fill($validated);
+            // Update existing model (only fill real DB columns)
+            $dataToFill = $validated;
+            try {
+                $columns = Schema::getColumnListing($this->model->getTable());
+                $dataToFill = Arr::only($validated, $columns);
+            } catch (\Throwable $e) {
+                // ignore
+            }
+            $this->model->fill($dataToFill);
             $this->model->save();
 
             return [
