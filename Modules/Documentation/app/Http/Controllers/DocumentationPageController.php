@@ -13,6 +13,7 @@ class DocumentationPageController extends ResourceController
     public $icon = 'fa fa-cube';
     public $model = DocumentationPage::class;
     public $routeName = 'documentation-pages';
+    public $parentMenu = 'Dashboard';
 
 
 

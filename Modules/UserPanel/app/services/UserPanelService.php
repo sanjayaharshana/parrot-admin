@@ -87,34 +87,92 @@ class UserPanelService {
     public static function getNavMenuItem()
     {
         $allRoutes = Route::getRoutes();
-        $webRoutes = [];
+        $flatItems = [];
+        $groups = [];
 
         foreach ($allRoutes as $route) {
+            // Only consider web routes
+            if (!in_array('web', $route->gatherMiddleware())) {
+                continue;
+            }
+            if (!self::checkControllerString($route->getActionName())) {
+                continue;
+            }
 
-            // Check if the route has 'web' middleware (web.php routes usually do)
-            if (in_array('web', $route->gatherMiddleware())) {
-                if(self::checkControllerString($route->getActionName())) {
+            $actionName = $route->getActionName();
+            $controllerClass = explode('@', $actionName)[0];
+            $icon = self::getControllerIcon($controllerClass);
+            $parent = self::getControllerParent($controllerClass);
 
-                    // Extract controller class from action name
-                    $actionName = $route->getActionName();
-                    $controllerClass = explode('@', $actionName)[0];
+            $item = [
+                'uri' => $route->uri(),
+                'name' => $route->getName(),
+                'icon' => $icon,
+            ];
 
-                    // Get icon from controller
-                    $icon = self::getControllerIcon($controllerClass);
-
-                    $webRoutes[] = [
-                        'uri' => $route->uri(),
-                        'name' => $route->getName(),
-                        'icon' => $icon
+            if ($parent) {
+                if (!isset($groups[$parent])) {
+                    $groups[$parent] = [
+                        'label' => $parent,
+                        'children' => [],
+                        'icon' => 'fa fa-folder',
                     ];
                 }
+                $groups[$parent]['children'][] = $item;
+            } else {
+                $flatItems[] = $item;
             }
         }
 
-        // For debugging - you can temporarily uncomment this line to see what's being returned
-        // dd($webRoutes);
+        // Try to merge matching top-level item into its group as parent link
+        $displayName = function (?string $routeName): string {
+            if (!$routeName) return '';
+            $label = str_replace(['userpanel.', 'pluginmanager.'], ['', ''], $routeName);
+            $base = explode('.', $label)[0] ?? $label;
+            return ucfirst(str_replace('-', ' ', $base));
+        };
 
-        return $webRoutes;
+        $menu = [];
+        foreach ($groups as $groupLabel => $group) {
+            $matchIndex = null;
+            foreach ($flatItems as $idx => $fi) {
+                if ($displayName($fi['name']) === $groupLabel) {
+                    $matchIndex = $idx;
+                    break;
+                }
+            }
+            if ($matchIndex !== null) {
+                $parentLink = $flatItems[$matchIndex];
+                array_splice($flatItems, $matchIndex, 1);
+                array_unshift($group['children'], $parentLink + ['is_parent_link' => true]);
+            }
+            $menu[] = $group;
+        }
+
+        // Append remaining top-level items
+        foreach ($flatItems as $fi) {
+            $menu[] = $fi;
+        }
+
+        return $menu;
+    }
+
+    protected static function getControllerParent(string $controllerClass): ?string
+    {
+        try {
+            $reflection = new ReflectionClass($controllerClass);
+            if ($reflection->hasProperty('parentMenu')) {
+                $property = $reflection->getProperty('parentMenu');
+                $property->setAccessible(true);
+                $value = $property->getDefaultValue();
+                if (is_string($value) && trim($value) !== '') {
+                    return trim($value);
+                }
+            }
+        } catch (\ReflectionException $e) {
+            // ignore
+        }
+        return null;
     }
 
     // Test method to verify icon extraction

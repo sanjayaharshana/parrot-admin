@@ -58,12 +58,44 @@
 
             <nav class="mt-6">
                 <div class="px-4 space-y-2">
-                   @foreach(\Modules\UserPanel\Services\UserPanelService::getNavMenuItem() as $menuItem)
-                        <a href="{{ url($menuItem['uri']) }}"
-                           class="flex items-center px-4 py-2 text-white rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 {{ request()->routeIs($menuItem['name']) ? 'bg-white bg-opacity-20 text-white' : '' }}">
-                            <i class="{{ $menuItem['icon'] }} w-5 h-5 mr-3"></i>
-                            {{ $menuItem['name'] ? ucfirst(str_replace(['userpanel.', 'pluginmanager.', '-'], ['', '', ' '], $menuItem['name'])) : 'Dashboard' }}
-                        </a>
+                    @php
+                        $transformName = function ($routeName) {
+                            if (!$routeName) return '';
+                            return ucfirst(str_replace(['userpanel.', 'pluginmanager.', '-'], ['', '', ' '], $routeName));
+                        };
+                    @endphp
+                    @foreach(\Modules\UserPanel\Services\UserPanelService::getNavMenuItem() as $menuItem)
+                        @if(isset($menuItem['children']))
+                            @php
+                                $isActiveGroup = collect($menuItem['children'] ?? [])->contains(function($child){
+                                    return request()->routeIs($child['name'] ?? '');
+                                });
+                            @endphp
+                            <div x-data="{ open: {{ $isActiveGroup ? 'true' : 'false' }} }" class="space-y-1">
+                                <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-2 text-white rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200">
+                                    <span class="flex items-center">
+                                        <i class="{{ $menuItem['icon'] ?? 'fa fa-folder' }} w-5 h-5 mr-3"></i>
+                                        {{ $menuItem['label'] }}
+                                    </span>
+                                    <i class="fas fa-chevron-down transform transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                                </button>
+                                <div x-show="open" x-transition class="ml-3 pl-1 border-l border-white border-opacity-20 space-y-1">
+                                    @foreach($menuItem['children'] as $child)
+                                        <a href="{{ url($child['uri']) }}"
+                                           class="flex items-center px-4 py-2 text-white text-sm rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 {{ request()->routeIs($child['name']) ? 'bg-white bg-opacity-20 text-white' : '' }}">
+                                            <i class="{{ $child['icon'] }} w-4 h-4 mr-3"></i>
+                                            {{ $transformName($child['name']) }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @else
+                            <a href="{{ url($menuItem['uri']) }}"
+                               class="flex items-center px-4 py-2 text-white rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 {{ request()->routeIs($menuItem['name']) ? 'bg-white bg-opacity-20 text-white' : '' }}">
+                                <i class="{{ $menuItem['icon'] }} w-5 h-5 mr-3"></i>
+                                {{ $transformName($menuItem['name']) ?: 'Dashboard' }}
+                            </a>
+                        @endif
                     @endforeach
 
                 </div>
