@@ -26,15 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/media', [MediaController::class, 'index'])->name('media.index');
     Route::post('/media', [MediaController::class, 'store'])->name('media.store');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
-    Route::resource('/dashboard', \Modules\UserPanel\Http\Controllers\DashboardController::class)->names([
-        'index' => 'dashboard.index',
-        'create' => 'dashboard.create',
-        'store' => 'dashboard.store',
-        'show' => 'dashboard.show',
-        'edit' => 'dashboard.edit',
-        'update' => 'dashboard.update',
-        'destroy' => 'dashboard.destroy',
-    ]);
+    Route::get('/dashboard', [\Modules\UserPanel\Http\Controllers\DashboardController::class,'index'])->name('dashboard.index');
 
     Route::resource('/products', \Modules\UserPanel\Http\Controllers\ProductController::class)->names([
         'index' => 'products.index',
