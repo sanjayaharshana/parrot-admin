@@ -8,8 +8,8 @@ use Illuminate\Support\Str;
 
 class MakeParrotResource extends Command
 {
-    protected $signature = 'parrot:resource {model : Fully qualified model class (e.g. App\\Models\\Ship)} {--force}';
-    protected $description = 'Generate a resource controller with form/data-grid based on model columns';
+    protected $signature = 'parrot:resource {model : Fully qualified model class (e.g. App\\Models\\Ship)} {module? : Optional module name (e.g. UserPanel)} {--force}';
+    protected $description = 'Generate a resource controller with form/data-grid based on model columns (optionally target a module)';
 
     public function handle(Filesystem $files)
     {
@@ -27,7 +27,12 @@ class MakeParrotResource extends Command
         $base = class_basename($modelClass); // Ship
         $resource = Str::kebab(Str::plural($base)); // ships
         $controllerClass = $base . 'Controller';
-        $controllerPath = module_path('UserPanel', 'app/Http/Controllers/' . $controllerClass . '.php');
+        $moduleName = $this->argument('module') ? Str::studly($this->argument('module')) : 'UserPanel';
+        if (!is_dir(module_path($moduleName))) {
+            $this->error("Module '{$moduleName}' not found.");
+            return self::FAILURE;
+        }
+        $controllerPath = module_path($moduleName, 'app/Http/Controllers/' . $controllerClass . '.php');
 
         if ($files->exists($controllerPath) && !$this->option('force')) {
             $this->error("{$controllerClass} already exists. Use --force to overwrite.");
@@ -76,12 +81,12 @@ class MakeParrotResource extends Command
         $controllerStub = <<<PHP
 <?php
 
-namespace Modules\UserPanel\Http\Controllers;
+namespace Modules\\$moduleName\Http\Controllers;
 
 use {$modelClass};
 use Illuminate\Http\Request;
-use Modules\UserPanel\Http\Base\ResourceController;
-use Modules\UserPanel\Services\ResourceService;
+use Modules\\$moduleName\Http\Base\ResourceController;
+use Modules\\$moduleName\Services\ResourceService;
 
 class {$controllerClass} extends ResourceController
 {
@@ -110,7 +115,7 @@ class {$controllerClass} extends ResourceController
 
     public function dataView()
     {
-        \$dataView = new \Modules\UserPanel\Services\DataViewService(new {$base}());
+        \$dataView = new \Modules\\$moduleName\Services\DataViewService(new {$base}());
 
         \$dataView->title('{$base} Management')
             ->description('Manage {$resource} records')
