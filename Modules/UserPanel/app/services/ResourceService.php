@@ -31,6 +31,7 @@ class ResourceService
     protected array $formLayout = [];
     protected array $gridLayout = [];
     protected array $customHtml = [];
+    protected array $beforeSubmitCallbacks = [];
     
     // Tab functionality properties
     protected array $tabs = [];
@@ -232,6 +233,17 @@ class ResourceService
     }
 
     /**
+     * Register a callback to run before the form submission is handled.
+     * The callback should return truthy to continue, or an array like
+     * ['success' => false, 'error' => 'Message'] to abort with error.
+     */
+    public function beforeSubmit(callable $callback): self
+    {
+        $this->beforeSubmitCallbacks[] = $callback;
+        return $this;
+    }
+
+    /**
      * Configure bulk actions
      */
     public function bulkActions(array $actions): self
@@ -356,6 +368,11 @@ class ResourceService
 
         $this->buildForm($form);
 
+        // Attach beforeSubmit callbacks
+        foreach ($this->beforeSubmitCallbacks as $callback) {
+            $form->beforeSubmit($callback);
+        }
+
         return $form->handle($request);
     }
 
@@ -371,6 +388,11 @@ class ResourceService
             $form->routeForUpdate($this->routePrefix, $id);
 
             $this->buildForm($form);
+
+            // Attach beforeSubmit callbacks
+            foreach ($this->beforeSubmitCallbacks as $callback) {
+                $form->beforeSubmit($callback);
+            }
 
             // Debug: Check if validation rules are set
             $validationRules = $form->getValidationRules();

@@ -138,7 +138,27 @@ class ShipController extends ResourceController
                     'class' => 'btn-danger',
                     'confirm' => true
                 ]
-            ]);
+            ])
+            // Hook: Before submit - validate and persist side effects
+            ->beforeSubmit(function (\Illuminate\Http\Request $request) {
+                // Validate POS grid presence
+
+                $items = json_decode($request->input('purchased_items', '[]'), true) ?: [];
+                if (empty($items)) {
+                    return ['success' => false, 'error' => 'Please add at least one purchased item.'];
+                }
+
+                // Perform custom logic in a transaction
+                \DB::transaction(function () use ($request, $items) {
+                    // Example: reserve stock (decrement on hand)
+                    foreach ($items as $row) {
+                        \App\Models\Product::whereKey($row['id'])
+                            ->decrement('stock_quantity', (int) ($row['quantity'] ?? 0));
+                    }
+                });
+
+                return true;
+            });
     }
 
     public function dataView()
