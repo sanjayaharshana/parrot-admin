@@ -12,6 +12,12 @@ use Modules\UserPanel\Http\Controllers\TestController;
 use Modules\UserPanel\Http\Controllers\MediaController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
+    Route::resource('/t-v-shows', \Modules\UserPanel\Http\Controllers\TVShowsController::class)->names([ 'index'=>'t-v-shows.index','create'=>'t-v-shows.create','store'=>'t-v-shows.store','show'=>'t-v-shows.sh
+ow','edit'=>'t-v-shows.edit','update'=>'t-v-shows.update','destroy'=>'t-v-shows.destroy']);
+
+
+
     // Media manager endpoints
     Route::get('/media', [MediaController::class, 'index'])->name('media.index');
     Route::post('/media', [MediaController::class, 'store'])->name('media.store');
@@ -25,7 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'update' => 'dashboard.update',
         'destroy' => 'dashboard.destroy',
     ]);
-    
+
     Route::resource('/products', \Modules\UserPanel\Http\Controllers\ProductController::class)->names([
         'index' => 'products.index',
         'create' => 'products.create',
@@ -35,7 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'update' => 'products.update',
         'destroy' => 'products.destroy',
     ]);
-    
+
     Route::resource('/ships', \Modules\UserPanel\Http\Controllers\ShipController::class)->names([
         'index' => 'ships.index',
         'create' => 'ships.create',
@@ -45,7 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'update' => 'ships.update',
         'destroy' => 'ships.destroy',
     ]);
-    
+
     Route::resource('/users', \Modules\UserPanel\Http\Controllers\UserResourceController::class)->names([
         'index' => 'users.index',
         'create' => 'users.create',
@@ -55,7 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'update' => 'users.update',
         'destroy' => 'users.destroy',
     ]);
-    
+
     Route::post('/products/bulk-action', [\Modules\UserPanel\Http\Controllers\ProductController::class, 'bulkAction'])
         ->name('userpanel.products.bulk-action');
 });

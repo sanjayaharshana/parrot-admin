@@ -43,7 +43,9 @@ class UserPanelServiceProvider extends ServiceProvider
      */
     protected function registerCommands(): void
     {
-        // $this->commands([]);
+        $this->commands([
+            \Modules\UserPanel\Console\Commands\MakeParrotResource::class,
+        ]);
     }
 
     /**
