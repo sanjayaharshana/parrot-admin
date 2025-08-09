@@ -5,14 +5,160 @@ namespace Modules\Documentation\database\seeders;
 use Illuminate\Database\Seeder;
 use Modules\Documentation\Models\DocumentationCategory;
 use Modules\Documentation\Models\DocumentationPage;
+use Illuminate\Support\Str;
 
 class DocumentationPageSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->createGettingStartedPages();
+        $this->createAdvancedFeaturePages();
         $this->createGridSystemPages();
         $this->createCrudGenerationPages();
         $this->createFormGenerationPages();
+        $this->createUserPanelReferencePages();
+    }
+
+    private function createGettingStartedPages(): void
+    {
+        $category = DocumentationCategory::where('slug', 'getting-started')->first();
+
+        if (!$category) return;
+
+        $pages = [
+            [
+                'title' => 'Installation Guide',
+                'slug' => 'installation-guide',
+                'excerpt' => 'How to install and run the Parrot Admin Laravel project',
+                'content' => $this->getInstallationContent(),
+                'sort_order' => 1,
+                'is_featured' => true,
+            ],
+            [
+                'title' => 'CLI & Parrot Commands',
+                'slug' => 'cli-and-parrot-commands',
+                'excerpt' => 'Common Laravel and custom Parrot commands to get productive quickly',
+                'content' => $this->getCliCommandsContent(),
+                'sort_order' => 2,
+            ],
+        ];
+
+        foreach ($pages as $page) {
+            DocumentationPage::updateOrCreate(
+                ['slug' => $page['slug']],
+                array_merge($page, ['category_id' => $category->id])
+            );
+        }
+    }
+
+    private function createUserPanelReferencePages(): void
+    {
+        $category = DocumentationCategory::where('slug', 'userpanel-reference')->first();
+        if (!$category) return;
+
+        $docs = [
+            'layout-service-documentation' => [
+                'file' => base_path('Modules/UserPanel/LAYOUT_SERVICE_DOCUMENTATION.md'),
+                'title' => 'Layout Service Documentation',
+                'sort' => 1,
+            ],
+            'form-service-documentation' => [
+                'file' => base_path('Modules/UserPanel/FORM_SERVICE_DOCUMENTATION.md'),
+                'title' => 'Form Service Documentation',
+                'sort' => 2,
+            ],
+            'data-view-documentation' => [
+                'file' => base_path('Modules/UserPanel/DATA_VIEW_DOCUMENTATION.md'),
+                'title' => 'Data View Documentation',
+                'sort' => 3,
+            ],
+            'crud-system-guide' => [
+                'file' => base_path('Modules/UserPanel/CRUD_SYSTEM_GUIDE.md'),
+                'title' => 'CRUD System Guide',
+                'sort' => 4,
+            ],
+            'crud-routing-guide' => [
+                'file' => base_path('Modules/UserPanel/CRUD_ROUTING_GUIDE.md'),
+                'title' => 'CRUD Routing Guide',
+                'sort' => 5,
+            ],
+            'resource-service-documentation' => [
+                'file' => base_path('Modules/UserPanel/RESOURCE_SERVICE_DOCUMENTATION.md'),
+                'title' => 'Resource Service Documentation',
+                'sort' => 6,
+            ],
+            'callback-layout-documentation' => [
+                'file' => base_path('Modules/UserPanel/CALLBACK_LAYOUT_DOCUMENTATION.md'),
+                'title' => 'Callback Layout Documentation',
+                'sort' => 7,
+            ],
+            'tab-quick-reference' => [
+                'file' => base_path('Modules/UserPanel/TAB_QUICK_REFERENCE.md'),
+                'title' => 'Tab Quick Reference',
+                'sort' => 8,
+            ],
+        ];
+
+        foreach ($docs as $slug => $meta) {
+            if (!is_readable($meta['file'])) {
+                continue;
+            }
+            $markdown = file_get_contents($meta['file']);
+            $html = Str::markdown($markdown);
+            $excerpt = Str::limit(trim(strip_tags($html)), 200);
+
+            DocumentationPage::updateOrCreate(
+                ['slug' => $slug],
+                [
+                    'category_id' => $category->id,
+                    'title' => $meta['title'],
+                    'excerpt' => $excerpt,
+                    'content' => $html,
+                    'sort_order' => $meta['sort'],
+                    'is_active' => true,
+                    'is_featured' => false,
+                ]
+            );
+        }
+    }
+
+    private function createAdvancedFeaturePages(): void
+    {
+        $category = DocumentationCategory::where('slug', 'advanced-features')->first();
+
+        if (!$category) return;
+
+        $pages = [
+            [
+                'title' => 'Layout Builder (LayoutService)',
+                'slug' => 'layout-builder',
+                'excerpt' => 'Build responsive, sectioned pages using the LayoutService with optional callbacks',
+                'content' => $this->getLayoutBuilderContent(),
+                'sort_order' => 1,
+                'is_featured' => true,
+            ],
+            [
+                'title' => 'Form Builder & PageController',
+                'slug' => 'form-builder-and-page-controller',
+                'excerpt' => 'How to create custom pages with PageController and render forms/layouts',
+                'content' => $this->getFormBuilderAndPageControllerContent(),
+                'sort_order' => 2,
+            ],
+            [
+                'title' => 'DataView (GridView) Guide',
+                'slug' => 'dataview-gridview-guide',
+                'excerpt' => 'Build sortable, searchable, filterable data grids using DataViewService',
+                'content' => $this->getDataViewGuideContent(),
+                'sort_order' => 3,
+            ],
+        ];
+
+        foreach ($pages as $page) {
+            DocumentationPage::updateOrCreate(
+                ['slug' => $page['slug']],
+                array_merge($page, ['category_id' => $category->id])
+            );
+        }
     }
 
     private function createGridSystemPages(): void
@@ -47,10 +193,233 @@ class DocumentationPageSeeder extends Seeder
         ];
 
         foreach ($pages as $page) {
-            DocumentationPage::create(array_merge($page, ['category_id' => $category->id]));
+            DocumentationPage::updateOrCreate(
+                ['slug' => $page['slug']],
+                array_merge($page, ['category_id' => $category->id])
+            );
         }
     }
 
+    private function getInstallationContent(): string
+    {
+        $repoUrl = 'https://github.com/sanjayaharshana/parrot-admin';
+        return <<<HTML
+<h2>Installation</h2>
+
+<p>Follow these steps to install and run the project. Repository: <a href="{$repoUrl}" target="_blank" rel="noopener">parrot-admin</a>.</p>
+
+<h3>Requirements</h3>
+<ul>
+  <li>PHP 8.1+</li>
+  <li>Composer</li>
+  <li>Node.js & NPM (or Yarn)</li>
+  <li>MySQL/PostgreSQL (or another supported DB)</li>
+</ul>
+
+<h3>Steps</h3>
+<pre><code># 1) Clone the repo
+git clone {$repoUrl}
+cd parrot-admin
+
+# 2) Copy env and configure DB
+cp .env.example .env
+# Update DB_* in .env
+
+# 3) Install dependencies
+composer install
+npm install
+
+# 4) Generate app key
+php artisan key:generate
+
+# 5) Migrate and seed
+php artisan migrate --seed
+
+# (Optional) Seed module data
+php artisan module:seed Documentation
+php artisan module:seed UserPanel
+
+# 6) Build frontend assets
+npm run build
+# or for dev
+npm run dev
+
+# 7) Serve the app
+php artisan serve
+</code></pre>
+
+<p>Ensure required modules are enabled in <code>modules_statuses.json</code>.</p>
+HTML;
+    }
+
+    private function getCliCommandsContent(): string
+    {
+        return <<<HTML
+<h2>CLI & Parrot Commands</h2>
+
+<h3>Laravel Basics</h3>
+<pre><code># Make model and migration
+php artisan make:model Post -m
+
+# Make controller
+php artisan make:controller PostController --resource
+
+# Make migration only
+php artisan make:migration create_posts_table
+
+# Run migrations
+php artisan migrate
+</code></pre>
+
+<h3>Parrot Commands</h3>
+<p>Parrot provides a resource generator that wires up a ResourceController integrated with the form and grid systems.</p>
+<pre><code># Generate a resource for a model in a module (default module: UserPanel)
+php artisan parrot:resource App\Models\Product UserPanel
+
+# Overwrite if exists
+php artisan parrot:resource App\Models\Product UserPanel --force
+</code></pre>
+
+<p>The generator inspects your table columns and scaffolds:</p>
+<ul>
+  <li>ResourceController with tabs and fields</li>
+  <li>DataView (grid) configuration</li>
+  <li>Route hints for quick registration</li>
+  <li>Form field heuristics (e.g., textarea for content, email for email columns)</li>
+  <li>Optional module targeting</li>
+  <li>Use <code>--force</code> to overwrite</li>
+  <li>After generation, add the resource route to your module's <code>routes/web.php</code></li>
+  
+</ul>
+HTML;
+    }
+
+    private function getLayoutBuilderContent(): string
+    {
+        return <<<'HTML'
+<h2>Layout Builder (LayoutService)</h2>
+
+<p>Use <code>Modules\UserPanel\Services\LayoutService</code> to compose sections, grids, rows, and cards. You can attach a <code>FormService</code> to enable callback-based field binding.</p>
+
+<pre><code>use Modules\UserPanel\Services\LayoutService;
+use Modules\UserPanel\Services\FormService;
+
+
+
+
+$layout = new LayoutService();
+$form = new FormService();
+$layout->setFormService($form);
+
+// Grid with three items
+$grid = $layout->grid(3, 4);
+$grid->item(function (
+    $form, $item
+) {
+    $item->addHtml('&lt;div class="p-4 bg-white rounded border"&gt;Card 1&lt;/div&gt;');
+});
+$grid->item(function ($form, $item) {
+    $item->addHtml('&lt;div class="p-4 bg-white rounded border"&gt;Card 2&lt;/div&gt;');
+});
+$grid->item(function ($form, $item) {
+    $item->addHtml('&lt;div class="p-4 bg-white rounded border"&gt;Card 3&lt;/div&gt;');
+});
+
+// Section with description
+$layout->section('Profile', 'Basic info', function ($form, $section) {
+    $section->addField($form->text()->name('name')->label('Name'));
+    $section->addField($form->email()->name('email')->label('Email'));
+});
+
+echo $layout->render();
+ </code></pre>
+
+<p>Supported containers: <code>row()</code>, <code>column()</code>, <code>grid()</code>, <code>section()</code>, <code>card()</code>, <code>divider()</code>, <code>spacer()</code>, <code>container()</code>, <code>html()</code>, <code>view()</code>, <code>component()</code>.</p>
+HTML;
+    }
+
+    private function getFormBuilderAndPageControllerContent(): string
+    {
+        return <<<'HTML'
+<h2>Form Builder & PageController</h2>
+
+<p>Extend <code>Modules\UserPanel\Http\Base\PageController</code> to build custom pages using the LayoutService and render via the built-in view.</p>
+
+<pre><code>namespace Modules\UserPanel\Http\Controllers;
+
+use Modules\UserPanel\Http\Base\PageController;
+
+class DashboardController extends PageController
+{
+    public \$title = 'Dashboard';
+
+    public function layout()
+    {
+        // Use \$this->layoutService and \$this->form
+        \$grid = \$this->layoutService->grid(3, 4);
+        \$grid->item(function (\$form, \$item) {
+            \$item->addHtml('&lt;div class="p-4 bg-white rounded border"&gt;Stats&lt;/div&gt;');
+        });
+
+        \$this->layoutService->section('Overview', 'Summary', function (\$form, \$section) {
+            \$section->addHtml('&lt;p&gt;Welcome!&lt;/p&gt;');
+        });
+    }
+}
+</code></pre>
+
+<p>The base controller calls your <code>layout()</code> and renders <code>userpanel::custom-page</code> with the generated HTML.</p>
+
+<h3>Form Builder</h3>
+<p>Use <code>Modules\UserPanel\Services\Form\FormService</code> to define fields and layouts. You can render forms independently or add fields to layout containers.</p>
+HTML;
+    }
+
+    private function getDataViewGuideContent(): string
+    {
+        return <<<'HTML'
+<h2>DataView (GridView) Guide</h2>
+
+<p><code>Modules\UserPanel\Services\DataViewService</code> renders searchable, sortable, and pageable data tables.</p>
+
+<pre><code>use Modules\UserPanel\Services\DataViewService;
+use App\Models\Product;
+
+\$dataView = new DataViewService(new Product());
+
+\$dataView->title('Product Management')
+    ->description('Manage products')
+    ->routePrefix('products')
+    ->perPage(15)
+    ->defaultSort('id', 'desc')
+    ->pagination(true)
+    ->search(true);
+
+// Columns
+\$dataView->id('ID');
+\$dataView->column('name', 'Name')->sortable()->searchable();
+\$dataView->column('price', 'Price')->sortable();
+
+// Filters
+\$dataView->addTextFilter('name', 'Name');
+\$dataView->addDateRangeFilter('created_at', 'Created At');
+
+// Actions
+\$dataView->actions([
+  'view' => ['label' => 'View', 'icon' => 'fa fa-eye', 'route' => 'show'],
+  'edit' => ['label' => 'Edit', 'icon' => 'fa fa-edit', 'route' => 'edit'],
+  'delete' => ['label' => 'Delete', 'icon' => 'fa fa-trash', 'route' => 'destroy', 'method' => 'DELETE', 'confirm' => true],
+]);
+
+// Create button
+\$dataView->createButton(route('products.create'), 'Create New');
+
+echo \$dataView->render();
+</code></pre>
+
+<p>Integrate with a controller by returning the rendered HTML into your view, or use the provided <code>ResourceController</code> which wires this up for you automatically.</p>
+HTML;
+    }
     private function createCrudGenerationPages(): void
     {
         $category = DocumentationCategory::where('slug', 'crud-generation')->first();

@@ -58,10 +58,21 @@ class DocumentationCategorySeeder extends Seeder
                 'color' => '#6B7280',
                 'sort_order' => 6,
             ],
+            [
+                'name' => 'UserPanel Reference',
+                'slug' => 'userpanel-reference',
+                'description' => 'Authoritative docs sourced from the UserPanel module markdown files',
+                'icon' => 'fas fa-book',
+                'color' => '#1F2937',
+                'sort_order' => 7,
+            ],
         ];
 
         foreach ($categories as $category) {
-            DocumentationCategory::create($category);
+            DocumentationCategory::updateOrCreate(
+                ['slug' => $category['slug']],
+                $category
+            );
         }
     }
 }
