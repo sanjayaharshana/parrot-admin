@@ -8,7 +8,8 @@ use Modules\Subscriptions\Http\Controllers\StripeWebhookController;
 Route::post('stripe/webhook', [StripeWebhookController::class, 'handleWebhook'])
     ->name('cashier.webhook');
 
-
+// Public pricing page (no auth required)
+Route::get('pricing', [SubscriptionsController::class, 'pricing'])->name('pricing');
 
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('subscriptions/plans', [SubscriptionsController::class, 'plans'])->name('subscriptions.plans');

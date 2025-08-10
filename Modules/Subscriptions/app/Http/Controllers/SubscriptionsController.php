@@ -62,11 +62,20 @@ class SubscriptionsController extends Controller
 
     public function plans()
     {
-        $plans = Plan::with(['prices' => function($q) {
-            $q->where('active', true);
+        $plans = Plan::with(['features', 'prices' => function($query) {
+            $query->where('active', true);
         }])->where('is_active', true)->get();
 
-        return view('subscriptions::plans', compact('plans'));
+        return view('subscriptions::pricing', compact('plans'));
+    }
+
+    public function pricing()
+    {
+        $plans = Plan::with(['features', 'prices' => function($query) {
+            $query->where('active', true);
+        }])->where('is_active', true)->get();
+
+        return view('subscriptions::pricing', compact('plans'));
     }
 
     public function checkout(Request $request)
