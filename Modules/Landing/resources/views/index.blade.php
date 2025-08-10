@@ -781,63 +781,6 @@
         </div>
     </section>
 
-    <!-- Pricing Section -->
-    <section class="pricing" id="pricing">
-        <div class="container">
-            <h2 class="section-title">Simple, Transparent Pricing</h2>
-            <p class="section-subtitle">Choose the plan that's right for your business. No hidden fees, no surprises.</p>
-            <div class="pricing-grid">
-                <div class="pricing-card">
-                    <div class="pricing-header">
-                        <h3 class="plan-name">Starter</h3>
-                        <div class="plan-price">$29</div>
-                        <div class="plan-period">per month</div>
-                    </div>
-                    <ul class="pricing-features">
-                        <li>Up to 5 team members</li>
-                        <li>Basic analytics</li>
-                        <li>Email support</li>
-                        <li>10GB storage</li>
-                        <li>Core features</li>
-                    </ul>
-                    <a href="#" class="btn btn-secondary">Start Free Trial</a>
-                </div>
-                <div class="pricing-card featured">
-                    <div class="pricing-header">
-                        <h3 class="plan-name">Professional</h3>
-                        <div class="plan-price">$79</div>
-                        <div class="plan-period">per month</div>
-                    </div>
-                    <ul class="pricing-features">
-                        <li>Up to 25 team members</li>
-                        <li>Advanced analytics</li>
-                        <li>Priority support</li>
-                        <li>100GB storage</li>
-                        <li>All features</li>
-                        <li>Custom integrations</li>
-                    </ul>
-                    <a href="#" class="btn btn-primary">Start Free Trial</a>
-                </div>
-                <div class="pricing-card">
-                    <div class="pricing-header">
-                        <h3 class="plan-name">Enterprise</h3>
-                        <div class="plan-price">$199</div>
-                        <div class="plan-period">per month</div>
-                    </div>
-                    <ul class="pricing-features">
-                        <li>Unlimited team members</li>
-                        <li>Custom analytics</li>
-                        <li>Dedicated support</li>
-                        <li>Unlimited storage</li>
-                        <li>All features</li>
-                        <li>Custom development</li>
-                        <li>SLA guarantee</li>
-                    </ul>
-                    <a href="#" class="btn btn-secondary">Contact Sales</a>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- CTA Section -->
     <section class="cta-section">
@@ -904,7 +847,7 @@
         // Simple mobile menu toggle
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const navMenu = document.querySelector('.nav-menu');
-        
+
         if (mobileMenuBtn && navMenu) {
             mobileMenuBtn.addEventListener('click', function() {
                 navMenu.classList.toggle('show');
@@ -921,7 +864,7 @@
         function initProfileDropdown() {
             const profileTrigger = document.getElementById('profile-trigger');
             const profileMenu = document.getElementById('profile-menu');
-            
+
             if (profileTrigger && profileMenu) {
                 profileTrigger.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -999,7 +942,7 @@
             debugBtn.style.border = 'none';
             debugBtn.style.borderRadius = '5px';
             debugBtn.style.cursor = 'pointer';
-            
+
             debugBtn.addEventListener('click', function() {
                 const profileTrigger = document.getElementById('profile-trigger');
                 const profileMenu = document.getElementById('profile-menu');
@@ -1008,7 +951,7 @@
                     profileMenu.classList.toggle('show');
                 }
             });
-            
+
             document.body.appendChild(debugBtn);
         });
     </script>

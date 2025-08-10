@@ -1,10 +1,10 @@
 <!-- Header -->
 <header class="header" id="header">
     <nav class="nav-container">
-        <a href="#" class="logo">Parrot Admin</a>
+        <a href="{{url('/')}}" class="logo">Parrot Admin</a>
         <ul class="nav-menu">
             <li><a href="#features">Features</a></li>
-            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="{{url('pricing')}}">Pricing</a></li>
             <li><a href="{{ route('documentation.index') }}" class="nav-link {{ request()->routeIs('documentation.*') ? 'active' : '' }}">Documentation</a></li>
             <li><a href="/about">About</a></li>
             <li><a href="#contact">Contact</a></li>
