@@ -3,12 +3,20 @@
     <ul>
         @foreach($plans as $plan)
             <li class="mb-3">
-                <form action="{{ route('subscriptions.checkout') }}" method="POST">
-                    @csrf
-                    <span>{{ $plan['name'] }}</span>
-                    <input type="hidden" name="price_id" value="{{ $plan['price_id'] }}">
-                    <button type="submit">Subscribe</button>
-                </form>
+                <div>
+                    <strong>{{ $plan->name }}</strong>
+                    <div>{{ $plan->description }}</div>
+                </div>
+                @foreach($plan->prices as $price)
+                    <form action="{{ route('subscriptions.checkout') }}" method="POST" style="margin-top:8px">
+                        @csrf
+                        <span>
+                            {{ strtoupper($price->currency) }} {{ number_format($price->amount/100, 2) }} / {{ $price->interval }}
+                        </span>
+                        <input type="hidden" name="price_id" value="{{ $price->stripe_price_id }}">
+                        <button type="submit" {{ empty($price->stripe_price_id) ? 'disabled' : '' }}>Subscribe</button>
+                    </form>
+                @endforeach
             </li>
         @endforeach
     </ul>

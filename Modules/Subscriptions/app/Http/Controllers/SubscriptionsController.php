@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Laravel\Cashier\Checkout;
 use Laravel\Cashier\Cashier;
+use Modules\Subscriptions\Models\Plan;
+use Modules\Subscriptions\Models\PlanPrice;
 
 class SubscriptionsController extends Controller
 {
@@ -60,19 +62,9 @@ class SubscriptionsController extends Controller
 
     public function plans()
     {
-        // Expect these envs to be set with Stripe Price IDs
-        $plans = [
-            [
-                'name' => 'Basic Monthly',
-                'price_id' => env('STRIPE_PRICE_BASIC_MONTHLY'),
-                'interval' => 'month',
-            ],
-            [
-                'name' => 'Basic Yearly',
-                'price_id' => env('STRIPE_PRICE_BASIC_YEARLY'),
-                'interval' => 'year',
-            ],
-        ];
+        $plans = Plan::with(['prices' => function($q) {
+            $q->where('active', true);
+        }])->where('is_active', true)->get();
 
         return view('subscriptions::plans', compact('plans'));
     }
@@ -87,6 +79,9 @@ class SubscriptionsController extends Controller
         abort_unless($user, 403);
 
         $priceId = (string) $request->input('price_id');
+        if ($priceId === '' || $priceId === null) {
+            return back()->with('error', 'Invalid plan selection.');
+        }
 
         // Create Checkout session for subscription
         $checkout = $user->checkout([
@@ -95,6 +90,8 @@ class SubscriptionsController extends Controller
             'success_url' => route('subscriptions.success'),
             'cancel_url' => route('subscriptions.cancel'),
             'mode' => 'subscription',
+            // Optionally collect billing address
+            // 'billing_address_collection' => 'auto',
         ]);
 
         return redirect()->away($checkout->url);
@@ -141,5 +138,25 @@ class SubscriptionsController extends Controller
         }
 
         return back()->with('status', 'Subscription cancelled.');
+    }
+
+    public function invoices()
+    {
+        $user = Auth::user();
+        abort_unless($user, 403);
+
+        $invoices = $user->invoices();
+        return view('subscriptions::invoices', compact('invoices'));
+    }
+
+    public function downloadInvoice(string $invoice)
+    {
+        $user = Auth::user();
+        abort_unless($user, 403);
+
+        return $user->downloadInvoice($invoice, [
+            'vendor' => config('app.name'),
+            'product' => 'Subscription',
+        ]);
     }
 }

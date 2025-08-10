@@ -43,7 +43,9 @@ class SubscriptionsServiceProvider extends ServiceProvider
      */
     protected function registerCommands(): void
     {
-        // $this->commands([]);
+        $this->commands([
+            \Modules\Subscriptions\Console\Commands\SyncPackagesToStripe::class,
+        ]);
     }
 
     /**

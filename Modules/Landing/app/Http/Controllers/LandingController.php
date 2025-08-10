@@ -4,6 +4,7 @@ namespace Modules\Landing\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\Subscriptions\Models\Plan;
 
 class LandingController extends Controller
 {
@@ -12,7 +13,12 @@ class LandingController extends Controller
      */
     public function index()
     {
-        return view('landing::index-new');
+        // Fetch active subscription plans with their features and prices
+        $plans = Plan::with(['features', 'prices' => function($query) {
+            $query->where('active', true);
+        }])->where('is_active', true)->get();
+        
+        return view('landing::index-new', compact('plans'));
     }
 
     /**
