@@ -31,6 +31,7 @@ class DataViewService
     protected string $createButtonText = 'Create New';
     protected bool $showCreateButton = false;
     protected string $routePrefix = '';
+    protected array $queryScopes = [];
 
     public function __construct(Model $model)
     {
@@ -151,6 +152,54 @@ class DataViewService
             'label' => $label,
             'type' => 'text'
         ];
+        return $this;
+    }
+
+    /**
+     * Add numeric range filter
+     */
+    public function addNumericRangeFilter(string $field, string $label): self
+    {
+        $this->filters[$field] = [
+            'label' => $label,
+            'type' => 'numeric_range'
+        ];
+        return $this;
+    }
+
+    /**
+     * Add relationship filter
+     */
+    public function addRelationshipFilter(string $field, string $label, string $relationship, string $displayField): self
+    {
+        $this->filters[$field] = [
+            'label' => $label,
+            'type' => 'relationship',
+            'relationship' => $relationship,
+            'display_field' => $displayField
+        ];
+        return $this;
+    }
+
+    /**
+     * Add custom filter with closure
+     */
+    public function addCustomFilter(string $field, string $label, callable $filterLogic): self
+    {
+        $this->filters[$field] = [
+            'label' => $label,
+            'type' => 'custom',
+            'logic' => $filterLogic
+        ];
+        return $this;
+    }
+
+    /**
+     * Add a custom query scope
+     */
+    public function addQueryScope(callable $scope): self
+    {
+        $this->queryScopes[] = $scope;
         return $this;
     }
 
@@ -347,6 +396,11 @@ class DataViewService
             }
         }
 
+        // Apply custom query scopes first
+        foreach ($this->queryScopes as $scope) {
+            call_user_func($scope, $query);
+        }
+
         return $query;
     }
 
@@ -365,6 +419,30 @@ class DataViewService
                 }
                 if ($endDate) {
                     $query->whereDate($field, '<=', $endDate);
+                }
+                break;
+                
+            case 'numeric_range':
+                $minValue = Request::get("filter_{$field}_min");
+                $maxValue = Request::get("filter_{$field}_max");
+                
+                if ($minValue !== null && $minValue !== '') {
+                    $query->where($field, '>=', $minValue);
+                }
+                if ($maxValue !== null && $maxValue !== '') {
+                    $query->where($field, '<=', $maxValue);
+                }
+                break;
+                
+            case 'relationship':
+                $query->whereHas($filter['relationship'], function($q) use ($filter, $value) {
+                    $q->where($filter['display_field'], 'like', "%{$value}%");
+                });
+                break;
+                
+            case 'custom':
+                if (isset($filter['logic']) && is_callable($filter['logic'])) {
+                    call_user_func($filter['logic'], $query, $value);
                 }
                 break;
                 
@@ -806,6 +884,36 @@ class DataViewService
                 $html .= '<input type="date" name="filter_' . htmlspecialchars($field) . '_end" value="' . htmlspecialchars($endValue) . '" 
                             class="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs" 
                             placeholder="End">';
+                break;
+                
+            case 'numeric_range':
+                $minValue = Request::get("filter_{$field}_min", '');
+                $maxValue = Request::get("filter_{$field}_max", '');
+                
+                $html .= '<input type="number" name="filter_' . htmlspecialchars($field) . '_min" value="' . htmlspecialchars($minValue) . '" 
+                            class="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs" 
+                            placeholder="Min">';
+                $html .= '<span class="text-xs text-gray-500 px-1">to</span>';
+                $html .= '<input type="number" name="filter_' . htmlspecialchars($field) . '_max" value="' . htmlspecialchars($maxValue) . '" 
+                            class="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs" 
+                            placeholder="Max">';
+                break;
+                
+            case 'relationship':
+                $html .= '<select name="filter_' . htmlspecialchars($field) . '" class="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">';
+                $html .= '<option value="">All</option>';
+                $relationshipModel = $this->model->{$filter['relationship']}()->get();
+                foreach ($relationshipModel as $item) {
+                    $selected = $currentValue == $item->getKey() ? 'selected' : '';
+                    $html .= '<option value="' . htmlspecialchars($item->getKey()) . '" ' . $selected . '>' . htmlspecialchars($item->{$filter['display_field']}) . '</option>';
+                }
+                $html .= '</select>';
+                break;
+                
+            case 'custom':
+                $html .= '<input type="text" name="filter_' . htmlspecialchars($field) . '" value="' . htmlspecialchars($currentValue) . '" 
+                            class="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs" 
+                            placeholder="' . htmlspecialchars($filter['label']) . '">';
                 break;
                 
             case 'text':

@@ -189,6 +189,12 @@ class ProductController extends ResourceController
     {
         $dataView = new \Modules\UserPanel\Services\DataViewService(new Product());
 
+        // Add custom query scope for business logic
+        $dataView->addQueryScope(function($query) {
+            // Only show active products by default
+            $query->where('status', 'inactive');
+        });
+
         // Configure the data view
         $dataView->title('Product Management')
             ->description('Manage your product catalog with this comprehensive grid view. You can sort, filter, and search through product data seamlessly.')
@@ -244,38 +250,41 @@ class ProductController extends ResourceController
             ->display(function($value) {
                 if ($value) {
                     return '<span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Active</span>';
+                } else {
+                    return '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">Inactive</span>';
                 }
-                return '<span class="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">Inactive</span>';
             })
             ->sortable();
 
         // Add created date column
-        $dataView->column('created_at', 'Created Date')
+        $dataView->column('created_at', 'Created')
             ->display(function($value) {
-                return $value ? date('M d, Y', strtotime($value)) : 'N/A';
+                return date('M d, Y', strtotime($value));
             })
             ->sortable();
 
         // Add actions column
         $dataView->actions([
-            'view' => [
+            [
                 'label' => 'View',
-                'icon' => 'fa fa-eye',
-                'class' => 'btn-sm btn-info',
-                'route' => 'show'
+                'url' => function($product) {
+                    return route('products.show', $product->id);
+                },
+                'class' => 'px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600'
             ],
-            'edit' => [
+            [
                 'label' => 'Edit',
-                'icon' => 'fa fa-edit',
-                'class' => 'btn-sm btn-primary',
-                'route' => 'edit'
+                'url' => function($product) {
+                    return route('products.edit', $product->id);
+                },
+                'class' => 'px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600'
             ],
-            'delete' => [
+            [
                 'label' => 'Delete',
-                'icon' => 'fa fa-trash',
-                'class' => 'btn-sm btn-danger',
-                'route' => 'destroy',
-                'method' => 'DELETE',
+                'url' => function($product) {
+                    return route('products.destroy', $product->id);
+                },
+                'class' => 'px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600',
                 'confirm' => true
             ]
         ]);
@@ -300,9 +309,11 @@ class ProductController extends ResourceController
             ]
         ]);
 
-        // Add filters
+        // Add advanced filters
         $dataView->addTextFilter('name', 'Product Name');
         $dataView->addTextFilter('sku', 'SKU');
+
+        // Add select filter for category
         $dataView->addFilter('category', 'Category', [
             'electronics' => 'Electronics',
             'clothing' => 'Clothing',
@@ -310,10 +321,38 @@ class ProductController extends ResourceController
             'home' => 'Home & Garden',
             'sports' => 'Sports & Outdoors'
         ], 'select');
+
+        // Add select filter for status
         $dataView->addFilter('is_active', 'Status', [
             '1' => 'Active',
             '0' => 'Inactive'
         ], 'select');
+
+        // Add numeric range filter for price
+        $dataView->addNumericRangeFilter('price', 'Price Range');
+
+        // Add numeric range filter for stock
+        $dataView->addNumericRangeFilter('stock', 'Stock Range');
+
+        // Add relationship filter for vendor (if you have vendor relationship)
+        // $dataView->addRelationshipFilter('vendor_id', 'Vendor', 'vendor', 'name');
+
+        // Add custom filter for availability
+        $dataView->addCustomFilter('availability', 'Availability', function($query, $value) {
+            switch ($value) {
+                case 'in_stock':
+                    $query->where('stock', '>', 0);
+                    break;
+                case 'low_stock':
+                    $query->whereBetween('stock', [1, 10]);
+                    break;
+                case 'out_of_stock':
+                    $query->where('stock', 0);
+                    break;
+            }
+        });
+
+        // Add date range filter
         $dataView->addDateRangeFilter('created_at', 'Created Date');
 
         // Add create button
