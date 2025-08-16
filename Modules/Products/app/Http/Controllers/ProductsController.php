@@ -12,6 +12,7 @@ class ProductsController extends ResourceController
     public $icon = 'fa fa-cube';
     public $model = Products::class;
     public $routeName = 'products';
+    public $parentMenu = 'Products';
 
     protected function makeResource(): ResourceService
     {
@@ -19,8 +20,8 @@ class ProductsController extends ResourceController
             ->title('Products Management')
             ->description('Manage products records')
             ->enableTabs()
-            
-            // Basic Information Tab
+
+            // 1. Basic Information Tab
             ->tab('basic', 'Basic Information', 'fa fa-info-circle')
                 ->text('name')
                     ->required()
@@ -32,16 +33,17 @@ class ProductsController extends ResourceController
                     ->placeholder('Enter product description')
                     ->height(120)
                     ->help('Provide a detailed description that helps customers understand your product')
-                ->text('sku')
+                ->select('product_type')
                     ->searchable()
                     ->sortable()
-                    ->placeholder('Stock Keeping Unit')
-                    ->help('Unique identifier for inventory management (leave empty to auto-generate)')
-                ->text('slug')
-                    ->searchable()
-                    ->sortable()
-                    ->placeholder('product-url-slug')
-                    ->help('URL-friendly version of the product name (e.g., "wireless-headphones")')
+                    ->options([
+                        'physical' => 'Physical Product',
+                        'digital' => 'Digital Product',
+                        'subscription' => 'Subscription Product'
+                    ])
+                    ->placeholder('Select product type')
+                    ->help('Choose the type of product you are selling')
+                    ->required()
                 ->select('category')
                     ->searchable()
                     ->sortable()
@@ -68,23 +70,22 @@ class ProductsController extends ResourceController
                     ])
                     ->placeholder('Select brand')
                     ->help('Select the brand or choose "Generic" for unbranded products')
-                ->select('product_type')
+                ->text('sku')
                     ->searchable()
                     ->sortable()
-                    ->options([
-                        'physical' => 'Physical Product',
-                        'digital' => 'Digital Product',
-                        'subscription' => 'Subscription Product'
-                    ])
-                    ->placeholder('Select product type')
-                    ->help('Choose the type of product you are selling')
-                    ->required()
+                    ->placeholder('Stock Keeping Unit')
+                    ->help('Unique identifier for inventory management (leave empty to auto-generate)')
+                ->text('slug')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('product-url-slug')
+                    ->help('URL-friendly version of the product name (e.g., "wireless-headphones")')
             ->end()
-            
-            // Media & Images Tab
+
+            // 2. Media & Images Tab
             ->tab('media', 'Media & Images', 'fa fa-image')
                 ->file('image')
-                    ->accept('image/*')
+                    ->accept('image/*')->imageManager(true)
                     ->placeholder('Upload main product image')
                     ->help('Upload a high-quality image (800x800px recommended, max 2MB)')
                 ->text('thumbnail')
@@ -97,16 +98,16 @@ class ProductsController extends ResourceController
                         <div class="flex items-center">
                             <i class="fa fa-info-circle text-blue-500 mr-2"></i>
                             <span class="text-blue-800 text-sm">
-                                <strong>Image Guidelines:</strong> Recommended size: 800x800px, Max file size: 2MB, 
+                                <strong>Image Guidelines:</strong> Recommended size: 800x800px, Max file size: 2MB,
                                 Supported formats: JPG, PNG, GIF, WebP
                             </span>
                         </div>
                     </div>
                 ', 'Image Guidelines', 'mb-3')
             ->end()
-            
-            // Inventory & Stock Tab
-            ->tab('inventory', 'Inventory & Stock', 'fa fa-boxes')
+
+            // 4. Inventory & Shipping Tab
+            ->tab('inventory', 'Inventory & Shipping', 'fa fa-boxes')
                 ->number('stock_quantity')
                     ->searchable()
                     ->sortable()
@@ -158,17 +159,60 @@ class ProductsController extends ResourceController
                     ->placeholder('File size (e.g., 15.2 MB)')
                     ->help('Size of the digital file')
                     ->showWhen('product_type', 'digital')
+                ->text('shipping_class')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('Shipping class (e.g., Standard, Express)')
+                    ->help('Shipping class for physical products')
+                    ->showWhen('product_type', 'physical')
+                ->text('delivery_method')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('Delivery method (e.g., Email, Download)')
+                    ->help('How digital products are delivered')
+                    ->showWhen('product_type', 'digital')
+                ->text('access_url')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('Access URL for digital products')
+                    ->help('URL where customers can access digital products')
+                    ->showWhen('product_type', 'digital')
+                ->text('access_credentials')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('Access credentials (username/password)')
+                    ->help('Login credentials for digital product access')
+                    ->showWhen('product_type', 'digital')
+                ->text('subscription_access')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('Subscription access details')
+                    ->help('How customers access subscription products')
+                    ->showWhen('product_type', 'subscription')
+                ->select('subscription_duration')
+                    ->searchable()
+                    ->sortable()
+                    ->options([
+                        'unlimited' => 'Unlimited Duration',
+                        '30_days' => '30 Days',
+                        '90_days' => '90 Days',
+                        '180_days' => '180 Days',
+                        '365_days' => '1 Year',
+                        'custom' => 'Custom Duration'
+                    ])
+                    ->placeholder('Select subscription duration')
+                    ->help('Duration of subscription access')
+                    ->showWhen('product_type', 'subscription')
             ->end()
-            
-            // Pricing & Subscription Tab
-            ->tab('pricing', 'Pricing & Subscription', 'fa fa-dollar-sign')
+
+            // 3. Pricing & Billing Tab
+            ->tab('pricing', 'Pricing & Billing', 'fa fa-dollar-sign')
                 ->number('price')
                     ->searchable()
                     ->sortable()
                     ->placeholder('0.00')
                     ->help('Enter the price in your local currency (e.g., 29.99)')
                     ->rules(['min:0', 'numeric'])
-                    ->required()
                 ->number('subscription_price')
                     ->searchable()
                     ->sortable()
@@ -194,9 +238,47 @@ class ProductsController extends ResourceController
                     ->height(100)
                     ->help('Terms and conditions for subscription products')
                     ->showWhen('product_type', 'subscription')
+                ->number('shipping_cost')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('0.00')
+                    ->help('Shipping cost for physical products (leave empty for free shipping)')
+                    ->rules(['min:0', 'numeric'])
+                    ->showWhen('product_type', 'physical')
+                ->select('tax_rate')
+                    ->searchable()
+                    ->sortable()
+                    ->options([
+                        '0' => 'No Tax (0%)',
+                        '5' => 'Low Tax (5%)',
+                        '10' => 'Standard Tax (10%)',
+                        '15' => 'High Tax (15%)',
+                        '20' => 'Premium Tax (20%)'
+                    ])
+                    ->placeholder('Select tax rate')
+                    ->help('Tax rate applied to this product')
+                    ->showWhen('product_type', 'physical')
+                ->text('license_key')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('License key or activation code')
+                    ->help('License key for digital products (if applicable)')
+                    ->showWhen('product_type', 'digital')
+                ->select('license_type')
+                    ->searchable()
+                    ->sortable()
+                    ->options([
+                        'single_use' => 'Single Use License',
+                        'multi_use' => 'Multi-Use License',
+                        'unlimited' => 'Unlimited License',
+                        'subscription' => 'Subscription License'
+                    ])
+                    ->placeholder('Select license type')
+                    ->help('Type of license for digital products')
+                    ->showWhen('product_type', 'digital')
             ->end()
-            
-            // Product Settings Tab
+
+            // 5. Product Settings Tab
             ->tab('settings', 'Product Settings', 'fa fa-cog')
                 ->switch('is_active')
                     ->searchable()
@@ -233,16 +315,23 @@ class ProductsController extends ResourceController
                     ->sortable()
                     ->label('Taxable Product')
                     ->help('Apply sales tax to this product')
-                ->switch('is_digital')
+                ->switch('requires_shipping')
                     ->searchable()
                     ->sortable()
-                    ->label('Digital Product')
-                    ->help('Digital products are delivered electronically')
-                ->switch('is_subscription')
+                    ->label('Requires Shipping')
+                    ->help('Physical products that need to be shipped')
+                    ->showWhen('product_type', 'physical')
+                ->switch('is_downloadable')
                     ->searchable()
                     ->sortable()
-                    ->label('Subscription Product')
-                    ->help('Recurring billing product')
+                    ->label('Downloadable Product')
+                    ->help('Digital products that can be downloaded')
+                    ->showWhen('product_type', 'digital')
+                ->switch('auto_renew')
+                    ->searchable()
+                    ->sortable()
+                    ->label('Auto-Renew Subscription')
+                    ->help('Automatically renew subscription when it expires')
                     ->showWhen('product_type', 'subscription')
                 ->number('sort_order')
                     ->searchable()
@@ -250,22 +339,10 @@ class ProductsController extends ResourceController
                     ->placeholder('Display order (lower numbers first)')
                     ->help('Control the display order of products (lower numbers appear first)')
                     ->rules(['integer'])
-                ->text('shipping_class')
-                    ->searchable()
-                    ->sortable()
-                    ->placeholder('Shipping class (e.g., Standard, Express)')
-                    ->help('Shipping class for physical products')
-                    ->showWhen('product_type', 'physical')
-                ->text('delivery_method')
-                    ->searchable()
-                    ->sortable()
-                    ->placeholder('Delivery method (e.g., Email, Download)')
-                    ->help('How digital products are delivered')
-                    ->showWhen('product_type', 'digital')
             ->end()
-            
-            // SEO & Meta Tab
-            ->tab('seo', 'SEO & Meta', 'fa fa-search')
+
+            // 6. SEO & Marketing Tab
+            ->tab('seo', 'SEO & Marketing', 'fa fa-search')
                 ->text('meta_title')
                     ->searchable()
                     ->sortable()
@@ -283,8 +360,8 @@ class ProductsController extends ResourceController
                     ->placeholder('SEO keywords (comma separated)')
                     ->help('Comma-separated keywords for SEO (e.g., "wireless, headphones, bluetooth")')
             ->end()
-            
-            // Additional Information Tab
+
+            // 7. Additional Information Tab
             ->tab('additional', 'Additional Information', 'fa fa-plus-circle')
                 ->text('vendor')
                     ->searchable()
@@ -305,7 +382,7 @@ class ProductsController extends ResourceController
                     ->height(100)
                     ->help('Store additional custom data in JSON format')
             ->end()
-            
+
             ->actions([
                 'view' => [ 'label' => 'View', 'icon' => 'fa fa-eye', 'route' => 'show' ],
                 'edit' => [ 'label' => 'Edit', 'icon' => 'fa fa-edit', 'route' => 'edit' ],
