@@ -626,6 +626,31 @@ class TabBuilder
     }
 
     /**
+     * Start a new section within the tab
+     */
+    public function section(string $title, string $icon = null, string $class = 'bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4'): self
+    {
+        $this->orderedItems[] = [
+            'type' => 'section_start',
+            'title' => $title,
+            'icon' => $icon,
+            'class' => $class
+        ];
+        return $this;
+    }
+
+    /**
+     * End the current section
+     */
+    public function endSection(): self
+    {
+        $this->orderedItems[] = [
+            'type' => 'section_end'
+        ];
+        return $this;
+    }
+
+    /**
      * Get the ordered items for this tab
      */
     public function getOrderedItems(): array

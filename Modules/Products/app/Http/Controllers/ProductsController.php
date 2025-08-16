@@ -213,6 +213,7 @@ class ProductsController extends ResourceController
                     ->placeholder('0.00')
                     ->help('Enter the price in your local currency (e.g., 29.99)')
                     ->rules(['min:0', 'numeric'])
+                    ->required()
                 ->number('subscription_price')
                     ->searchable()
                     ->sortable()

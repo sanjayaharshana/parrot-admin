@@ -745,6 +745,19 @@ class ResourceService
                         }
                     } elseif ($item['type'] === 'content') {
                         $this->addContentToFormTab($formTab, $item);
+                    } elseif ($item['type'] === 'section_start') {
+                        // Start a new section
+                        $formTab->customHtml(
+                            '<div class="' . ($item['class'] ?? 'bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4') . '">' .
+                            '<div class="flex items-center mb-3">' .
+                            ($item['icon'] ? '<i class="' . $item['icon'] . ' mr-2 text-gray-500"></i>' : '') .
+                            '<h3 class="text-lg font-medium text-gray-900">' . htmlspecialchars($item['title']) . '</h3>' .
+                            '</div>',
+                            'before'
+                        );
+                    } elseif ($item['type'] === 'section_end') {
+                        // End the current section
+                        $formTab->customHtml('</div>', 'after');
                     }
                 }
             }
