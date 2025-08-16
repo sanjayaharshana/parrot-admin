@@ -1,17 +1,16 @@
 <?php
 
-namespace Database\Seeders;
+namespace Modules\Products\Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class EvestSeeder extends Seeder
+class ProductsSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        //
+        // $this->call([]);
     }
 }

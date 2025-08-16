@@ -22,8 +22,7 @@ class DatabaseSeeder extends Seeder
 
         // Seed products for demonstration
         $this->call([
-            ProductSeeder::class,
-            ShipSeeder::class,
+
         ]);
     }
 }
