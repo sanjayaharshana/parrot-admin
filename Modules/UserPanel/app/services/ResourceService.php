@@ -1153,6 +1153,15 @@ class FieldBuilder
     }
 
     /**
+     * Set the label for the field
+     */
+    public function label(string $label): self
+    {
+        $this->resource->updateField($this->fieldName, ['label' => $label]);
+        return $this;
+    }
+
+    /**
      * Make the field accept multiple values (for file fields)
      */
     public function multiple(): self

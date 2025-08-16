@@ -13,23 +13,30 @@ class DocumentationPageController extends ResourceController
     public $icon = 'fa fa-cube';
     public $model = DocumentationPage::class;
     public $routeName = 'documentation-pages';
-    public $parentMenu = 'Dashboard';
+    public $parentMenu = 'Documentation';
 
 
 
     protected function makeResource(): \Modules\UserPanel\Services\ResourceService
     {
+        $documentationCategory = \Modules\Documentation\Models\DocumentationCategory::active()->ordered()->pluck('name', 'id');
 
         return (new \Modules\UserPanel\Services\ResourceService(\Modules\Documentation\Models\DocumentationPage::class, 'documentation-pages'))
             ->title('DocumentationPage Management')
             ->description('Manage documentation-pages records')
             ->enableTabs()
-            ->tab('general', 'General', 'fa fa-info-circle')
-                ->text('category_id')->searchable()->sortable()
+            ->tab('content', 'Content', 'fa fa-info-circle')
+                ->select('category_id')->options(
+                $documentationCategory->toArray()
+                )->searchable()->label('Category')
+
                 ->text('title')->searchable()->sortable()
+                ->richText('content')->height(400)
+
+            ->end()
+            ->tab('general', 'General', 'fa fa-info-circle')
                 ->text('slug')->searchable()->sortable()
                 ->text('excerpt')->searchable()->sortable()
-                ->richText('content')->height(400)
                 ->text('meta_title')->searchable()->sortable()
                 ->textarea('meta_description')
                 ->text('meta_keywords')->searchable()->sortable()

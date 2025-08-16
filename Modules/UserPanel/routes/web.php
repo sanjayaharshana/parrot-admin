@@ -14,6 +14,7 @@ use Modules\UserPanel\Http\Controllers\CKEditorDemoController;
 use Modules\UserPanel\Http\Controllers\CKEditorTestController;
 use Modules\UserPanel\Http\Controllers\CKEditorDebugController;
 use Modules\UserPanel\Http\Controllers\HeightTestController;
+use Modules\UserPanel\Http\Controllers\SelectTestController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -80,6 +81,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Height Test Routes
     Route::get('/height-test', [HeightTestController::class, 'create'])->name('height-test.create');
     Route::post('/height-test', [HeightTestController::class, 'store'])->name('height-test.store');
+
+    // Select Test Routes
+    Route::get('/select-test', [SelectTestController::class, 'create'])->name('select-test.create');
+    Route::post('/select-test', [SelectTestController::class, 'store'])->name('select-test.store');
 });
 
 // Example Tab Controller Routes (for demonstration)

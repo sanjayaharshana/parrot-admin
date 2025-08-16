@@ -77,6 +77,17 @@ class TabBuilder
     }
 
     /**
+     * Set the label of the last added field
+     */
+    public function label(string $label): self
+    {
+        if ($this->lastFieldName) {
+            $this->resource->updateField($this->lastFieldName, ['label' => $label]);
+        }
+        return $this;
+    }
+
+    /**
      * Add an email field to the tab
      */
     public function email(string $name, array $options = []): self
