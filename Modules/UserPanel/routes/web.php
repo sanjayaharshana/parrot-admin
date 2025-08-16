@@ -10,6 +10,9 @@ use Modules\UserPanel\Http\Controllers\DataViewController;
 use Modules\UserPanel\Http\Controllers\SimpleLayoutController;
 use Modules\UserPanel\Http\Controllers\TestController;
 use Modules\UserPanel\Http\Controllers\MediaController;
+use Modules\UserPanel\Http\Controllers\CKEditorDemoController;
+use Modules\UserPanel\Http\Controllers\CKEditorTestController;
+use Modules\UserPanel\Http\Controllers\CKEditorDebugController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -60,6 +63,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/products/bulk-action', [\Modules\UserPanel\Http\Controllers\ProductController::class, 'bulkAction'])
         ->name('userpanel.products.bulk-action');
+
+    // CKEditor Demo Routes
+    Route::get('/ckeditor-demo', [CKEditorDemoController::class, 'create'])->name('ckeditor-demo.create');
+    Route::post('/ckeditor-demo', [CKEditorDemoController::class, 'store'])->name('ckeditor-demo.store');
+
+    // CKEditor Test Routes
+    Route::get('/ckeditor-test', [CKEditorTestController::class, 'create'])->name('ckeditor-test.create');
+    Route::post('/ckeditor-test', [CKEditorTestController::class, 'store'])->name('ckeditor-test.store');
+
+    // CKEditor Debug Routes
+    Route::get('/ckeditor-debug', [CKEditorDebugController::class, 'create'])->name('ckeditor-debug.create');
+    Route::post('/ckeditor-debug', [CKEditorDebugController::class, 'store'])->name('ckeditor-debug.store');
 });
 
 // Example Tab Controller Routes (for demonstration)

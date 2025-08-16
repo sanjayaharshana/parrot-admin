@@ -125,6 +125,16 @@ class ResourceService
     }
 
     /**
+     * Define a rich text field with CKEditor
+     */
+    public function richText(string $name, array $options = []): FieldBuilder
+    {
+        $fieldBuilder = $this->field($name, 'textarea', $options);
+        $fieldBuilder->ckeditor(true);
+        return $fieldBuilder;
+    }
+
+    /**
      * Define an email field
      */
     public function email(string $name, array $options = []): FieldBuilder
@@ -560,6 +570,10 @@ class ResourceService
                     if ($currentValue !== null) {
                         $formField->value($currentValue);
                     }
+                    // Enable CKEditor if configured
+                    if (!empty($field['ckeditor'])) {
+                        $formField->ckeditor(true);
+                    }
                     break;
 
                 case 'email':
@@ -724,6 +738,10 @@ class ResourceService
                 }
                 if (!empty($field['required'])) {
                     $formField->required();
+                }
+                // Enable CKEditor if configured
+                if (!empty($field['ckeditor'])) {
+                    $formField->ckeditor(true);
                 }
                 break;
                 
@@ -1132,6 +1150,19 @@ class FieldBuilder
     public function multiple(): self
     {
         $this->resource->updateField($this->fieldName, ['multiple' => true]);
+        return $this;
+    }
+
+    /**
+     * Enable CKEditor for this field (only works with textarea fields)
+     */
+    public function ckeditor(bool $enable = true): self
+    {
+        if ($enable) {
+            $this->resource->updateField($this->fieldName, ['ckeditor' => true]);
+        } else {
+            $this->resource->updateField($this->fieldName, ['ckeditor' => false]);
+        }
         return $this;
     }
 

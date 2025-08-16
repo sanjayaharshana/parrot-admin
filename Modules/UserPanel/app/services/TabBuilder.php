@@ -49,6 +49,23 @@ class TabBuilder
     }
 
     /**
+     * Add a rich text field with CKEditor to the tab
+     */
+    public function richText(string $name, array $options = []): self
+    {
+        $field = $this->resource->richText($name, $options);
+        $this->resource->addFieldToTab($this->tabId, $name);
+        $this->lastFieldName = $name;
+        
+        // Apply field configuration if provided
+        if (!empty($options)) {
+            $this->applyFieldConfiguration($name, $options);
+        }
+        
+        return $this;
+    }
+
+    /**
      * Add an email field to the tab
      */
     public function email(string $name, array $options = []): self

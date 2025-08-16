@@ -494,6 +494,16 @@ class FormService
     }
 
     /**
+     * Create a rich text field with CKEditor
+     */
+    public function richText(): Field
+    {
+        $field = $this->addField('textarea');
+        $field->ckeditor(true);
+        return $field;
+    }
+
+    /**
      * Create an email input field
      */
     public function email(): Field

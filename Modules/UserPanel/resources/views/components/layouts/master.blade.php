@@ -155,6 +155,9 @@
         </div>
     </div>
 
+    <!-- CKEditor Assets -->
+    @vite(['resources/css/ckeditor-only.css', 'resources/js/ckeditor-only.js'])
+    
     <!-- Alpine.js -->
     <script src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
     <script>

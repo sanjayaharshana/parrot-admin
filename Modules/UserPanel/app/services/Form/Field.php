@@ -317,6 +317,21 @@ class Field
         return $this;
     }
 
+    /**
+     * Enable CKEditor for this field (only works with textarea fields)
+     */
+    public function ckeditor(bool $enable = true): self
+    {
+        if ($this->type === 'textarea') {
+            if ($enable) {
+                $this->attributes['data-ckeditor'] = 'true';
+            } else {
+                unset($this->attributes['data-ckeditor']);
+            }
+        }
+        return $this;
+    }
+
     public function step(string $step): self
     {
         $this->attributes['step'] = $step;

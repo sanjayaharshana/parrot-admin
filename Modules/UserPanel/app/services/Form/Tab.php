@@ -135,6 +135,20 @@ class Tab
     }
 
     /**
+     * Add a rich text field with CKEditor to the tab
+     */
+    public function richText(?string $name = null, array $options = []): Field
+    {
+        $field = new Field('textarea');
+        if ($name !== null) {
+            $field->name($name);
+        }
+        $field->ckeditor(true);
+        $this->content[] = $field;
+        return $field;
+    }
+
+    /**
      * Add a select field to the tab
      */
     public function select(?string $name = null, array $options = []): Field

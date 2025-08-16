@@ -23,7 +23,7 @@ class TVShowsController extends ResourceController
                 ->text('video')->searchable()->sortable()
                 ->text('title')->searchable()->sortable()
                 ->text('slug')->searchable()->sortable()
-                ->textarea('description')
+                ->richText('description')
                 ->text('thumbnail')->searchable()->sortable()
             ->end()
             ->actions([
