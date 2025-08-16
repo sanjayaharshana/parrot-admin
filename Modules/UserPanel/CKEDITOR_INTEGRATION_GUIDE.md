@@ -122,8 +122,26 @@ $form->richText()
     ->name('content')
     ->label('Content')
     ->required()
-    ->attribute('data-height', '400') // Custom height
-    ->attribute('data-toolbar', 'basic'); // Custom toolbar
+    ->height(400) // Set custom height in pixels
+    ->ckeditor(true); // Enable CKEditor
+```
+
+### Height Configuration
+
+You can set custom heights for CKEditor fields using the `height()` method:
+
+```php
+// Set height to 300px
+->richText('content')->height(300)
+
+// Set height to 500px
+->textarea('description')->ckeditor(true)->height(500)
+
+// Combine with other methods
+->richText('content')
+    ->height(400)
+    ->required()
+    ->label('Main Content')
 ```
 
 ## CKEditor Features
@@ -455,3 +473,47 @@ function CustomPlugin(editor) {
 ## Demo
 
 Visit `/ckeditor-demo` in your application to see CKEditor in action with various examples and usage patterns.
+
+## Height Configuration Examples
+
+### Using the height() Method
+
+The `height()` method allows you to set custom heights for CKEditor fields:
+
+```php
+// In ResourceService
+$this->richText('content')->height(300);
+
+// In FormService
+$form->richText()
+    ->name('content')
+    ->height(400)
+    ->required();
+
+// In TabBuilder
+$tab->richText('content')->height(500);
+
+// Combine with other methods
+$this->richText('content')
+    ->height(350)
+    ->required()
+    ->label('Main Content');
+```
+
+### Height Values
+
+- **Small editors**: 200-300px (for brief content)
+- **Medium editors**: 350-450px (for standard content)
+- **Large editors**: 500-700px (for detailed content)
+- **Custom sizes**: Any pixel value you prefer
+
+### Responsive Heights
+
+The height setting works well with responsive design:
+
+```php
+// Different heights for different content types
+$this->richText('excerpt')->height(200);      // Short excerpt
+$this->richText('content')->height(400);      // Main content
+$this->richText('details')->height(600);      // Detailed information
+```

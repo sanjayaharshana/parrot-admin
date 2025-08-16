@@ -66,6 +66,17 @@ class TabBuilder
     }
 
     /**
+     * Set the height of the last added field (works with textarea and CKEditor fields)
+     */
+    public function height(int $height): self
+    {
+        if ($this->lastFieldName) {
+            $this->resource->updateField($this->lastFieldName, ['height' => $height]);
+        }
+        return $this;
+    }
+
+    /**
      * Add an email field to the tab
      */
     public function email(string $name, array $options = []): self

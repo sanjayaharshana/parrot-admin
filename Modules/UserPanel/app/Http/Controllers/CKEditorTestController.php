@@ -24,7 +24,7 @@ class CKEditorTestController extends BaseController
                 ->textarea('description')->ckeditor(true)
                 ->end()
             ->tab('content', 'Rich Content', 'fa fa-edit')
-                ->richText('content')
+                ->richText('content')->height(300)
                 ->end();
 
         $this->form->clear();

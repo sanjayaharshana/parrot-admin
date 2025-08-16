@@ -332,6 +332,17 @@ class Field
         return $this;
     }
 
+    /**
+     * Set the height of the field (works with textarea and CKEditor fields)
+     */
+    public function height(int $height): self
+    {
+        if ($this->type === 'textarea') {
+            $this->attributes['data-height'] = $height;
+        }
+        return $this;
+    }
+
     public function step(string $step): self
     {
         $this->attributes['step'] = $step;

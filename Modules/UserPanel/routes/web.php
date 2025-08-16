@@ -13,6 +13,7 @@ use Modules\UserPanel\Http\Controllers\MediaController;
 use Modules\UserPanel\Http\Controllers\CKEditorDemoController;
 use Modules\UserPanel\Http\Controllers\CKEditorTestController;
 use Modules\UserPanel\Http\Controllers\CKEditorDebugController;
+use Modules\UserPanel\Http\Controllers\HeightTestController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -75,6 +76,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // CKEditor Debug Routes
     Route::get('/ckeditor-debug', [CKEditorDebugController::class, 'create'])->name('ckeditor-debug.create');
     Route::post('/ckeditor-debug', [CKEditorDebugController::class, 'store'])->name('ckeditor-debug.store');
+
+    // Height Test Routes
+    Route::get('/height-test', [HeightTestController::class, 'create'])->name('height-test.create');
+    Route::post('/height-test', [HeightTestController::class, 'store'])->name('height-test.store');
 });
 
 // Example Tab Controller Routes (for demonstration)

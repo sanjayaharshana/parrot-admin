@@ -7,8 +7,23 @@
 
 .ckeditor-container .ck-editor__editable {
     min-height: 200px;
-    max-height: 500px;
+    max-height: none;
     overflow-y: auto;
+}
+
+/* Custom height support */
+.ckeditor-container[style*="height"] .ck-editor__editable {
+    min-height: 0;
+    height: calc(100% - 50px) !important; /* Subtract toolbar height and force override */
+}
+
+/* Ensure the editor respects the container height */
+.ckeditor-container[style*="height"] .ck-editor__main {
+    height: calc(100% - 50px) !important; /* Main editor area */
+}
+
+.ckeditor-container[style*="height"] .ck-editor__editable_inline {
+    height: 100% !important; /* Inline editor */
 }
 
 .ckeditor-container .ck-editor__editable:focus {

@@ -29,7 +29,7 @@ class DocumentationPageController extends ResourceController
                 ->text('title')->searchable()->sortable()
                 ->text('slug')->searchable()->sortable()
                 ->text('excerpt')->searchable()->sortable()
-                ->richText('content')
+                ->richText('content')->height(400)
                 ->text('meta_title')->searchable()->sortable()
                 ->textarea('meta_description')
                 ->text('meta_keywords')->searchable()->sortable()

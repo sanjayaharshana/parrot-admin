@@ -64,6 +64,7 @@ class CKEditorDemoController extends BaseController
                     ->label('Content')
                     ->placeholder('Start writing your content here...')
                     ->required()
+                    ->height(350) // Set custom height
             );
 
         // Alternative way to enable CKEditor on existing textarea
@@ -74,6 +75,7 @@ class CKEditorDemoController extends BaseController
                     ->label('Additional Content')
                     ->placeholder('This textarea will also use CKEditor')
                     ->ckeditor(true) // Enable CKEditor manually
+                    ->height(250) // Set custom height
             );
 
         return $layout->render();

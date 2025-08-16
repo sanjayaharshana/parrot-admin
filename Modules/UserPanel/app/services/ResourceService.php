@@ -574,6 +574,10 @@ class ResourceService
                     if (!empty($field['ckeditor'])) {
                         $formField->ckeditor(true);
                     }
+                    // Set height if configured
+                    if (!empty($field['height'])) {
+                        $formField->height($field['height']);
+                    }
                     break;
 
                 case 'email':
@@ -742,6 +746,10 @@ class ResourceService
                 // Enable CKEditor if configured
                 if (!empty($field['ckeditor'])) {
                     $formField->ckeditor(true);
+                }
+                // Set height if configured
+                if (!empty($field['height'])) {
+                    $formField->height($field['height']);
                 }
                 break;
                 
@@ -1163,6 +1171,15 @@ class FieldBuilder
         } else {
             $this->resource->updateField($this->fieldName, ['ckeditor' => false]);
         }
+        return $this;
+    }
+
+    /**
+     * Set the height of the field (works with textarea and CKEditor fields)
+     */
+    public function height(int $height): self
+    {
+        $this->resource->updateField($this->fieldName, ['height' => $height]);
         return $this;
     }
 

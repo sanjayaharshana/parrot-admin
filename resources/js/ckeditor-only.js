@@ -52,6 +52,17 @@ function initializeCKEditor() {
         // Create a container for the editor
         const editorContainer = document.createElement('div');
         editorContainer.className = 'ckeditor-container mb-4';
+        
+        // Apply custom height if specified
+        const customHeight = textarea.getAttribute('data-height');
+        console.log('Textarea height attribute:', customHeight);
+        if (customHeight) {
+            editorContainer.style.height = `${customHeight}px`;
+            // Also set the height on the textarea for reference
+            textarea.style.height = `${customHeight}px`;
+            console.log('Set container height to:', customHeight, 'px');
+        }
+        
         textarea.parentNode.insertBefore(editorContainer, textarea);
         
         // Hide the original textarea
@@ -64,6 +75,20 @@ function initializeCKEditor() {
                 // Set initial content
                 if (textarea.value) {
                     editor.setData(textarea.value);
+                }
+                
+                // Apply custom height to the editor after initialization
+                if (customHeight) {
+                    console.log('Applying custom height:', customHeight, 'px');
+                    const editorElement = editorContainer.querySelector('.ck-editor__editable');
+                    if (editorElement) {
+                        const editorHeight = customHeight - 50; // Subtract toolbar height
+                        editorElement.style.height = `${editorHeight}px`;
+                        editorElement.style.minHeight = `${editorHeight}px`;
+                        console.log('Applied height to editor element:', editorHeight, 'px');
+                    } else {
+                        console.log('Editor element not found');
+                    }
                 }
                 
                 // Update textarea value when editor content changes
