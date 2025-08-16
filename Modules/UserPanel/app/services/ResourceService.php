@@ -728,36 +728,73 @@ class ResourceService
                 // Get ordered items for this tab
                 $orderedItems = $this->getTabOrderedItems($tabId);
                 
-                // Process items in the correct order
+                // Track section context
+                $currentSection = null;
+                $sectionFields = [];
+                
+                // First pass: collect all items and organize them by sections
+                $organizedItems = [];
+                $currentSectionItems = [];
+                
                 foreach ($orderedItems as $item) {
-                    if ($item['type'] === 'field') {
-                        $fieldName = $item['name'];
-                        if (isset($this->fields[$fieldName])) {
-                            $field = $this->fields[$fieldName];
-                            
-                            // Get the current value from the model if it exists
-                            $currentValue = null;
-                            if ($form->getModel() && $form->getModel()->exists) {
-                                $currentValue = $form->getModelValue($fieldName);
-                            }
-                            
-                            $this->addFieldToFormTab($formTab, $field, $fieldName, $currentValue);
+                    if ($item['type'] === 'section_start') {
+                        // If we have a previous section, save it
+                        if ($currentSection) {
+                            $organizedItems[] = [
+                                'type' => 'section',
+                                'section' => $currentSection,
+                                'items' => $currentSectionItems
+                            ];
+                        }
+                        
+                        // Start new section
+                        $currentSection = $item;
+                        $currentSectionItems = [];
+                    } elseif ($item['type'] === 'section_end') {
+                        // Save current section
+                        if ($currentSection) {
+                            $organizedItems[] = [
+                                'type' => 'section',
+                                'section' => $currentSection,
+                                'items' => $currentSectionItems
+                            ];
+                            $currentSection = null;
+                            $currentSectionItems = [];
+                        }
+                    } elseif ($item['type'] === 'field') {
+                        if ($currentSection) {
+                            $currentSectionItems[] = $item;
+                        } else {
+                            // Field outside of any section
+                            $organizedItems[] = $item;
                         }
                     } elseif ($item['type'] === 'content') {
+                        if ($currentSection) {
+                            $currentSectionItems[] = $item;
+                        } else {
+                            // Content outside of any section
+                            $organizedItems[] = $item;
+                        }
+                    }
+                }
+                
+                // Don't forget the last section if it wasn't closed
+                if ($currentSection && !empty($currentSectionItems)) {
+                    $organizedItems[] = [
+                        'type' => 'section',
+                        'section' => $currentSection,
+                        'items' => $currentSectionItems
+                    ];
+                }
+                
+                // Second pass: render organized items
+                foreach ($organizedItems as $item) {
+                    if ($item['type'] === 'field') {
+                        $this->renderFieldItem($formTab, $item);
+                    } elseif ($item['type'] === 'content') {
                         $this->addContentToFormTab($formTab, $item);
-                    } elseif ($item['type'] === 'section_start') {
-                        // Start a new section
-                        $formTab->customHtml(
-                            '<div class="' . ($item['class'] ?? 'bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4') . '">' .
-                            '<div class="flex items-center mb-3">' .
-                            ($item['icon'] ? '<i class="' . $item['icon'] . ' mr-2 text-gray-500"></i>' : '') .
-                            '<h3 class="text-lg font-medium text-gray-900">' . htmlspecialchars($item['title']) . '</h3>' .
-                            '</div>',
-                            'before'
-                        );
-                    } elseif ($item['type'] === 'section_end') {
-                        // End the current section
-                        $formTab->customHtml('</div>', 'after');
+                    } elseif ($item['type'] === 'section') {
+                        $this->renderSection($formTab, $item['section'], $item['items']);
                     }
                 }
             }
@@ -765,6 +802,52 @@ class ResourceService
 
         // Ensure validation rules collected on ResourceService are applied to the FormService
         $form->setValidationRules($this->getValidationRules());
+    }
+
+    /**
+     * Render a field item
+     */
+    protected function renderFieldItem($formTab, array $item): void
+    {
+        $fieldName = $item['name'];
+        if (isset($this->fields[$fieldName])) {
+            $field = $this->fields[$fieldName];
+            
+            // Get the current value from the model if it exists
+            $currentValue = null;
+            // Note: We'll get the current value when we actually add the field
+            // For now, pass null and let addFieldToFormTab handle it
+            
+            $this->addFieldToFormTab($formTab, $field, $fieldName, $currentValue);
+        }
+    }
+
+    /**
+     * Render a section with its fields
+     */
+    protected function renderSection($formTab, array $section, array $items): void
+    {
+        // Start section container
+        $sectionHtml = '<div class="' . ($section['class'] ?? 'bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4') . '">' .
+            '<div class="flex items-center mb-3">' .
+            ($section['icon'] ? '<i class="' . $section['icon'] . ' mr-2 text-gray-500"></i>' : '') .
+            '<h3 class="text-lg font-medium text-gray-900">' . htmlspecialchars($section['title']) . '</h3>' .
+            '</div>';
+        
+        // Add section start HTML
+        $formTab->customHtml($sectionHtml, 'before');
+        
+        // Render all items within the section
+        foreach ($items as $item) {
+            if ($item['type'] === 'field') {
+                $this->renderFieldItem($formTab, $item);
+            } elseif ($item['type'] === 'content') {
+                $this->addContentToFormTab($formTab, $item);
+            }
+        }
+        
+        // Add section end HTML
+        $formTab->customHtml('</div>', 'after');
     }
 
     /**
