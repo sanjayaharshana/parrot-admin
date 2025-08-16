@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Documentation\Http\Controllers\DocumentationController;
 use Modules\Documentation\Http\Controllers\DocumentationPageController;
+use \Modules\Documentation\Http\Controllers\DocumentationCategoryController;
 
 Route::prefix('documentation')->name('documentation.')->group(function () {
     Route::get('/', [DocumentationController::class, 'index'])->name('index');
@@ -23,4 +24,6 @@ Route::prefix('documentation')->name('documentation.')->group(function () {
 Route::resource('/documentation-pages', DocumentationPageController::class)->names([ 'index'=>'documentation-pages.index','create'=>'documentation-pages.create',
     'store'=>'documentation-pages.store','show'=>'documentation-pages.show','edit'=>'documentation-pages.edit','update'=>'documentation-pages.update','destroy'=>'documentation-pages.destroy']);
 
-
+Route::resource('/documentation-categories', DocumentationCategoryController::class)->names([ 'index'=>'documentation-categories.index','create'=>'documentation-categori
+es.create','store'=>'documentation-categories.store','show'=>'documentation-categories.show','edit'=>'documentation-categories.edit','update'=>'documentation-categories.update','destroy'=>'doc
+umentation-categories.destroy']);
