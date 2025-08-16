@@ -21,9 +21,22 @@ Route::prefix('documentation')->name('documentation.')->group(function () {
 });
 
 
-Route::resource('/documentation-pages', DocumentationPageController::class)->names([ 'index'=>'documentation-pages.index','create'=>'documentation-pages.create',
-    'store'=>'documentation-pages.store','show'=>'documentation-pages.show','edit'=>'documentation-pages.edit','update'=>'documentation-pages.update','destroy'=>'documentation-pages.destroy']);
+Route::resource('/documentation-pages', DocumentationPageController::class)->names([
+    'index' => 'documentation-pages.index',
+    'create' => 'documentation-pages.create',
+    'store' => 'documentation-pages.store',
+    'show' => 'documentation-pages.show',
+    'edit' => 'documentation-pages.edit',
+    'update' => 'documentation-pages.update',
+    'destroy' => 'documentation-pages.destroy'
+]);
 
-Route::resource('/documentation-categories', DocumentationCategoryController::class)->names([ 'index'=>'documentation-categories.index','create'=>'documentation-categori
-es.create','store'=>'documentation-categories.store','show'=>'documentation-categories.show','edit'=>'documentation-categories.edit','update'=>'documentation-categories.update','destroy'=>'doc
-umentation-categories.destroy']);
+Route::resource('/documentation-categories', DocumentationCategoryController::class)->names([
+    'index' => 'documentation-categories.index',
+    'create' => 'documentation-categories.create',
+    'store' => 'documentation-categories.store',
+    'show' => 'documentation-categories.show',
+    'edit' => 'documentation-categories.edit',
+    'update' => 'documentation-categories.update',
+    'destroy' => 'documentation-categories.destroy'
+]);

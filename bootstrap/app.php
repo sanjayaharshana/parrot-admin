@@ -10,6 +10,15 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withProviders([
+        // Load module service providers
+        \Modules\Documentation\Providers\DocumentationServiceProvider::class,
+        \Modules\UserPanel\Providers\UserPanelServiceProvider::class,
+        \Modules\Auth\Providers\AuthServiceProvider::class,
+        \Modules\Landing\Providers\LandingServiceProvider::class,
+        \Modules\PluginManager\Providers\PluginManagerServiceProvider::class,
+        \Modules\Subscriptions\Providers\SubscriptionsServiceProvider::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'userpanel' => \Modules\UserPanel\Http\Middleware\Userpanel::class
