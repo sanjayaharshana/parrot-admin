@@ -35,6 +35,7 @@ class DocumentationPageController extends ResourceController
 
             ->end()
             ->tab('seo', 'SEO', 'fa fa-info-circle')
+                ->customHtml('<p class="text-muted">SEO settings for the documentation page.</p>', null, 'mb-4')->sortable()
                 ->text('slug')->searchable()->sortable()
                 ->text('excerpt')->searchable()->sortable()
                 ->text('meta_title')->searchable()->sortable()

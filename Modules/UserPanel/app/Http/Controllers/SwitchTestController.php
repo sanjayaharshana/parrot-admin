@@ -62,3 +62,4 @@ class SwitchTestController extends BaseController
         return redirect()->back()->with('success', 'Form submitted successfully!');
     }
 }
+
