@@ -7,5 +7,6 @@
     "PluginManager": true,
     "Documentation": true,
     "Subscriptions": true,
-    "Settings": true
+    "Settings": true,
+    "Products": true
 }

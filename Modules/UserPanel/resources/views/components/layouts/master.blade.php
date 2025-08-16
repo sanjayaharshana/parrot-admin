@@ -58,10 +58,80 @@
         .toggle-label {
             background-color: #d1d5db;
         }
+
+        /* Preloader Styles - Inline Fallback */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 16rem;
+            width: calc(100% - 16rem);
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            backdrop-filter: blur(2px);
+        }
+
+        .preloader.hidden {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        .preloader-content {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .preloader-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        .preloader-text {
+            color: #667eea;
+            font-size: 1rem;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .preloader {
+                left: 0;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 
 <body class="bg-gray-50">
+    <!-- Preloader -->
+    <div id="preloader" class="preloader">
+        <div class="preloader-content">
+            <div class="preloader-spinner"></div>
+            <div class="preloader-text">Loading...</div>
+        </div>
+    </div>
+
     <div class="min-h-screen flex">
         <!-- Sidebar -->
         <div class="gradient-bg text-white shadow-lg w-64 flex-shrink-0">
@@ -168,31 +238,209 @@
         </div>
     </div>
 
+
+    
     <!-- CKEditor Assets -->
     @vite(['resources/css/ckeditor-only.css', 'resources/js/ckeditor-only.js'])
     
     <!-- Alpine.js -->
     <script src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
+    
+    <!-- Preloader Script - Inline Fallback -->
     <script>
-      window.formDataGrid = window.formDataGrid || function(name, columns, endpoint){
-        return {
-          name: name,
-          columns: columns,
-          endpoint: endpoint,
-          rows: [],
-          open: false,
-          search: "",
-          results: [],
-          grandTotal: 0,
-          serialized: "[]",
-          currency: function(v){ try { return new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"}).format(Number(v||0)); } catch(e){ return Number(v||0).toFixed(2); } },
-          recalc: function(){ this.grandTotal = this.rows.reduce(function(s,r){ return s + ((Number(r.quantity)||0) * (Number(r.price)||0)); }, 0); this.serialized = JSON.stringify(this.rows); },
-          remove: function(idx){ this.rows.splice(idx,1); this.recalc(); },
-          openPicker: function(){ this.open = true; this.loadResults(); },
-          loadResults: async function(){ if(!this.endpoint) return; const url = this.endpoint + (this.search ? (this.endpoint.indexOf('?')>=0?'&':'?') + 'q=' + encodeURIComponent(this.search) : ''); const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } }); this.results = res.ok ? await res.json() : []; },
-          add: function(item){ const row = { __id: Math.random().toString(36).slice(2), id: item.id, item_name: item.name || item.item_name, quantity: 1, price: Number(item.price)||0, purchase_date: (new Date()).toISOString().slice(0,10) }; this.rows.push(row); this.recalc(); }
+        // Preloader functionality
+        function initPreloader() {
+            const preloader = document.getElementById('preloader');
+            
+            if (preloader) {
+                console.log('Preloader found, initializing...');
+                
+                // Hide preloader after page loads
+                setTimeout(function() {
+                    console.log('Hiding preloader...');
+                    preloader.classList.add('hidden');
+                    // Remove from DOM after animation
+                    setTimeout(function() {
+                        if (preloader && preloader.parentNode) {
+                            console.log('Removing preloader from DOM...');
+                            preloader.parentNode.removeChild(preloader);
+                        }
+                    }, 300);
+                }, 1000); // Increased delay to 1 second
+
+                // Show preloader on navigation
+                window.addEventListener('beforeunload', function() {
+                    preloader.classList.remove('hidden');
+                });
+
+                // Show preloader on AJAX requests
+                document.addEventListener('ajax:start', function() {
+                    preloader.classList.remove('hidden');
+                });
+
+                document.addEventListener('ajax:end', function() {
+                    setTimeout(function() {
+                        preloader.classList.add('hidden');
+                    }, 300);
+                });
+
+                // Intercept fetch requests to show preloader
+                const originalFetch = window.fetch;
+                let activeRequests = 0;
+
+                window.fetch = function(...args) {
+                    activeRequests++;
+                    preloader.classList.remove('hidden');
+
+                    return originalFetch(...args)
+                        .finally(function() {
+                            activeRequests--;
+                            if (activeRequests === 0) {
+                                setTimeout(function() {
+                                    preloader.classList.add('hidden');
+                                }, 300);
+                            }
+                        });
+                };
+            } else {
+                console.log('Preloader not found, retrying...');
+                // Retry after a short delay
+                setTimeout(initPreloader, 100);
+            }
+        }
+
+        // Initialize preloader when DOM is ready
+        console.log('Preloader script loaded, document readyState:', document.readyState);
+        
+        if (document.readyState === 'loading') {
+            console.log('DOM still loading, waiting for DOMContentLoaded...');
+            document.addEventListener('DOMContentLoaded', initPreloader);
+        } else {
+            console.log('DOM already ready, initializing preloader immediately...');
+            // DOM is already ready
+            initPreloader();
+        }
+
+        // Backup: Also hide preloader when window fully loads
+        window.addEventListener('load', function() {
+            const preloader = document.getElementById('preloader');
+            if (preloader) {
+                console.log('Window loaded, hiding preloader...');
+                setTimeout(function() {
+                    preloader.classList.add('hidden');
+                    setTimeout(function() {
+                        if (preloader && preloader.parentNode) {
+                            preloader.parentNode.removeChild(preloader);
+                        }
+                    }, 300);
+                }, 500);
+            }
+        });
+
+        // Global functions for manual control
+        window.showUserPanelPreloader = function() {
+            const preloader = document.getElementById('preloader');
+            if (preloader) {
+                preloader.classList.remove('hidden');
+            }
         };
-      };
+
+        window.hideUserPanelPreloader = function() {
+            const preloader = document.getElementById('preloader');
+            if (preloader) {
+                setTimeout(function() {
+                    preloader.classList.add('hidden');
+                }, 300);
+            }
+        };
+
+        // Force hide preloader (emergency function)
+        window.forceHidePreloader = function() {
+            const preloader = document.getElementById('preloader');
+            if (preloader) {
+                console.log('Force hiding preloader...');
+                preloader.classList.add('hidden');
+                preloader.style.display = 'none';
+                preloader.style.opacity = '0';
+                preloader.style.visibility = 'hidden';
+                preloader.style.pointerEvents = 'none';
+                
+                setTimeout(function() {
+                    if (preloader && preloader.parentNode) {
+                        console.log('Removing preloader from DOM...');
+                        preloader.parentNode.removeChild(preloader);
+                    }
+                }, 100);
+            }
+        };
+
+        // Auto-hide preloader after 3 seconds (safety measure)
+        setTimeout(function() {
+            console.log('Safety timeout reached, force hiding preloader...');
+            window.forceHidePreloader();
+        }, 3000);
+
+        // Additional safety: hide preloader when page becomes visible
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                setTimeout(function() {
+                    window.forceHidePreloader();
+                }, 1000);
+            }
+        });
+
+        window.formDataGrid = window.formDataGrid || function(name, columns, endpoint) {
+            return {
+                name: name,
+                columns: columns,
+                endpoint: endpoint,
+                rows: [],
+                open: false,
+                search: "",
+                results: [],
+                grandTotal: 0,
+                serialized: "[]",
+                currency: function(v) { 
+                    try { 
+                        return new Intl.NumberFormat(undefined, {style: "currency", currency: "USD"}).format(Number(v || 0)); 
+                    } catch(e) { 
+                        return Number(v || 0).toFixed(2); 
+                    } 
+                },
+                recalc: function() { 
+                    this.grandTotal = this.rows.reduce(function(s, r) { 
+                        return s + ((Number(r.quantity) || 0) * (Number(r.price) || 0)); 
+                    }, 0); 
+                    this.serialized = JSON.stringify(this.rows); 
+                },
+                remove: function(idx) { 
+                    this.rows.splice(idx, 1); 
+                    this.recalc(); 
+                },
+                openPicker: function() { 
+                    this.open = true; 
+                    this.loadResults(); 
+                },
+                loadResults: async function() { 
+                    if (!this.endpoint) return; 
+                    const url = this.endpoint + (this.endpoint.indexOf('?') >= 0 ? '&' : '?') + 'q=' + encodeURIComponent(this.search); 
+                    const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } }); 
+                    this.recalc(); 
+                },
+                add: function(item) { 
+                    const row = { 
+                        __id: Math.random().toString(36).slice(2), 
+                        id: item.id, 
+                        item_name: item.name || item.item_name, 
+                        quantity: 1, 
+                        price: Number(item.price) || 0, 
+                        purchase_date: (new Date()).toISOString().slice(0, 10) 
+                    }; 
+                    this.rows.push(row); 
+                    this.recalc(); 
+                }
+            };
+        };
     </script>
 </body>
 </html>

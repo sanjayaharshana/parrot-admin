@@ -24,5 +24,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/media', [MediaController::class, 'store'])->name('media.store');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
     Route::get('/dashboard', [\Modules\UserPanel\Http\Controllers\DashboardController::class,'index'])->name('dashboard.index');
+    
+    // Preloader demo route
+    Route::get('/preloader-demo', function() {
+        return view('userpanel::preloader-demo');
+    })->name('preloader.demo');
 
 });
