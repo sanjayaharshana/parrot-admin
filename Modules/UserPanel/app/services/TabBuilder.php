@@ -88,6 +88,17 @@ class TabBuilder
     }
 
     /**
+     * Set the placeholder text for the last added field
+     */
+    public function placeholder(string $placeholder): self
+    {
+        if ($this->lastFieldName) {
+            $this->resource->updateField($this->lastFieldName, ['placeholder' => $placeholder]);
+        }
+        return $this;
+    }
+
+    /**
      * Add an email field to the tab
      */
     public function email(string $name, array $options = []): self
