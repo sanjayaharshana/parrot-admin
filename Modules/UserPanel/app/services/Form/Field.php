@@ -410,6 +410,16 @@ class Field
                 $checked = $this->value ? ' checked' : '';
                 return '<label class="flex items-center"><input type="radio" ' . $attributes . $checked . ' class="rounded-full border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"> <span class="ml-2 text-sm text-gray-700">' . htmlspecialchars($this->label) . '</span></label>';
                 
+            case 'switch':
+                $checked = $this->value ? ' checked' : '';
+                return '<div class="flex items-center justify-between">
+                    <label class="text-sm font-medium text-gray-700">' . htmlspecialchars($this->label) . '</label>
+                    <div class="relative inline-block w-12 align-middle select-none">
+                        <input type="checkbox" ' . $attributes . $checked . ' class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform duration-200 ease-in-out" style="transform: translateX(' . ($this->value ? '24px' : '0') . ');">
+                        <label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-colors duration-200 ease-in-out"></label>
+                    </div>
+                </div>';
+                
             case 'file':
                 if ($this->useMediaManager) {
                     $name = htmlspecialchars($this->name);

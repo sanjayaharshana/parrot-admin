@@ -1,15 +1,31 @@
 @extends('userpanel::components.layouts.master')
 
-@section('title', 'Simple Layout Example')
-@section('page-title', 'Simple Layout & Form Binding')
+@section('title', $title ?? 'Create Resource')
+@section('page-title', $title ?? 'Create Resource')
 
 @section('content')
+    <!-- Breadcrumb -->
+    <x-userpanel::breadcrumb :items="[
+        ['label' => 'Dashboard', 'url' => route('dashboard.index')],
+        ['label' => $resourceTitle ?? 'Resource Management', 'url' => route($routePrefix . '.index')],
+        ['label' => 'Create New']
+    ]" />
+
+    <!-- Page Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">{{ $title ?? 'Create Resource' }}</h1>
+        @if(isset($description))
+            <p class="mt-2 text-gray-600">{{ $description }}</p>
+        @endif
+    </div>
+
+    <!-- Form -->
     <div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
         <form method="{{ $form->getMethod() }}" action="{{ $form->getAction() }}" enctype="multipart/form-data" class="space-y-6">
             {!! $form->renderFormContent() !!}
             
             <div class="flex justify-end space-x-4 mt-6">
-                <a href="{{ url()->previous() }}" class="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                <a href="{{ route($routePrefix . '.index') }}" class="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
                     Cancel
                 </a>
                 <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">

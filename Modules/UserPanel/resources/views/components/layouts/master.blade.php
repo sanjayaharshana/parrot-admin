@@ -45,6 +45,19 @@
         .hover-gradient:hover {
             background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
         }
+
+        /* Switch/Toggle Styles */
+        .toggle-checkbox:checked {
+            transform: translateX(24px) !important;
+        }
+        
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #3b82f6;
+        }
+        
+        .toggle-label {
+            background-color: #d1d5db;
+        }
     </style>
 </head>
 

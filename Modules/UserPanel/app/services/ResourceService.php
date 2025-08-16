@@ -183,6 +183,14 @@ class ResourceService
     }
 
     /**
+     * Define a switch/toggle field
+     */
+    public function switch(string $name, array $options = []): FieldBuilder
+    {
+        return $this->field($name, 'switch', $options);
+    }
+
+    /**
      * Define a file field
      */
     public function file(string $name, array $options = []): FieldBuilder
@@ -626,6 +634,15 @@ class ResourceService
                     }
                     break;
 
+                case 'switch':
+                    $formField = $form->switch()
+                        ->name($name)
+                        ->label($field['label']);
+                    if ($currentValue !== null) {
+                        $formField->value($currentValue);
+                    }
+                    break;
+
                 case 'radio':
                     $formField = $form->radio()
                         ->name($name)
@@ -800,6 +817,17 @@ class ResourceService
                 
             case 'checkbox':
                 $formField = $formTab->checkbox($fieldName)
+                    ->label($field['label']);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                break;
+                
+            case 'switch':
+                $formField = $formTab->switch($fieldName)
                     ->label($field['label']);
                 if ($currentValue !== null) {
                     $formField->value($currentValue);

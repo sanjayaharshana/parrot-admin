@@ -25,7 +25,7 @@ class DocumentationPageController extends ResourceController
             ->title('DocumentationPage Management')
             ->description('Manage documentation-pages records')
             ->enableTabs()
-            ->tab('content', 'Content', 'fa fa-info-circle')
+            ->tab('general', 'Content', 'fa fa-info-circle')
                 ->select('category_id')->options(
                 $documentationCategory->toArray()
                 )->searchable()->label('Category')
@@ -34,16 +34,15 @@ class DocumentationPageController extends ResourceController
                 ->richText('content')->height(400)
 
             ->end()
-            ->tab('general', 'General', 'fa fa-info-circle')
+            ->tab('seo', 'SEO', 'fa fa-info-circle')
                 ->text('slug')->searchable()->sortable()
                 ->text('excerpt')->searchable()->sortable()
                 ->text('meta_title')->searchable()->sortable()
                 ->textarea('meta_description')
                 ->text('meta_keywords')->searchable()->sortable()
                 ->text('sort_order')->searchable()->sortable()
-                ->text('is_active')->searchable()->sortable()
+                ->switch('is_active')->searchable()->sortable()
                 ->text('is_featured')->searchable()->sortable()
-                ->text('published_at')->searchable()->sortable()
             ->end()
             ->actions([
                 'view' => [ 'label' => 'View', 'icon' => 'fa fa-eye', 'route' => 'show' ],

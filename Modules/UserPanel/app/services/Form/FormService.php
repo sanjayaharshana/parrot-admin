@@ -552,6 +552,14 @@ class FormService
     }
 
     /**
+     * Create a switch/toggle field
+     */
+    public function switch(): Field
+    {
+        return $this->addField('switch');
+    }
+
+    /**
      * Create a file input field
      */
     public function file(): Field

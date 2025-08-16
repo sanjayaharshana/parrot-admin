@@ -38,8 +38,9 @@ abstract class ResourceController extends BaseController
 
         return view('userpanel::index', [
             'grid' => $gridContent,
-            'title' => $data['title'] ?? 'Ship Management',
-            'description' => $data['description'] ?? 'Manage ships with full CRUD operations'
+            'title' => $data['title'] ?? $this->resource->getTitle(),
+            'description' => $data['description'] ?? $this->resource->getDescription(),
+            'routePrefix' => $this->resource->getRoutePrefix()
         ]);
     }
 
@@ -49,6 +50,10 @@ abstract class ResourceController extends BaseController
     public function create()
     {
         $data = $this->resource->create();
+        
+        // Add additional data for breadcrumbs and navigation
+        $data['resourceTitle'] = $this->resource->getTitle();
+        $data['routePrefix'] = $this->resource->getRoutePrefix();
 
         return view('userpanel::create', $data);
     }
@@ -87,7 +92,9 @@ abstract class ResourceController extends BaseController
         return view('userpanel::show', [
             'model' => $model,
             'title' => "View {$this->resource->getTitle()}",
-            'description' => "Details for {$this->resource->getTitle()} record"
+            'description' => "Details for {$this->resource->getTitle()} record",
+            'resourceTitle' => $this->resource->getTitle(),
+            'routePrefix' => $this->resource->getRoutePrefix()
         ]);
     }
 
@@ -97,6 +104,10 @@ abstract class ResourceController extends BaseController
     public function edit($id)
     {
         $data = $this->resource->edit($id);
+        
+        // Add additional data for breadcrumbs and navigation
+        $data['resourceTitle'] = $this->resource->getTitle();
+        $data['routePrefix'] = $this->resource->getRoutePrefix();
 
         return view('userpanel::edit', $data);
     }

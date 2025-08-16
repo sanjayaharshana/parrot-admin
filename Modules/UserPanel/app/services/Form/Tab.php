@@ -188,6 +188,19 @@ class Tab
     }
 
     /**
+     * Add a switch/toggle field to the tab
+     */
+    public function switch(?string $name = null, array $options = []): Field
+    {
+        $field = new Field('switch');
+        if ($name !== null) {
+            $field->name($name);
+        }
+        $this->content[] = $field;
+        return $field;
+    }
+
+    /**
      * Add a file field to the tab
      */
     public function file(?string $name = null, array $options = []): Field

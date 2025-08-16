@@ -190,6 +190,23 @@ class TabBuilder
     }
 
     /**
+     * Add a switch/toggle field to the tab
+     */
+    public function switch(string $name, array $options = []): self
+    {
+        $field = $this->resource->switch($name, $options);
+        $this->resource->addFieldToTab($this->tabId, $name);
+        $this->lastFieldName = $name;
+        
+        // Apply field configuration if provided
+        if (!empty($options)) {
+            $this->applyFieldConfiguration($name, $options);
+        }
+        
+        return $this;
+    }
+
+    /**
      * Add a file field to the tab
      */
     public function file(string $name, array $options = []): self

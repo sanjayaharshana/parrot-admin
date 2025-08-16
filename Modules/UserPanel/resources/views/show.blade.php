@@ -4,6 +4,22 @@
 @section('page-title', $title ?? 'Resource Details')
 
 @section('content')
+    <!-- Breadcrumb -->
+    <x-userpanel::breadcrumb :items="[
+        ['label' => 'Dashboard', 'url' => route('dashboard.index')],
+        ['label' => $resourceTitle ?? 'Resource Management', 'url' => route($routePrefix . '.index')],
+        ['label' => 'View Details']
+    ]" />
+
+    <!-- Page Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">{{ $title ?? 'Resource Details' }}</h1>
+        @if(isset($description))
+            <p class="mt-2 text-gray-600">{{ $description }}</p>
+        @endif
+    </div>
+
+    <!-- Content -->
     <div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
         <div class="space-y-6">
             @if(isset($model))
