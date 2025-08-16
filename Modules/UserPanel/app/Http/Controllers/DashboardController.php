@@ -48,8 +48,8 @@ class DashboardController extends PageController
             $item->addHtml('<div class="bg-white rounded-lg shadow-lg border border-gray-200 p-6">'
                 . '<h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>'
                 . '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">'
-                . '<a href="' . e(route('products.create')) . '" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm text-center">Create Product</a>'
-                . '<a href="' . e(route('ships.create')) . '" class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm text-center">Create Ship</a>'
+                . '<a href="" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm text-center">Create Product</a>'
+                . '<a href="" class="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm text-center">Create Ship</a>'
                 . '</div>'
                 . '</div>');
         });
