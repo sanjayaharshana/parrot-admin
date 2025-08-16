@@ -933,7 +933,7 @@ class FormService
             $html .= '<button type="button" 
                                 @click="activeTab = \'' . $tab->getId() . '\'; console.log(\'Tab clicked:\', \'' . $tab->getId() . '\', \'New activeTab:\', activeTab)" 
                                 :class="activeTab === \'' . $tab->getId() . '\' ? \'border-blue-500 text-blue-600 bg-blue-50\' : \'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300\'"
-                                class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                                class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
                             ' . $tab->renderHeader() . '
                         </button>';
         }
@@ -948,12 +948,6 @@ class FormService
             
             $html .= '<div x-show="activeTab === \'' . $tab->getId() . '\'" 
                             x-cloak
-                            x-transition:enter="transition ease-out duration-200" 
-                            x-transition:enter-start="opacity-0 transform scale-95" 
-                            x-transition:enter-end="opacity-100 transform scale-100" 
-                            x-transition:leave="transition ease-in duration-150" 
-                            x-transition:leave-start="opacity-100 transform scale-100" 
-                            x-transition:leave-end="opacity-0 transform scale-95"
                             class="tab-panel space-y-6"
                             x-init="console.log(\'Tab panel initialized:\', \'' . $tab->getId() . '\')">
                             ' . $tab->renderContent() . '
