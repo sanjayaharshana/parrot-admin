@@ -7,6 +7,7 @@ class TabBuilder
     protected ResourceService $resource;
     protected string $tabId;
     protected ?string $lastFieldName = null;
+    protected array $orderedItems = [];
 
     public function __construct(ResourceService $resource, string $tabId)
     {
@@ -22,6 +23,9 @@ class TabBuilder
         $field = $this->resource->text($name, $options);
         $this->resource->addFieldToTab($this->tabId, $name);
         $this->lastFieldName = $name;
+        
+        // Store the field in order
+        $this->orderedItems[] = ['type' => 'field', 'name' => $name];
         
         // Apply field configuration if provided
         if (!empty($options)) {
@@ -40,6 +44,9 @@ class TabBuilder
         $this->resource->addFieldToTab($this->tabId, $name);
         $this->lastFieldName = $name;
         
+        // Store the field in order
+        $this->orderedItems[] = ['type' => 'field', 'name' => $name];
+        
         // Apply field configuration if provided
         if (!empty($options)) {
             $this->applyFieldConfiguration($name, $options);
@@ -56,6 +63,9 @@ class TabBuilder
         $field = $this->resource->richText($name, $options);
         $this->resource->addFieldToTab($this->tabId, $name);
         $this->lastFieldName = $name;
+        
+        // Store the field in order
+        $this->orderedItems[] = ['type' => 'field', 'name' => $name];
         
         // Apply field configuration if provided
         if (!empty($options)) {
@@ -158,6 +168,9 @@ class TabBuilder
         $this->resource->addFieldToTab($this->tabId, $name);
         $this->lastFieldName = $name;
         
+        // Store the field in order
+        $this->orderedItems[] = ['type' => 'field', 'name' => $name];
+        
         // Apply field configuration if provided
         if (!empty($options)) {
             $this->applyFieldConfiguration($name, $options);
@@ -209,6 +222,9 @@ class TabBuilder
         $this->resource->addFieldToTab($this->tabId, $name);
         $this->lastFieldName = $name;
         
+        // Store the field in order
+        $this->orderedItems[] = ['type' => 'field', 'name' => $name];
+        
         // Apply field configuration if provided
         if (!empty($options)) {
             $this->applyFieldConfiguration($name, $options);
@@ -242,6 +258,9 @@ class TabBuilder
         $field = $this->resource->date($name, $options);
         $this->resource->addFieldToTab($this->tabId, $name);
         $this->lastFieldName = $name;
+        
+        // Store the field in order
+        $this->orderedItems[] = ['type' => 'field', 'name' => $name];
         
         // Apply field configuration if provided
         if (!empty($options)) {
@@ -393,6 +412,14 @@ class TabBuilder
             'title' => $title,
             'class' => $class
         ]);
+        
+        // Store the content in order
+        $this->orderedItems[] = ['type' => 'content', 'contentType' => 'customHtml', 'data' => [
+            'html' => $html,
+            'title' => $title,
+            'class' => $class
+        ]];
+        
         return $this;
     }
 
@@ -461,10 +488,20 @@ class TabBuilder
     }
 
     /**
+     * Get the ordered items for this tab
+     */
+    public function getOrderedItems(): array
+    {
+        return $this->orderedItems;
+    }
+
+    /**
      * End the tab definition and return to the resource
      */
     public function end(): ResourceService
     {
+        // Store the ordered items in the resource
+        $this->resource->setTabOrderedItems($this->tabId, $this->orderedItems);
         return $this->resource;
     }
 }

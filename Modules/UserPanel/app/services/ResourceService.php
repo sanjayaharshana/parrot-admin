@@ -36,6 +36,7 @@ class ResourceService
     // Tab functionality properties
     protected array $tabs = [];
     protected bool $useTabs = false;
+    protected array $tabOrderedItems = [];
 
     public function __construct(string $modelClass, string $resourceName = null)
     {
@@ -480,6 +481,23 @@ class ResourceService
     }
 
     /**
+     * Set ordered items for a specific tab
+     */
+    public function setTabOrderedItems(string $tabId, array $orderedItems): self
+    {
+        $this->tabOrderedItems[$tabId] = $orderedItems;
+        return $this;
+    }
+
+    /**
+     * Get ordered items for a specific tab
+     */
+    public function getTabOrderedItems(string $tabId): array
+    {
+        return $this->tabOrderedItems[$tabId] ?? [];
+    }
+
+    /**
      * Add a field to a specific tab
      */
     public function addFieldToTab(string $tabId, string $fieldName): self
@@ -706,24 +724,27 @@ class ResourceService
             if (isset($formTabs[$tabId])) {
                 $formTab = $formTabs[$tabId];
                 
-                // Add fields to the tab
-                foreach ($tab['fields'] as $fieldName) {
-                    if (isset($this->fields[$fieldName])) {
-                        $field = $this->fields[$fieldName];
-                        
-                        // Get the current value from the model if it exists
-                        $currentValue = null;
-                        if ($form->getModel() && $form->getModel()->exists) {
-                            $currentValue = $form->getModelValue($fieldName);
-                        }
-                        
-                        $this->addFieldToFormTab($formTab, $field, $fieldName, $currentValue);
-                    }
-                }
+                // Get ordered items for this tab
+                $orderedItems = $this->getTabOrderedItems($tabId);
                 
-                // Add custom content to the tab
-                foreach ($tab['content'] as $content) {
-                    $this->addContentToFormTab($formTab, $content);
+                // Process items in the correct order
+                foreach ($orderedItems as $item) {
+                    if ($item['type'] === 'field') {
+                        $fieldName = $item['name'];
+                        if (isset($this->fields[$fieldName])) {
+                            $field = $this->fields[$fieldName];
+                            
+                            // Get the current value from the model if it exists
+                            $currentValue = null;
+                            if ($form->getModel() && $form->getModel()->exists) {
+                                $currentValue = $form->getModelValue($fieldName);
+                            }
+                            
+                            $this->addFieldToFormTab($formTab, $field, $fieldName, $currentValue);
+                        }
+                    } elseif ($item['type'] === 'content') {
+                        $this->addContentToFormTab($formTab, $item);
+                    }
                 }
             }
         }
@@ -905,32 +926,62 @@ class ResourceService
      */
     protected function addContentToFormTab($formTab, array $content): void
     {
-        switch ($content['type']) {
-            case 'divider':
-                $formTab->divider($content['data']['text'] ?? null, $content['data']['class'] ?? 'my-6');
-                break;
-                
-            case 'alert':
-                $formTab->alert($content['data']['message'], $content['data']['type'] ?? 'info');
-                break;
-                
-            case 'customHtml':
-                $formTab->customHtml(
-                    $content['data']['html'], 
-                    $content['data']['position'] ?? 'before', 
-                    ['class' => $content['data']['class'] ?? 'bg-white shadow rounded-lg p-6']
-                );
-                break;
-            case 'dataGrid':
-                $grid = new \Modules\UserPanel\Services\Form\DataGrid($content['data']['name'], $content['data']['label'] ?? $content['data']['name'], $content['data']['icon'] ?? null);
-                if (!empty($content['data']['columns'])) {
-                    $grid->columns($content['data']['columns']);
-                }
-                if (!empty($content['data']['searchEndpoint'])) {
-                    $grid->searchEndpoint($content['data']['searchEndpoint']);
-                }
-                $formTab->addContent($grid);
-                break;
+        if (isset($content['contentType'])) {
+            // Handle new ordered content structure
+            switch ($content['contentType']) {
+                case 'customHtml':
+                    $formTab->customHtml(
+                        $content['data']['html'], 
+                        $content['data']['position'] ?? 'before', 
+                        ['class' => $content['data']['class'] ?? 'bg-white shadow rounded-lg p-6']
+                    );
+                    break;
+                case 'divider':
+                    $formTab->divider($content['data']['text'] ?? null, $content['data']['class'] ?? 'my-6');
+                    break;
+                case 'alert':
+                    $formTab->alert($content['data']['message'], $content['data']['type'] ?? 'info');
+                    break;
+                case 'dataGrid':
+                    $grid = new \Modules\UserPanel\Services\Form\DataGrid($content['data']['name'], $content['data']['label'] ?? $content['data']['name'], $content['data']['icon'] ?? null);
+                    if (!empty($content['data']['columns'])) {
+                        $grid->columns($content['data']['columns']);
+                    }
+                    if (!empty($content['data']['searchEndpoint'])) {
+                        $grid->searchEndpoint($content['data']['searchEndpoint']);
+                    }
+                    $formTab->addContent($grid);
+                    break;
+            }
+        } else {
+            // Handle legacy content structure
+            switch ($content['type']) {
+                case 'divider':
+                    $formTab->divider($content['data']['text'] ?? null, $content['data']['class'] ?? 'my-6');
+                    break;
+                    
+                case 'alert':
+                    $formTab->alert($content['data']['message'], $content['data']['type'] ?? 'info');
+                    break;
+                    
+                case 'customHtml':
+                    $formTab->customHtml(
+                        $content['data']['html'], 
+                        $content['data']['position'] ?? 'before', 
+                        ['class' => $content['data']['class'] ?? 'bg-white shadow rounded-lg p-6']
+                    );
+                    break;
+                case 'dataGrid':
+                    $grid = new \Modules\UserPanel\Services\Form\DataGrid($content['data']['name'], $content['data']['label'] ?? $content['data']['name'], $content['data']['icon'] ?? null);
+                    if (!empty($content['data']['columns'])) {
+                        $grid->columns($content['data']['columns']);
+                    }
+                    if (!empty($content['data']['searchEndpoint'])) {
+                        $grid->searchEndpoint($content['data']['searchEndpoint']);
+                    }
+                    $formTab->addContent($grid);
+                    break;
+            }
         }
     }
 
