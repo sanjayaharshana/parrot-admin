@@ -6,5 +6,6 @@
     "UserPanel": true,
     "PluginManager": true,
     "Documentation": true,
-    "Subscriptions": true
+    "Subscriptions": true,
+    "Settings": true
 }

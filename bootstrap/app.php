@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         \Modules\Landing\Providers\LandingServiceProvider::class,
         \Modules\PluginManager\Providers\PluginManagerServiceProvider::class,
         \Modules\Subscriptions\Providers\SubscriptionsServiceProvider::class,
+        \Modules\Settings\Providers\SettingsServiceProvider::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([

@@ -4,6 +4,7 @@ namespace Modules\Subscriptions\Providers;
 
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Closure;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -22,7 +23,7 @@ class RouteServiceProvider extends ServiceProvider
     /**
      * Define the routes for the application.
      */
-    public function map(): void
+    public function routes(Closure $routesCallback): void
     {
         $this->mapApiRoutes();
         $this->mapWebRoutes();
