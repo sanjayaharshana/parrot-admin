@@ -10,12 +10,14 @@ class Field
     protected ?string $value = null;
     protected ?string $label = null;
     protected ?string $placeholder = null;
+    protected ?string $helpText = null;
     protected bool $required = false;
     protected array $attributes = [];
     protected array $validationRules = [];
     protected array $validationMessages = [];
     protected array $options = [];
     protected bool $useMediaManager = false;
+    protected array $conditionalRules = [];
 
     public function __construct(string $type, ?FormService $formService = null)
     {
@@ -66,6 +68,15 @@ class Field
     public function placeholder(string $placeholder): self
     {
         $this->placeholder = $placeholder;
+        return $this;
+    }
+
+    /**
+     * Set help text for the field
+     */
+    public function help(string $helpText): self
+    {
+        $this->helpText = $helpText;
         return $this;
     }
 
@@ -146,6 +157,16 @@ class Field
                 $this->formService->addValidationMessage($this->name, $rule, $message);
             }
         }
+        return $this;
+    }
+
+    /**
+     * Smart validation method that suggests common rules based on field type
+     */
+    public function validate(array $rules, array $messages = []): self
+    {
+        $this->rules($rules);
+        $this->messages($messages);
         return $this;
     }
 
@@ -343,6 +364,84 @@ class Field
         return $this;
     }
 
+    /**
+     * Show field when another field has a specific value
+     */
+    public function showWhen(string $fieldName, $value): self
+    {
+        $this->conditionalRules['show'] = [
+            'field' => $fieldName,
+            'value' => $value,
+            'operator' => 'equals'
+        ];
+        return $this;
+    }
+
+    /**
+     * Show field when another field has any of the specified values
+     */
+    public function showWhenIn(string $fieldName, array $values): self
+    {
+        $this->conditionalRules['show'] = [
+            'field' => $fieldName,
+            'value' => $values,
+            'operator' => 'in'
+        ];
+        return $this;
+    }
+
+    /**
+     * Hide field when another field has a specific value
+     */
+    public function hideWhen(string $fieldName, $value): self
+    {
+        $this->conditionalRules['hide'] = [
+            'field' => $fieldName,
+            'value' => $value,
+            'operator' => 'equals'
+        ];
+        return $this;
+    }
+
+    /**
+     * Hide field when another field has any of the specified values
+     */
+    public function hideWhenIn(string $fieldName, array $values): self
+    {
+        $this->conditionalRules['hide'] = [
+            'field' => $fieldName,
+            'value' => $values,
+            'operator' => 'in'
+        ];
+        return $this;
+    }
+
+    /**
+     * Show field when another field is not empty
+     */
+    public function showWhenNotEmpty(string $fieldName): self
+    {
+        $this->conditionalRules['show'] = [
+            'field' => $fieldName,
+            'value' => null,
+            'operator' => 'not_empty'
+        ];
+        return $this;
+    }
+
+    /**
+     * Hide field when another field is empty
+     */
+    public function hideWhenEmpty(string $fieldName): self
+    {
+        $this->conditionalRules['hide'] = [
+            'field' => $fieldName,
+            'value' => null,
+            'operator' => 'empty'
+        ];
+        return $this;
+    }
+
     public function step(string $step): self
     {
         $this->attributes['step'] = $step;
@@ -369,6 +468,11 @@ class Field
             $attributes[] = 'required';
         }
         
+        // Add conditional display attributes
+        if (!empty($this->conditionalRules)) {
+            $attributes[] = 'data-conditional="' . htmlspecialchars(json_encode($this->conditionalRules)) . '"';
+        }
+        
         foreach ($this->attributes as $key => $value) {
             $attributes[] = $key . '="' . htmlspecialchars($value) . '"';
         }
@@ -379,18 +483,23 @@ class Field
     public function render(): string
     {
         $attributes = $this->renderAttributes();
-        $label = $this->label ? '<label for="' . $this->name . '" class="block text-sm font-medium text-gray-700 mb-2">' . htmlspecialchars($this->label) . '</label>' : '';
+        $label = $this->label ? '<label for="' . $this->name . '" class="block text-sm font-medium text-gray-700 mb-1">' . htmlspecialchars($this->label) . '</label>' : '';
+        $help = $this->helpText ? '<p class="text-sm text-gray-500">' . htmlspecialchars($this->helpText) . '</p>' : '';
+        
+        $fieldContent = '';
         
         switch ($this->type) {
             case 'text':
             case 'email':
             case 'password':
             case 'number':
-                return $label . '<input type="' . $this->type . '" ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">';
+                $fieldContent = $label . '<input type="' . $this->type . '" ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">' . $help;
+                break;
                 
             case 'textarea':
                 $value = $this->value ? htmlspecialchars($this->value) : '';
-                return $label . '<textarea ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">' . $value . '</textarea>';
+                $fieldContent = $label . '<textarea ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">' . $value . '</textarea>' . $help;
+                break;
                 
             case 'select':
                 $options = $this->getOptions();
@@ -399,26 +508,30 @@ class Field
                     $selected = ($this->value == $value) ? ' selected' : '';
                     $html .= '<option value="' . htmlspecialchars($value) . '"' . $selected . '>' . htmlspecialchars($label) . '</option>';
                 }
-                $html .= '</select>';
-                return $html;
+                $html .= '</select>' . $help;
+                $fieldContent = $html;
+                break;
                 
             case 'checkbox':
                 $checked = $this->value ? ' checked' : '';
-                return '<label class="flex items-center"><input type="checkbox" ' . $attributes . $checked . ' class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"> <span class="ml-2 text-sm text-gray-700">' . htmlspecialchars($this->label) . '</span></label>';
+                $fieldContent = '<label class="flex items-center"><input type="checkbox" ' . $attributes . $checked . ' class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"> <span class="ml-2 text-sm text-gray-700">' . htmlspecialchars($this->label) . '</span></label>' . $help;
+                break;
                 
             case 'radio':
                 $checked = $this->value ? ' checked' : '';
-                return '<label class="flex items-center"><input type="radio" ' . $attributes . $checked . ' class="rounded-full border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"> <span class="ml-2 text-sm text-gray-700">' . htmlspecialchars($this->label) . '</span></label>';
+                $fieldContent = '<label class="flex items-center"><input type="radio" ' . $attributes . $checked . ' class="rounded-full border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"> <span class="ml-2 text-sm text-gray-700">' . htmlspecialchars($this->label) . '</span></label>' . $help;
+                break;
                 
             case 'switch':
                 $checked = $this->value ? ' checked' : '';
-                return '<div class="flex items-center justify-between">
+                $fieldContent = '<div class="flex items-center justify-between">
                     <label class="text-sm font-medium text-gray-700">' . htmlspecialchars($this->label) . '</label>
                     <div class="relative inline-block w-12 align-middle select-none">
                         <input type="checkbox" ' . $attributes . $checked . ' class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform duration-200 ease-in-out" style="transform: translateX(' . ($this->value ? '24px' : '0') . ');">
                         <label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-colors duration-200 ease-in-out"></label>
                     </div>
-                </div>';
+                </div>' . $help;
+                break;
                 
             case 'file':
                 if ($this->useMediaManager) {
@@ -436,12 +549,18 @@ class Field
                     $html .= '</div>';
                     $html .= '<input type="hidden" name="' . $name . '" data-media-hidden="' . $name . '">';
                     $html .= '</div>';
-                    return $html;
+                    $fieldContent = $html . $help;
+                } else {
+                    $fieldContent = $label . '<input type="file" ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">' . $help;
                 }
-                return $label . '<input type="file" ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">';
+                break;
                 
             default:
-                return $label . '<input type="text" ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">';
+                $fieldContent = $label . '<input type="text" ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">' . $help;
+                break;
         }
+        
+        // Wrap in field container for conditional display
+        return '<div class="field-container">' . $fieldContent . '</div>';
     }
 } 

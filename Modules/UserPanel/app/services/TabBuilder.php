@@ -36,6 +36,17 @@ class TabBuilder
     }
 
     /**
+     * Add help text to the last added field
+     */
+    public function help(string $helpText): self
+    {
+        if ($this->lastFieldName) {
+            $this->resource->updateField($this->lastFieldName, ['help_text' => $helpText]);
+        }
+        return $this;
+    }
+
+    /**
      * Add a textarea field to the tab
      */
     public function textarea(string $name, array $options = []): self
@@ -326,6 +337,37 @@ class TabBuilder
     }
 
     /**
+     * Smart validation method with common rule combinations
+     */
+    public function validate(array $rules, array $messages = []): self
+    {
+        if ($this->lastFieldName) {
+            // Add validation rules
+            $this->rules($rules);
+            
+            // Add validation messages
+            foreach ($messages as $rule => $message) {
+                $this->message($rule, $message);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Add validation message for the last added field
+     */
+    public function message(string $rule, string $message): self
+    {
+        if ($this->lastFieldName) {
+            $field = $this->resource->getField($this->lastFieldName);
+            $validationMessages = $field['validation_messages'] ?? [];
+            $validationMessages[$rule] = $message;
+            $this->resource->updateField($this->lastFieldName, ['validation_messages' => $validationMessages]);
+        }
+        return $this;
+    }
+
+    /**
      * Set options for select/radio/checkbox fields
      */
     public function options($options): self
@@ -485,6 +527,102 @@ class TabBuilder
             $validation = array_merge($field['validation'] ?? [], $options['rules']);
             $this->resource->updateField($fieldName, ['validation' => $validation]);
         }
+    }
+
+    /**
+     * Show the last added field when another field has a specific value
+     */
+    public function showWhen(string $fieldName, $value): self
+    {
+        if ($this->lastFieldName) {
+            $this->resource->updateField($this->lastFieldName, [
+                'conditional_rules' => array_merge(
+                    $this->resource->getField($this->lastFieldName)['conditional_rules'] ?? [],
+                    ['show' => ['field' => $fieldName, 'value' => $value, 'operator' => 'equals']]
+                )
+            ]);
+        }
+        return $this;
+    }
+
+    /**
+     * Show the last added field when another field has any of the specified values
+     */
+    public function showWhenIn(string $fieldName, array $values): self
+    {
+        if ($this->lastFieldName) {
+            $this->resource->updateField($this->lastFieldName, [
+                'conditional_rules' => array_merge(
+                    $this->resource->getField($this->lastFieldName)['conditional_rules'] ?? [],
+                    ['show' => ['field' => $fieldName, 'value' => $values, 'operator' => 'in']]
+                )
+            ]);
+        }
+        return $this;
+    }
+
+    /**
+     * Hide the last added field when another field has a specific value
+     */
+    public function hideWhen(string $fieldName, $value): self
+    {
+        if ($this->lastFieldName) {
+            $this->resource->updateField($this->lastFieldName, [
+                'conditional_rules' => array_merge(
+                    $this->resource->getField($this->lastFieldName)['conditional_rules'] ?? [],
+                    ['hide' => ['field' => $fieldName, 'value' => $value, 'operator' => 'equals']]
+                )
+            ]);
+        }
+        return $this;
+    }
+
+    /**
+     * Hide the last added field when another field has any of the specified values
+     */
+    public function hideWhenIn(string $fieldName, array $values): self
+    {
+        if ($this->lastFieldName) {
+            $this->resource->updateField($this->lastFieldName, [
+                'conditional_rules' => array_merge(
+                    $this->resource->getField($this->lastFieldName)['conditional_rules'] ?? [],
+                    ['hide' => ['field' => $fieldName, 'value' => $values, 'operator' => 'equals']]
+                )
+            ]);
+        }
+        return $this;
+    }
+
+    /**
+     * Show the last added field when another field is not empty
+     */
+    public function showWhenNotEmpty(string $fieldName): self
+    {
+        if ($this->lastFieldName) {
+            $this->resource->updateField($this->lastFieldName, [
+                'conditional_rules' => array_merge(
+                    $this->resource->getField($this->lastFieldName)['conditional_rules'] ?? [],
+                    ['show' => ['field' => $fieldName, 'value' => null, 'operator' => 'not_empty']]
+                )
+            ]);
+        }
+        return $this;
+    }
+
+    /**
+     * Hide the last added field when another field is empty
+     */
+    public function hideWhenEmpty(string $fieldName): self
+    {
+        if ($this->lastFieldName) {
+            $this->resource->updateField($this->lastFieldName, [
+                'conditional_rules' => array_merge(
+                    $this->resource->getField($this->lastFieldName)['conditional_rules'] ?? [],
+                    ['hide' => ['field' => $fieldName, 'value' => null, 'operator' => 'empty']]
+                )
+            ]);
+        }
+        return $this;
     }
 
     /**

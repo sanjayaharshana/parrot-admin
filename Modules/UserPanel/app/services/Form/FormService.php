@@ -12,7 +12,7 @@ class FormService
     protected array $fields = [];
     protected array $layout = [];
     protected array $customHtml = [];
-    protected string $formClass = 'space-y-6';
+    protected string $formClass = 'space-y-4';
     protected string $buttonClass = 'w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50';
     protected ?Model $model = null;
     protected string $method = 'POST';
@@ -921,10 +921,10 @@ class FormService
             return '';
         }
 
-        $html = '<div class="tabs-container" x-data="{ activeTab: \'' . $this->activeTab . '\' }" x-init="console.log(\'Tabs initialized with activeTab:\', activeTab); console.log(\'Available tabs:\', ' . json_encode(array_keys($this->tabs)) . ')">';
+        $html = '<div class="tabs-container" x-data="{ activeTab: \'' . $this->activeTab . '\' }" x-init="console.log(\'Tabs initialized with activeTab:\', activeTab); console.log(\'Available tabs:\', ' . json_encode(array_keys($this->tabs)) . '); initConditionalFields();">';
         
         // Tab navigation
-        $html .= '<div class="border-b border-gray-200 mb-6">';
+        $html .= '<div class="border-b border-gray-200 mb-4">';
         $html .= '<nav class="-mb-px flex space-x-8" aria-label="Tabs">';
         
         foreach ($this->tabs as $tab) {
@@ -948,12 +948,15 @@ class FormService
             
             $html .= '<div x-show="activeTab === \'' . $tab->getId() . '\'" 
                             x-cloak
-                            class="tab-panel space-y-6"
+                            class="tab-panel space-y-4"
                             x-init="console.log(\'Tab panel initialized:\', \'' . $tab->getId() . '\')">
                             ' . $tab->renderContent() . '
                         </div>';
         }
         $html .= '</div>';
+        
+        // Add conditional field JavaScript
+        $html .= $this->renderConditionalFieldsScript();
         
         $html .= '</div>';
         
@@ -986,5 +989,124 @@ class FormService
             $html .= $layoutItem->render();
         }
         return $html;
+    }
+
+    /**
+     * Render JavaScript for conditional field display
+     */
+    protected function renderConditionalFieldsScript(): string
+    {
+        return '
+        <script>
+        function initConditionalFields() {
+            // Get all fields with conditional rules
+            const conditionalFields = document.querySelectorAll("[data-conditional]");
+            
+            conditionalFields.forEach(field => {
+                const rules = JSON.parse(field.dataset.conditional);
+                const fieldContainer = field.closest(".field-container") || field.parentElement;
+                
+                // Initially hide/show based on current values
+                updateFieldVisibility(field, rules);
+                
+                // Add event listeners to controlling fields
+                if (rules.show) {
+                    const rule = rules.show;
+                    const controllingField = document.querySelector(`[name="${rule.field}"]`);
+                    
+                    if (controllingField) {
+                        controllingField.addEventListener("change", () => {
+                            updateFieldVisibility(field, rules);
+                        });
+                        
+                        // Also listen for input events for text fields
+                        if (controllingField.type === "text" || controllingField.type === "textarea") {
+                            controllingField.addEventListener("input", () => {
+                                updateFieldVisibility(field, rules);
+                            });
+                        }
+                    }
+                }
+                
+                if (rules.hide) {
+                    const rule = rules.hide;
+                    const controllingField = document.querySelector(`[name="${rule.field}"]`);
+                    
+                    if (controllingField) {
+                        controllingField.addEventListener("change", () => {
+                            updateFieldVisibility(field, rules);
+                        });
+                        
+                        // Also listen for input events for text fields
+                        if (controllingField.type === "text" || controllingField.type === "textarea") {
+                            controllingField.addEventListener("input", () => {
+                                updateFieldVisibility(field, rules);
+                            });
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateFieldVisibility(field, rules) {
+            const fieldContainer = field.closest(".field-container") || field.parentElement;
+            let shouldShow = true;
+            
+            Object.keys(rules).forEach(ruleType => {
+                const rule = rules[ruleType];
+                const controllingField = document.querySelector(`[name="${rule.field}"]`);
+                
+                if (controllingField) {
+                    const fieldValue = controllingField.value;
+                    const fieldType = controllingField.type;
+                    
+                    let conditionMet = false;
+                    
+                    switch (rule.operator) {
+                        case "equals":
+                            if (fieldType === "checkbox") {
+                                conditionMet = controllingField.checked === rule.value;
+                            } else {
+                                conditionMet = fieldValue == rule.value;
+                            }
+                            break;
+                            
+                        case "in":
+                            conditionMet = rule.value.includes(fieldValue);
+                            break;
+                            
+                        case "not_empty":
+                            conditionMet = fieldValue.trim() !== "";
+                            break;
+                            
+                        case "empty":
+                            conditionMet = fieldValue.trim() === "";
+                            break;
+                    }
+                    
+                    if (ruleType === "show") {
+                        shouldShow = shouldShow && conditionMet;
+                    } else if (ruleType === "hide") {
+                        shouldShow = shouldShow && !conditionMet;
+                    }
+                }
+            });
+            
+            if (shouldShow) {
+                fieldContainer.style.display = "";
+                fieldContainer.classList.remove("hidden");
+            } else {
+                fieldContainer.style.display = "none";
+                fieldContainer.classList.add("hidden");
+            }
+        }
+        
+        // Initialize when DOM is ready
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initConditionalFields);
+        } else {
+            initConditionalFields();
+        }
+        </script>';
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Modules\UserPanel\Services\Form\FormService;
 use Modules\UserPanel\Services\DataViewService;
+use Modules\UserPanel\Services\Form\FormField;
 
 class ResourceService
 {
@@ -769,6 +770,11 @@ class ResourceService
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
                 break;
                 
             case 'textarea':
@@ -781,6 +787,9 @@ class ResourceService
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
                 // Enable CKEditor if configured
                 if (!empty($field['ckeditor'])) {
                     $formField->ckeditor(true);
@@ -789,6 +798,8 @@ class ResourceService
                 if (!empty($field['height'])) {
                     $formField->height($field['height']);
                 }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
                 break;
                 
             case 'email':
@@ -801,6 +812,8 @@ class ResourceService
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
                 break;
                 
             case 'password':
@@ -810,6 +823,8 @@ class ResourceService
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
                 break;
                 
             case 'number':
@@ -822,6 +837,11 @@ class ResourceService
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
                 break;
                 
             case 'select':
@@ -834,6 +854,8 @@ class ResourceService
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
                 break;
                 
             case 'checkbox':
@@ -845,6 +867,8 @@ class ResourceService
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
                 break;
                 
             case 'switch':
@@ -856,6 +880,8 @@ class ResourceService
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
                 break;
                 
             case 'radio':
@@ -868,6 +894,8 @@ class ResourceService
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
                 break;
                 
             case 'file':
@@ -883,6 +911,8 @@ class ResourceService
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
                 break;
                 
             case 'date':
@@ -894,6 +924,8 @@ class ResourceService
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
                 break;
                 
             case 'datetime':
@@ -905,6 +937,8 @@ class ResourceService
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
                 break;
                 
             default:
@@ -917,6 +951,8 @@ class ResourceService
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
                 break;
         }
     }
@@ -1145,6 +1181,49 @@ class ResourceService
     public function rawHtml(string $html): self
     {
         return $this->customHtml($html);
+    }
+
+    /**
+     * Apply conditional display rules to a form field
+     */
+    protected function applyConditionalRules($formField, array $field): void
+    {
+        if (isset($field['conditional_rules']) && is_array($field['conditional_rules'])) {
+            // Handle TabBuilder format
+            if (isset($field['conditional_rules']['show'])) {
+                $rule = $field['conditional_rules']['show'];
+                if (isset($rule['field']) && isset($rule['operator'])) {
+                    switch ($rule['operator']) {
+                        case 'equals':
+                            $formField->showWhen($rule['field'], $rule['value']);
+                            break;
+                        case 'in':
+                            $formField->showWhenIn($rule['field'], $rule['value']);
+                            break;
+                        case 'not_empty':
+                            $formField->showWhenNotEmpty($rule['field']);
+                            break;
+                    }
+                }
+            }
+            
+            if (isset($field['conditional_rules']['hide'])) {
+                $rule = $field['conditional_rules']['hide'];
+                if (isset($rule['field']) && isset($rule['operator'])) {
+                    switch ($rule['operator']) {
+                        case 'equals':
+                            $formField->hideWhen($rule['field'], $rule['value']);
+                            break;
+                        case 'in':
+                            $formField->hideWhenIn($rule['field'], $rule['value']);
+                            break;
+                        case 'empty':
+                            $formField->hideWhenEmpty($rule['field']);
+                            break;
+                    }
+                }
+            }
+        }
     }
 }
 
