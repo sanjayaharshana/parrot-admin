@@ -8,11 +8,61 @@ class TabBuilder
     protected string $tabId;
     protected ?string $lastFieldName = null;
     protected array $orderedItems = [];
+    protected string $priority = 'medium'; // high, medium, low
+    protected bool $collapsible = false;
 
     public function __construct(ResourceService $resource, string $tabId)
     {
         $this->resource = $resource;
         $this->tabId = $tabId;
+    }
+
+    /**
+     * Set the priority of the tab (high, medium, low)
+     * High priority tabs are shown first, low priority last
+     */
+    public function priority(string $priority): self
+    {
+        $this->priority = $priority;
+        return $this;
+    }
+
+    /**
+     * Make the tab collapsible
+     */
+    public function collapsible(): self
+    {
+        $this->collapsible = true;
+        return $this;
+    }
+
+    /**
+     * Add multiple fields to the tab at once
+     */
+    public function fields(array $fieldNames): self
+    {
+        foreach ($fieldNames as $fieldName) {
+            $this->orderedItems[] = ['type' => 'field', 'name' => $fieldName];
+            $this->resource->addFieldToTab($this->tabId, $fieldName);
+        }
+        return $this;
+    }
+
+    /**
+     * Set the priority of the tab (high, medium, low)
+     * High priority tabs are shown first, low priority last
+     */
+    public function setPriority(string $priority): self
+    {
+        return $this->priority($priority);
+    }
+
+    /**
+     * Make the tab collapsible
+     */
+    public function setCollapsible(): self
+    {
+        return $this->collapsible();
     }
 
     /**
@@ -665,6 +715,13 @@ class TabBuilder
     {
         // Store the ordered items in the resource
         $this->resource->setTabOrderedItems($this->tabId, $this->orderedItems);
+        
+        // Update tab metadata with priority and collapsible state
+        $this->resource->updateTabMetadata($this->tabId, [
+            'priority' => $this->priority,
+            'collapsible' => $this->collapsible
+        ]);
+        
         return $this->resource;
     }
 }

@@ -482,6 +482,25 @@ class ResourceService
     }
 
     /**
+     * Get tabs ordered by priority (high -> medium -> low)
+     */
+    public function getTabsOrderedByPriority(): array
+    {
+        $tabs = $this->tabs;
+        
+        // Sort tabs by priority
+        uasort($tabs, function ($a, $b) {
+            $priorityOrder = ['high' => 3, 'medium' => 2, 'low' => 1];
+            $aPriority = $priorityOrder[$a['priority'] ?? 'medium'] ?? 2;
+            $bPriority = $priorityOrder[$b['priority'] ?? 'medium'] ?? 2;
+            
+            return $bPriority - $aPriority; // High priority first
+        });
+        
+        return $tabs;
+    }
+
+    /**
      * Set ordered items for a specific tab
      */
     public function setTabOrderedItems(string $tabId, array $orderedItems): self
@@ -519,6 +538,17 @@ class ResourceService
                 'type' => $type,
                 'data' => $data
             ];
+        }
+        return $this;
+    }
+
+    /**
+     * Update tab metadata (priority, collapsible, etc.)
+     */
+    public function updateTabMetadata(string $tabId, array $metadata): self
+    {
+        if (isset($this->tabs[$tabId])) {
+            $this->tabs[$tabId] = array_merge($this->tabs[$tabId], $metadata);
         }
         return $this;
     }
@@ -713,9 +743,16 @@ class ResourceService
      */
     protected function buildFormWithTabs(FormService $form): void
     {
-        // First, create all tabs in the FormService
-        foreach ($this->tabs as $tabId => $tab) {
-            $form->tab($tabId, $tab['label'], $tab['icon']);
+        // Get tabs ordered by priority
+        $orderedTabs = $this->getTabsOrderedByPriority();
+        
+        // First, create all tabs in the FormService in priority order
+        foreach ($orderedTabs as $tabId => $tab) {
+            $metadata = [
+                'priority' => $tab['priority'] ?? 'medium',
+                'collapsible' => $tab['collapsible'] ?? false
+            ];
+            $form->tab($tabId, $tab['label'], $tab['icon'], $metadata);
         }
         
         // Now get the created tabs and add fields to them

@@ -16,6 +16,8 @@ class Tab
     protected ?string $icon;
     protected array $content = [];
     protected array $attributes = [];
+    protected string $priority = 'medium'; // high, medium, low
+    protected bool $collapsible = false;
 
     public function __construct(string $id, string $label, ?string $icon = null)
     {
@@ -31,6 +33,40 @@ class Tab
     {
         $this->content[] = $content;
         return $this;
+    }
+
+    /**
+     * Set the priority of the tab (high, medium, low)
+     */
+    public function setPriority(string $priority): self
+    {
+        $this->priority = $priority;
+        return $this;
+    }
+
+    /**
+     * Get the priority of the tab
+     */
+    public function getPriority(): string
+    {
+        return $this->priority;
+    }
+
+    /**
+     * Make the tab collapsible
+     */
+    public function setCollapsible(bool $collapsible = true): self
+    {
+        $this->collapsible = $collapsible;
+        return $this;
+    }
+
+    /**
+     * Check if the tab is collapsible
+     */
+    public function isCollapsible(): bool
+    {
+        return $this->collapsible;
     }
 
     /**

@@ -787,9 +787,20 @@ class FormService
     /**
      * Add a tab to the form
      */
-    public function tab(string $id, string $label, string $icon = null): Tab
+    public function tab(string $id, string $label, string $icon = null, array $metadata = []): Tab
     {
         $tab = new Tab($id, $label, $icon);
+        
+        // Apply metadata if provided
+        if (!empty($metadata)) {
+            if (isset($metadata['priority'])) {
+                $tab->setPriority($metadata['priority']);
+            }
+            if (isset($metadata['collapsible'])) {
+                $tab->setCollapsible($metadata['collapsible']);
+            }
+        }
+        
         $this->tabs[$id] = $tab;
         return $tab;
     }
@@ -923,18 +934,31 @@ class FormService
 
         $html = '<div class="tabs-container" x-data="{ activeTab: \'' . $this->activeTab . '\' }" x-init="console.log(\'Tabs initialized with activeTab:\', activeTab); console.log(\'Available tabs:\', ' . json_encode(array_keys($this->tabs)) . '); initConditionalFields();">';
         
+        // Add priority-based styling
+        $html .= '<style>
+            .priority-high { font-weight: 700; color: #1f2937; }
+            .priority-medium { font-weight: 500; color: #6b7280; }
+            .priority-low { font-weight: 400; color: #9ca3af; }
+            .priority-high:hover { color: #111827; }
+            .priority-medium:hover { color: #374151; }
+            .priority-low:hover { color: #6b7280; }
+        </style>';
+        
         // Tab navigation
         $html .= '<div class="border-b border-gray-200 mb-4">';
         $html .= '<nav class="-mb-px flex space-x-8" aria-label="Tabs">';
         
         foreach ($this->tabs as $tab) {
             $isActive = $tab->getId() === $this->activeTab;
+            $isCollapsible = $tab->isCollapsible();
+            $priorityClass = 'priority-' . $tab->getPriority();
             
             $html .= '<button type="button" 
                                 @click="activeTab = \'' . $tab->getId() . '\'; console.log(\'Tab clicked:\', \'' . $tab->getId() . '\', \'New activeTab:\', activeTab)" 
                                 :class="activeTab === \'' . $tab->getId() . '\' ? \'border-blue-500 text-blue-600 bg-blue-50\' : \'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300\'"
-                                class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                                class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ' . $priorityClass . '">
                             ' . $tab->renderHeader() . '
+                            ' . ($isCollapsible ? '<i class="fa fa-chevron-down ml-1 text-xs transition-transform" :class="activeTab === \'' . $tab->getId() . '\' ? \'rotate-180\' : \'\'"></i>' : '') . '
                         </button>';
         }
         
