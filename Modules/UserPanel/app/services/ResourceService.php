@@ -817,9 +817,13 @@ class ResourceService
                 $currentSection = null;
                 $sectionFields = [];
                 
-                // First pass: collect all items and organize them by sections
+                // First pass: collect all items and organize them by sections, rows, and columns
                 $organizedItems = [];
                 $currentSectionItems = [];
+                $currentRowItems = [];
+                $currentColumnItems = [];
+                $inRow = false;
+                $inColumn = false;
                 
                 foreach ($orderedItems as $item) {
                     if ($item['type'] === 'section_start') {
@@ -835,6 +839,10 @@ class ResourceService
                         // Start new section
                         $currentSection = $item;
                         $currentSectionItems = [];
+                        $currentRowItems = [];
+                        $currentColumnItems = [];
+                        $inRow = false;
+                        $inColumn = false;
                     } elseif ($item['type'] === 'section_end') {
                         // Save current section
                         if ($currentSection) {
@@ -845,19 +853,60 @@ class ResourceService
                             ];
                             $currentSection = null;
                             $currentSectionItems = [];
+                            $currentRowItems = [];
+                            $currentColumnItems = [];
+                            $inRow = false;
+                            $inColumn = false;
                         }
+                    } elseif ($item['type'] === 'row_start') {
+                        $inRow = true;
+                        $currentRowItems = [];
+                        $currentColumnItems = [];
+                        $inColumn = false;
+                    } elseif ($item['type'] === 'row_end') {
+                        $inRow = false;
+                        if (!empty($currentRowItems)) {
+                            $organizedItems[] = [
+                                'type' => 'row',
+                                'items' => $currentRowItems
+                            ];
+                        }
+                        $currentRowItems = [];
+                        $currentColumnItems = [];
+                        $inColumn = false;
+                    } elseif ($item['type'] === 'column_start') {
+                        $inColumn = true;
+                        $currentColumnItems = [];
+                    } elseif ($item['type'] === 'column_end') {
+                        $inColumn = false;
+                        if (!empty($currentColumnItems)) {
+                            $currentRowItems[] = [
+                                'type' => 'column',
+                                'width' => $item['width'] ?? 6,
+                                'items' => $currentColumnItems
+                            ];
+                        }
+                        $currentColumnItems = [];
                     } elseif ($item['type'] === 'field') {
-                        if ($currentSection) {
+                        if ($inColumn) {
+                            $currentColumnItems[] = $item;
+                        } elseif ($inRow) {
+                            $currentRowItems[] = $item;
+                        } elseif ($currentSection) {
                             $currentSectionItems[] = $item;
                         } else {
-                            // Field outside of any section
+                            // Field outside of any section/row/column
                             $organizedItems[] = $item;
                         }
                     } elseif ($item['type'] === 'content') {
-                        if ($currentSection) {
+                        if ($inColumn) {
+                            $currentColumnItems[] = $item;
+                        } elseif ($inRow) {
+                            $currentRowItems[] = $item;
+                        } elseif ($currentSection) {
                             $currentSectionItems[] = $item;
                         } else {
-                            // Content outside of any section
+                            // Content outside of any section/row/column
                             $organizedItems[] = $item;
                         }
                     }
@@ -872,6 +921,14 @@ class ResourceService
                     ];
                 }
                 
+                // Don't forget the last row if it wasn't closed
+                if ($inRow && !empty($currentRowItems)) {
+                    $organizedItems[] = [
+                        'type' => 'row',
+                        'items' => $currentRowItems
+                    ];
+                }
+                
                 // Second pass: render organized items
                 foreach ($organizedItems as $item) {
                     if ($item['type'] === 'field') {
@@ -880,6 +937,8 @@ class ResourceService
                         $this->addContentToFormTab($formTab, $item);
                     } elseif ($item['type'] === 'section') {
                         $this->renderSection($formTab, $item['section'], $item['items'], $form);
+                    } elseif ($item['type'] === 'row') {
+                        $this->renderRow($formTab, $item['items'], $form);
                     }
                 }
             }
@@ -907,6 +966,55 @@ class ResourceService
             // Create the field in the FormService tab
             $this->createFieldInFormTab($formTab, $field, $fieldName, $currentValue);
         }
+    }
+
+    /**
+     * Render a row with its columns
+     */
+    protected function renderRow($formTab, array $items, FormService $form): void
+    {
+        // Start row container
+        $rowHtml = '<div class="grid grid-cols-12 gap-6 mb-6">';
+        $formTab->customHtml($rowHtml, 'before');
+        
+        // Render all items within the row
+        foreach ($items as $item) {
+            if ($item['type'] === 'column') {
+                $this->renderColumn($formTab, $item, $form);
+            } elseif ($item['type'] === 'field') {
+                $this->renderFieldItem($formTab, $item, $form);
+            } elseif ($item['type'] === 'content') {
+                $this->addContentToFormTab($formTab, $item);
+            }
+        }
+        
+        // Add row end HTML
+        $formTab->customHtml('</div>', 'after');
+    }
+
+    /**
+     * Render a column with its fields
+     */
+    protected function renderColumn($formTab, array $column, FormService $form): void
+    {
+        $width = $column['width'] ?? 6;
+        $colClass = "col-span-{$width}";
+        
+        // Start column container
+        $columnHtml = "<div class=\"{$colClass}\">";
+        $formTab->customHtml($columnHtml, 'before');
+        
+        // Render all items within the column
+        foreach ($column['items'] as $item) {
+            if ($item['type'] === 'field') {
+                $this->renderFieldItem($formTab, $item, $form);
+            } elseif ($item['type'] === 'content') {
+                $this->addContentToFormTab($formTab, $item);
+            }
+        }
+        
+        // Add column end HTML
+        $formTab->customHtml('</div>', 'after');
     }
 
     /**

@@ -97,6 +97,53 @@ class TabBuilder
     }
 
     /**
+     * Start a new row within the tab
+     */
+    public function row(): self
+    {
+        $this->orderedItems[] = [
+            'type' => 'row_start'
+        ];
+        return $this;
+    }
+
+    /**
+     * Start a new column within the current row
+     */
+    public function column(int $width = 6): self
+    {
+        $this->orderedItems[] = [
+            'type' => 'column_start',
+            'width' => $width
+        ];
+        return $this;
+    }
+
+    /**
+     * End the current column
+     */
+    public function endColumn(): self
+    {
+        $this->orderedItems[] = [
+            'type' => 'column_end'
+        ];
+        return $this;
+    }
+
+    /**
+     * End the current row
+     */
+    public function endRow(): self
+    {
+        $this->orderedItems[] = [
+            'type' => 'row_end'
+        ];
+        return $this;
+    }
+
+
+
+    /**
      * Add a textarea field to the tab
      */
     public function textarea(string $name, array $options = []): self
