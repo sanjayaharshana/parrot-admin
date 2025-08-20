@@ -435,24 +435,24 @@ class ResourceService
             $form->bindModel($model);
             $form->routeForUpdate($this->routePrefix, $id);
 
-                $this->buildForm($form);
+            $this->buildForm($form);
 
-        // Set validation rules and messages on the form
-        $validationRules = $this->getValidationRules();
-        $validationMessages = $this->getValidationMessages();
-        
-        if (!empty($validationRules)) {
-            $form->setValidationRules($validationRules);
-        }
-        
-        if (!empty($validationMessages)) {
-            $form->setValidationMessages($validationMessages);
-        }
+            // Set validation rules and messages on the form
+            $validationRules = $this->getValidationRules();
+            $validationMessages = $this->getValidationMessages();
+            
+            if (!empty($validationRules)) {
+                $form->setValidationRules($validationRules);
+            }
+            
+            if (!empty($validationMessages)) {
+                $form->setValidationMessages($validationMessages);
+            }
 
-        // Attach beforeSubmit callbacks
-        foreach ($this->beforeSubmitCallbacks as $callback) {
-            $form->beforeSubmit($callback);
-        }
+            // Attach beforeSubmit callbacks
+            foreach ($this->beforeSubmitCallbacks as $callback) {
+                $form->beforeSubmit($callback);
+            }
 
             $result = $form->handle($request);
 
@@ -471,7 +471,7 @@ class ResourceService
             return [
                 'success' => false,
                 'message' => 'Error updating record: ' . $e->getMessage(),
-                'errors' => ['general' => $e->getMessage()]
+                'errors' => ['errors' => $e->getMessage()]
             ];
         }
     }
@@ -875,11 +875,11 @@ class ResourceService
                 // Second pass: render organized items
                 foreach ($organizedItems as $item) {
                     if ($item['type'] === 'field') {
-                        $this->renderFieldItem($formTab, $item);
+                        $this->renderFieldItem($formTab, $item, $form);
                     } elseif ($item['type'] === 'content') {
                         $this->addContentToFormTab($formTab, $item);
                     } elseif ($item['type'] === 'section') {
-                        $this->renderSection($formTab, $item['section'], $item['items']);
+                        $this->renderSection($formTab, $item['section'], $item['items'], $form);
                     }
                 }
             }
@@ -892,7 +892,7 @@ class ResourceService
     /**
      * Render a field item
      */
-    protected function renderFieldItem($formTab, array $item): void
+    protected function renderFieldItem($formTab, array $item, FormService $form): void
     {
         $fieldName = $item['name'];
         if (isset($this->fields[$fieldName])) {
@@ -900,23 +900,25 @@ class ResourceService
             
             // Get the current value from the model if it exists
             $currentValue = null;
-            // Note: We'll get the current value when we actually add the field
-            // For now, pass null and let addFieldToFormTab handle it
+            if ($form->getModel() && $form->getModel()->exists) {
+                $currentValue = $form->getModelValue($fieldName);
+            }
             
-            $this->addFieldToFormTab($formTab, $field, $fieldName, $currentValue);
+            // Create the field in the FormService tab
+            $this->createFieldInFormTab($formTab, $field, $fieldName, $currentValue);
         }
     }
 
     /**
      * Render a section with its fields
      */
-    protected function renderSection($formTab, array $section, array $items): void
+    protected function renderSection($formTab, array $section, array $items, FormService $form): void
     {
         // Start section container
         $sectionHtml = '<div class="' . ($section['class'] ?? 'bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4') . '">' .
             '<div class="flex items-center mb-3">' .
             ($section['icon'] ? '<i class="' . $section['icon'] . ' mr-2 text-gray-500"></i>' : '') .
-            '<h3 class="text-lg font-medium text-gray-900">' . htmlspecialchars($section['title']) . '</h3>' .
+            '<h3 class="title">' . htmlspecialchars($section['title']) . '</h3>' .
             '</div>';
         
         // Add section start HTML
@@ -925,7 +927,7 @@ class ResourceService
         // Render all items within the section
         foreach ($items as $item) {
             if ($item['type'] === 'field') {
-                $this->renderFieldItem($formTab, $item);
+                $this->renderFieldItem($formTab, $item, $form);
             } elseif ($item['type'] === 'content') {
                 $this->addContentToFormTab($formTab, $item);
             }
@@ -936,15 +938,241 @@ class ResourceService
     }
 
     /**
-     * Add a field to a form tab
+     * Create a field in a FormService tab
+     */
+    protected function createFieldInFormTab($formTab, array $field, string $fieldName, $currentValue): void
+    {
+        // Create the field using the appropriate FormService method
+        switch ($field['type']) {
+            case 'text':
+                $formField = $formTab->text($fieldName)
+                    ->label($field['label']);
+                if (!empty($field['placeholder'])) {
+                    $formField->placeholder($field['placeholder']);
+                } else {
+                    $formField->placeholder("Enter {$field['label']}");
+                }
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            case 'textarea':
+                $formField = $formTab->textarea($fieldName)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}");
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
+                // Enable CKEditor if configured
+                if (!empty($field['ckeditor'])) {
+                    $formField->ckeditor(true);
+                }
+                // Set height if configured
+                if (!empty($field['height'])) {
+                    $formField->height($field['height']);
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            case 'email':
+                $formField = $formTab->email($fieldName)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}");
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            case 'password':
+                $formField = $formTab->password($fieldName)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}");
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            case 'number':
+                $formField = $formTab->number($fieldName)
+                    ->label($field['label'])
+                    ->placeholder("Enter {$field['label']}");
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            case 'select':
+                $formField = $formTab->select($fieldName)
+                    ->label($field['label'])
+                    ->options($field['options'] ?? []);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            case 'checkbox':
+                $formField = $formTab->checkbox($fieldName)
+                    ->label($field['label']);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            case 'switch':
+                $formField = $formTab->switch($fieldName)
+                    ->label($field['label']);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            case 'radio':
+                $formField = $formTab->radio($fieldName)
+                    ->label($field['label'])
+                    ->options($field['options'] ?? []);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            case 'file':
+                $formField = $formTab->file($fieldName)
+                    ->label($field['label']);
+                if (!empty($field['image_manager'])) {
+                    // Tell Field renderer to use media manager UI
+                    $formField->imageManager();
+                }
+                if (isset($field['accept'])) {
+                    $formField->accept($field['accept']);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            case 'date':
+                $formField = $formTab->date($fieldName)
+                    ->label($field['label']);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            case 'datetime':
+                $formField = $formTab->datetime($fieldName)
+                    ->label($field['label']);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            case 'url':
+                $formField = $formTab->text($fieldName)
+                    ->label($field['label'])
+                    ->attribute('type', 'url');
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            default:
+                // Fallback to text field for unknown types
+                $formField = $formTab->text($fieldName)
+                    ->label($field['label']);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+        }
+    }
+
+    /**
+     * Add a field to a form tab (legacy method - kept for compatibility)
      */
     protected function addFieldToFormTab($formTab, array $field, string $fieldName, $currentValue): void
     {
         switch ($field['type']) {
             case 'text':
                 $formField = $formTab->text($fieldName)
-                    ->label($field['label'])
-                    ->placeholder("Enter {$field['label']}");
+                    ->label($field['label']);
+                if (!empty($field['placeholder'])) {
+                    $formField->placeholder($field['placeholder']);
+                } else {
+                    $formField->placeholder("Enter {$field['label']}");
+                }
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
                 }
@@ -1644,6 +1872,24 @@ class FieldBuilder
     public function height(int $height): self
     {
         $this->resource->updateField($this->fieldName, ['height' => $height]);
+        return $this;
+    }
+
+    /**
+     * Set help text for the field
+     */
+    public function help(string $helpText): self
+    {
+        $this->resource->updateField($this->fieldName, ['help_text' => $helpText]);
+        return $this;
+    }
+
+    /**
+     * Set placeholder text for the field
+     */
+    public function placeholder(string $placeholderText): self
+    {
+        $this->resource->updateField($this->fieldName, ['placeholder' => $placeholderText]);
         return $this;
     }
 
