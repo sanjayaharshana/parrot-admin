@@ -16,6 +16,8 @@ class ResourceService
     protected array $fields = [];
     protected array $columns = [];
     protected array $validationRules = [];
+    protected array $controllerValidationRules = [];
+    protected array $controllerValidationMessages = [];
     protected array $validationMessages = [];
     protected array $searchableFields = [];
     protected array $sortableFields = [];
@@ -38,6 +40,9 @@ class ResourceService
     protected array $tabs = [];
     protected bool $useTabs = false;
     protected array $tabOrderedItems = [];
+    
+    // Controller instance for validation
+    protected $controller = null;
 
     public function __construct(string $modelClass, string $resourceName = null)
     {
@@ -106,6 +111,9 @@ class ResourceService
             'validation' => [],
             'display' => null
         ], $options);
+
+        // Debug: Log field creation
+        \Log::info("ResourceService::field() - Created field '{$name}' of type '{$type}'", $this->fields[$name]);
 
         return new FieldBuilder($this, $name);
     }
@@ -396,6 +404,18 @@ class ResourceService
 
         $this->buildForm($form);
 
+        // Set validation rules and messages on the form
+        $validationRules = $this->getValidationRules();
+        $validationMessages = $this->getValidationMessages();
+        
+        if (!empty($validationRules)) {
+            $form->setValidationRules($validationRules);
+        }
+        
+        if (!empty($validationMessages)) {
+            $form->setValidationMessages($validationMessages);
+        }
+
         // Attach beforeSubmit callbacks
         foreach ($this->beforeSubmitCallbacks as $callback) {
             $form->beforeSubmit($callback);
@@ -415,15 +435,24 @@ class ResourceService
             $form->bindModel($model);
             $form->routeForUpdate($this->routePrefix, $id);
 
-            $this->buildForm($form);
+                $this->buildForm($form);
 
-            // Attach beforeSubmit callbacks
-            foreach ($this->beforeSubmitCallbacks as $callback) {
-                $form->beforeSubmit($callback);
-            }
+        // Set validation rules and messages on the form
+        $validationRules = $this->getValidationRules();
+        $validationMessages = $this->getValidationMessages();
+        
+        if (!empty($validationRules)) {
+            $form->setValidationRules($validationRules);
+        }
+        
+        if (!empty($validationMessages)) {
+            $form->setValidationMessages($validationMessages);
+        }
 
-            // Debug: Check if validation rules are set
-            $validationRules = $form->getValidationRules();
+        // Attach beforeSubmit callbacks
+        foreach ($this->beforeSubmitCallbacks as $callback) {
+            $form->beforeSubmit($callback);
+        }
 
             $result = $form->handle($request);
 
@@ -1198,7 +1227,103 @@ class ResourceService
                 $rules[$name] = $field['validation'];
             }
         }
+        
+        // Get controller validation rules if controller is set and has the method
+        if ($this->controller && method_exists($this->controller, 'getValidationRules')) {
+            try {
+                $controllerRules = $this->controller->getValidationRules();
+                if (!empty($controllerRules)) {
+                    $rules = array_merge($rules, $controllerRules);
+                }
+            } catch (\Exception $e) {
+                \Log::error("Error getting controller validation rules: " . $e->getMessage());
+            }
+        }
+        
+        // Debug: Log validation rules
+        \Log::info("ResourceService::getValidationRules() - Field validation rules", $rules);
+        \Log::info("ResourceService::getValidationRules() - Controller validation rules", $controllerRules ?? []);
+        \Log::info("ResourceService::getValidationRules() - Final merged rules", $rules);
+        
         return $rules;
+    }
+
+    /**
+     * Get validation messages for all fields
+     */
+    public function getValidationMessages(): array
+    {
+        $messages = [];
+        foreach ($this->fields as $name => $field) {
+            if (!empty($field['validation_messages'])) {
+                $messages[$name] = $field['validation_messages'];
+            }
+        }
+        
+        // Get controller validation messages if controller is set and has the method
+        if ($this->controller && method_exists($this->controller, 'getValidationMessages')) {
+            try {
+                $controllerMessages = $this->controller->getValidationMessages();
+                if (!empty($controllerMessages)) {
+                    $messages = array_merge($messages, $controllerMessages);
+                }
+            } catch (\Exception $e) {
+                \Log::error("Error getting controller validation messages: " . $e->getMessage());
+            }
+        }
+        
+        return $messages;
+    }
+
+    /**
+     * Set validation rules from controller
+     */
+    public function setControllerValidationRules(array $rules): self
+    {
+        $this->controllerValidationRules = $rules;
+        return $this;
+    }
+
+    /**
+     * Get controller validation rules
+     */
+    public function getControllerValidationRules(): array
+    {
+        return $this->controllerValidationRules ?? [];
+    }
+
+    /**
+     * Set validation messages from controller
+     */
+    public function setControllerValidationMessages(array $messages): self
+    {
+        $this->controllerValidationMessages = $messages;
+        return $this;
+    }
+
+    /**
+     * Get controller validation messages
+     */
+    public function getControllerValidationMessages(): array
+    {
+        return $this->controllerValidationMessages ?? [];
+    }
+
+    /**
+     * Set the controller instance
+     */
+    public function setController($controller): self
+    {
+        $this->controller = $controller;
+        return $this;
+    }
+
+    /**
+     * Get the controller instance
+     */
+    public function getController()
+    {
+        return $this->controller;
     }
 
     /**
@@ -1264,6 +1389,12 @@ class ResourceService
     {
         if (isset($this->fields[$name])) {
             $this->fields[$name] = array_merge($this->fields[$name], $data);
+            
+            // Debug: Log field update
+            \Log::info("ResourceService::updateField() - Updated field '{$name}'", $this->fields[$name]);
+        } else {
+            // Debug: Log field not found
+            \Log::error("ResourceService::updateField() - Field '{$name}' not found");
         }
         return $this;
     }

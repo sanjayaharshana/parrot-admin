@@ -15,6 +15,9 @@ abstract class ResourceController extends BaseController
     {
         parent::__construct();
         $this->resource = $this->makeResource();
+        
+        // Set the controller instance on the resource service
+        $this->resource->setController($this);
     }
 
     /**

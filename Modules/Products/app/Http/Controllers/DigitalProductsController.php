@@ -25,13 +25,17 @@ class DigitalProductsController extends ResourceController
             ->tab('basic', 'Basic Information', 'fa fa-info-circle')
                 ->text('name')->required()->placeholder('Enter product name')->help('Product name is required')
                 ->textarea('description')->placeholder('Enter product description')->help('Detailed description of the digital product')
-                ->text('sku')->required()->placeholder('Enter SKU')->help('Stock Keeping Unit - must be unique')
-                ->text('slug')->placeholder('Enter URL slug')->help('URL-friendly version of the name')
+                ->text('sku')->required()->placeholder('Enter SKU')->help('Stock Keeping Unit - must be unique')->rules([
+                'unique:digital_products,sku'
+            ])
+                ->text('slug')->placeholder('Enter URL slug')->help('URL-friendly version of the name')->required()->rules([
+                    'unique:digital_products,slug',
+            ])
                 ->number('price')->required()->placeholder('0.00')->help('Product price in decimal format')
                 ->text('category')->placeholder('Enter product category')->help('Product category for organization')
                 ->text('brand')->placeholder('Enter brand name')->help('Product brand or manufacturer')
                 ->text('vendor')->placeholder('Enter vendor name')->help('Product vendor or supplier')
-                ->number('sort_order')->placeholder('0')->help('Display order (lower numbers first)')
+                ->number('sort_order')->placeholder('0')->help('Display order (lower numbers first)')->required()
             ->end()
 
             // 2. Media & Files Tab - Images, downloads, file management
@@ -194,7 +198,7 @@ class DigitalProductsController extends ResourceController
     /**
      * Get validation rules for the request
      */
-    protected function getValidationRules($request, $id = null)
+    protected function getValidationRules($request = null, $id = null)
     {
         $rules = [
             // Basic Information

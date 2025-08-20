@@ -499,10 +499,17 @@ class TabBuilder
     public function required(): self
     {
         if ($this->lastFieldName) {
+            // Debug: Check if field exists
+            $field = $this->resource->getField($this->lastFieldName);
+            if (!$field) {
+                \Log::error("TabBuilder::required() - Field '{$this->lastFieldName}' not found in ResourceService");
+                return $this;
+            }
+            
             $this->resource->updateField($this->lastFieldName, [
                 'required' => true,
                 'validation' => array_merge(
-                    $this->resource->getField($this->lastFieldName)['validation'] ?? [], 
+                    $field['validation'] ?? [], 
                     ['required']
                 )
             ]);
