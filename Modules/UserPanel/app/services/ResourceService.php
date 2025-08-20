@@ -217,6 +217,14 @@ class ResourceService
     }
 
     /**
+     * Define a URL field
+     */
+    public function url(string $name, array $options = []): FieldBuilder
+    {
+        return $this->field($name, 'url', $options);
+    }
+
+    /**
      * Set resource title
      */
     public function title(string $title): self
@@ -708,6 +716,17 @@ class ResourceService
                         ->label($field['label']);
                     break;
 
+                case 'url':
+                    $formField = $form->text()
+                        ->name($name)
+                        ->label($field['label'])
+                        ->attribute('type', 'url')
+                        ->placeholder("Enter {$field['label']}");
+                    if ($currentValue !== null) {
+                        $formField->value($currentValue);
+                    }
+                    break;
+
                 default:
                     $formField = $form->text()
                         ->name($name)
@@ -1064,6 +1083,20 @@ class ResourceService
             case 'datetime':
                 $formField = $formTab->datetime($fieldName)
                     ->label($field['label']);
+                if ($currentValue !== null) {
+                    $formField->value($currentValue);
+                }
+                if (!empty($field['required'])) {
+                    $formField->required();
+                }
+                // Apply conditional rules
+                $this->applyConditionalRules($formField, $field);
+                break;
+                
+            case 'url':
+                $formField = $formTab->text($fieldName)
+                    ->label($field['label'])
+                    ->attribute('type', 'url');
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
                 }

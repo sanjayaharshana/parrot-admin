@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Products\Http\Controllers\BrandsController;
 use Modules\Products\Http\Controllers\CategoriesController;
+use Modules\Products\Http\Controllers\DigitalProductsController;
 
 
     Route::resource('/brands', BrandsController::class)
@@ -26,4 +27,15 @@ use Modules\Products\Http\Controllers\CategoriesController;
             'edit'=>'categories.edit',
             'update'=>'categories.update',
             'destroy'=>'categories.destroy'
+        ]);
+
+    Route::resource('/digital-products', DigitalProductsController::class)
+        ->names([
+            'index'=>'digital-products.index',
+            'create'=>'digital-products.create',
+            'store'=>'digital-products.store',
+            'show'=>'digital-products.show',
+            'edit'=>'digital-products.edit',
+            'update'=>'digital-products.update',
+            'destroy'=>'digital-products.destroy'
         ]);

@@ -13,7 +13,14 @@ class Brands extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [];
+    protected $fillable = [
+        'name',
+        'description',
+        'slug',
+        'logo',
+        'website',
+        'contact_email'
+    ];
 
     // protected static function newFactory(): BrandsFactory
     // {

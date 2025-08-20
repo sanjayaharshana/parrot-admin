@@ -21,7 +21,7 @@ class FormService
     protected array $validationRules = [];
     protected array $validationMessages = [];
     protected array $beforeSubmitCallbacks = [];
-    
+
     // Tab functionality properties
     protected array $tabs = [];
     protected string $activeTab = 'general';
@@ -213,6 +213,8 @@ class FormService
             }
         }
 
+
+
         $validator = \Illuminate\Support\Facades\Validator::make(
             $request->all(),
             $laravelRules,
@@ -227,9 +229,13 @@ class FormService
             ];
         }
 
+        $getRequestData = $request->all();
+        unset($getRequestData['_token']);
+
+
         return [
             'success' => true,
-            'data' => $validator->validated()
+            'data' => $getRequestData
         ];
     }
 
@@ -790,7 +796,7 @@ class FormService
     public function tab(string $id, string $label, string $icon = null, array $metadata = []): Tab
     {
         $tab = new Tab($id, $label, $icon);
-        
+
         // Apply metadata if provided
         if (!empty($metadata)) {
             if (isset($metadata['priority'])) {
@@ -800,7 +806,7 @@ class FormService
                 $tab->setCollapsible($metadata['collapsible']);
             }
         }
-        
+
         $this->tabs[$id] = $tab;
         return $tab;
     }
@@ -933,7 +939,7 @@ class FormService
         }
 
         $html = '<div class="tabs-container" x-data="{ activeTab: \'' . $this->activeTab . '\' }" x-init="console.log(\'Tabs initialized with activeTab:\', activeTab); console.log(\'Available tabs:\', ' . json_encode(array_keys($this->tabs)) . '); initConditionalFields();">';
-        
+
         // Add priority-based styling
         $html .= '<style>
             .priority-high { font-weight: 700; color: #1f2937; }
@@ -943,34 +949,34 @@ class FormService
             .priority-medium:hover { color: #374151; }
             .priority-low:hover { color: #6b7280; }
         </style>';
-        
+
         // Tab navigation
         $html .= '<div class="border-b border-gray-200 mb-4">';
         $html .= '<nav class="-mb-px flex space-x-8" aria-label="Tabs">';
-        
+
         foreach ($this->tabs as $tab) {
             $isActive = $tab->getId() === $this->activeTab;
             $isCollapsible = $tab->isCollapsible();
             $priorityClass = 'priority-' . $tab->getPriority();
-            
-            $html .= '<button type="button" 
-                                @click="activeTab = \'' . $tab->getId() . '\'; console.log(\'Tab clicked:\', \'' . $tab->getId() . '\', \'New activeTab:\', activeTab)" 
+
+            $html .= '<button type="button"
+                                @click="activeTab = \'' . $tab->getId() . '\'; console.log(\'Tab clicked:\', \'' . $tab->getId() . '\', \'New activeTab:\', activeTab)"
                                 :class="activeTab === \'' . $tab->getId() . '\' ? \'border-blue-500 text-blue-600 bg-blue-50\' : \'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300\'"
                                 class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ' . $priorityClass . '">
                             ' . $tab->renderHeader() . '
                             ' . ($isCollapsible ? '<i class="fa fa-chevron-down ml-1 text-xs transition-transform" :class="activeTab === \'' . $tab->getId() . '\' ? \'rotate-180\' : \'\'"></i>' : '') . '
                         </button>';
         }
-        
+
         $html .= '</nav>';
         $html .= '</div>';
-        
+
         // Tab content panels
         $html .= '<div class="tab-content">';
         foreach ($this->tabs as $tab) {
             $isActive = $tab->getId() === $this->activeTab;
-            
-            $html .= '<div x-show="activeTab === \'' . $tab->getId() . '\'" 
+
+            $html .= '<div x-show="activeTab === \'' . $tab->getId() . '\'"
                             x-cloak
                             class="tab-panel space-y-4"
                             x-init="console.log(\'Tab panel initialized:\', \'' . $tab->getId() . '\')">
@@ -978,12 +984,12 @@ class FormService
                         </div>';
         }
         $html .= '</div>';
-        
+
         // Add conditional field JavaScript
         $html .= $this->renderConditionalFieldsScript();
-        
+
         $html .= '</div>';
-        
+
         return $html;
     }
 
@@ -1025,24 +1031,24 @@ class FormService
         function initConditionalFields() {
             // Get all fields with conditional rules
             const conditionalFields = document.querySelectorAll("[data-conditional]");
-            
+
             conditionalFields.forEach(field => {
                 const rules = JSON.parse(field.dataset.conditional);
                 const fieldContainer = field.closest(".field-container") || field.parentElement;
-                
+
                 // Initially hide/show based on current values
                 updateFieldVisibility(field, rules);
-                
+
                 // Add event listeners to controlling fields
                 if (rules.show) {
                     const rule = rules.show;
                     const controllingField = document.querySelector(`[name="${rule.field}"]`);
-                    
+
                     if (controllingField) {
                         controllingField.addEventListener("change", () => {
                             updateFieldVisibility(field, rules);
                         });
-                        
+
                         // Also listen for input events for text fields
                         if (controllingField.type === "text" || controllingField.type === "textarea") {
                             controllingField.addEventListener("input", () => {
@@ -1051,16 +1057,16 @@ class FormService
                         }
                     }
                 }
-                
+
                 if (rules.hide) {
                     const rule = rules.hide;
                     const controllingField = document.querySelector(`[name="${rule.field}"]`);
-                    
+
                     if (controllingField) {
                         controllingField.addEventListener("change", () => {
                             updateFieldVisibility(field, rules);
                         });
-                        
+
                         // Also listen for input events for text fields
                         if (controllingField.type === "text" || controllingField.type === "textarea") {
                             controllingField.addEventListener("input", () => {
@@ -1071,21 +1077,21 @@ class FormService
                 }
             });
         }
-        
+
         function updateFieldVisibility(field, rules) {
             const fieldContainer = field.closest(".field-container") || field.parentElement;
             let shouldShow = true;
-            
+
             Object.keys(rules).forEach(ruleType => {
                 const rule = rules[ruleType];
                 const controllingField = document.querySelector(`[name="${rule.field}"]`);
-                
+
                 if (controllingField) {
                     const fieldValue = controllingField.value;
                     const fieldType = controllingField.type;
-                    
+
                     let conditionMet = false;
-                    
+
                     switch (rule.operator) {
                         case "equals":
                             if (fieldType === "checkbox") {
@@ -1094,20 +1100,20 @@ class FormService
                                 conditionMet = fieldValue == rule.value;
                             }
                             break;
-                            
+
                         case "in":
                             conditionMet = rule.value.includes(fieldValue);
                             break;
-                            
+
                         case "not_empty":
                             conditionMet = fieldValue.trim() !== "";
                             break;
-                            
+
                         case "empty":
                             conditionMet = fieldValue.trim() === "";
                             break;
                     }
-                    
+
                     if (ruleType === "show") {
                         shouldShow = shouldShow && conditionMet;
                     } else if (ruleType === "hide") {
@@ -1115,7 +1121,7 @@ class FormService
                     }
                 }
             });
-            
+
             if (shouldShow) {
                 fieldContainer.style.display = "";
                 fieldContainer.classList.remove("hidden");
@@ -1124,7 +1130,7 @@ class FormService
                 fieldContainer.classList.add("hidden");
             }
         }
-        
+
         // Initialize when DOM is ready
         if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", initConditionalFields);
