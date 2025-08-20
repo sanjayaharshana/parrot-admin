@@ -2,6 +2,8 @@
 
 namespace Modules\Products\Http\Controllers;
 
+use Modules\Products\Models\Brands;
+use Modules\Products\Models\Categories;
 use Modules\Products\Models\DigitalProduct;
 use Illuminate\Http\Request;
 use Modules\UserPanel\Http\Base\ResourceController;
@@ -16,6 +18,14 @@ class DigitalProductsController extends ResourceController
 
         protected function makeResource(): ResourceService
     {
+        $productCategories = Categories::where('is_active', 1)
+            ->pluck('name', 'id')
+            ->toArray();
+
+        $brands = Brands::all()
+            ->pluck('name', 'id')
+            ->toArray();
+
         return (new ResourceService(DigitalProduct::class, 'digital-products'))
             ->title('Digital Products Management')
             ->description('Manage digital products, downloads, and digital assets')
@@ -32,8 +42,8 @@ class DigitalProductsController extends ResourceController
                     'unique:digital_products,slug',
             ])
                 ->number('price')->required()->placeholder('0.00')->help('Product price in decimal format')
-                ->text('category')->placeholder('Enter product category')->help('Product category for organization')
-                ->text('brand')->placeholder('Enter brand name')->help('Product brand or manufacturer')
+                ->select('category')->placeholder('Enter product category')->help('Product category for organization')->options($productCategories)
+                ->select('brand')->placeholder('Enter brand name')->help('Product brand or manufacturer')->options($brands)
                 ->text('vendor')->placeholder('Enter vendor name')->help('Product vendor or supplier')
                 ->number('sort_order')->placeholder('0')->help('Display order (lower numbers first)')->required()
             ->end()
