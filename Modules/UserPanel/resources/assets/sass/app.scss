@@ -85,3 +85,27 @@
         color: #a5b4fc;
     }
 }
+
+/* Switch Field Styles */
+.toggle-checkbox:checked {
+    transform: translateX(24px) !important;
+}
+
+.toggle-checkbox:checked + .toggle-label {
+    background-color: #3b82f6 !important;
+}
+
+.toggle-label {
+    background-color: #d1d5db;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.toggle-checkbox {
+    z-index: 10;
+}
+
+/* Switch field help text styling */
+.field-container .space-y-2 > p.text-sm.text-gray-500 {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+}

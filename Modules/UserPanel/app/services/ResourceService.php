@@ -1105,6 +1105,9 @@ class ResourceService
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
                 }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
@@ -1116,6 +1119,9 @@ class ResourceService
                 $formField = $formTab->password($fieldName)
                     ->label($field['label'])
                     ->placeholder("Enter {$field['label']}");
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
@@ -1147,6 +1153,9 @@ class ResourceService
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
                 }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
@@ -1159,6 +1168,9 @@ class ResourceService
                     ->label($field['label']);
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
                 }
                 if (!empty($field['required'])) {
                     $formField->required();
@@ -1173,6 +1185,9 @@ class ResourceService
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
                 }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
@@ -1186,6 +1201,9 @@ class ResourceService
                     ->options($field['options'] ?? []);
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
                 }
                 if (!empty($field['required'])) {
                     $formField->required();
@@ -1204,6 +1222,9 @@ class ResourceService
                 if (isset($field['accept'])) {
                     $formField->accept($field['accept']);
                 }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
@@ -1217,6 +1238,9 @@ class ResourceService
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
                 }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
@@ -1229,6 +1253,9 @@ class ResourceService
                     ->label($field['label']);
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
                 }
                 if (!empty($field['required'])) {
                     $formField->required();
@@ -1244,6 +1271,9 @@ class ResourceService
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
                 }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
@@ -1257,6 +1287,9 @@ class ResourceService
                     ->label($field['label']);
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
                 }
                 if (!empty($field['required'])) {
                     $formField->required();
@@ -1326,6 +1359,9 @@ class ResourceService
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
                 }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
@@ -1337,6 +1373,9 @@ class ResourceService
                 $formField = $formTab->password($fieldName)
                     ->label($field['label'])
                     ->placeholder("Enter {$field['label']}");
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
@@ -1368,6 +1407,9 @@ class ResourceService
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
                 }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
@@ -1380,6 +1422,9 @@ class ResourceService
                     ->label($field['label']);
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
                 }
                 if (!empty($field['required'])) {
                     $formField->required();
@@ -1394,6 +1439,9 @@ class ResourceService
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
                 }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
+                }
                 if (!empty($field['required'])) {
                     $formField->required();
                 }
@@ -1407,6 +1455,9 @@ class ResourceService
                     ->options($field['options'] ?? []);
                 if ($currentValue !== null) {
                     $formField->value($currentValue);
+                }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
                 }
                 if (!empty($field['required'])) {
                     $formField->required();
@@ -1424,6 +1475,9 @@ class ResourceService
                 }
                 if (isset($field['accept'])) {
                     $formField->accept($field['accept']);
+                }
+                if (!empty($field['help_text'])) {
+                    $formField->help($field['help_text']);
                 }
                 if (!empty($field['required'])) {
                     $formField->required();

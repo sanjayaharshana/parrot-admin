@@ -28,7 +28,7 @@ class Field
     public function name(string $name): self
     {
         $this->name = $name;
-        
+
         // Apply pending validation rules if any
         if (isset($this->validationRules['pending'])) {
             foreach ($this->validationRules['pending'] as $rule) {
@@ -36,15 +36,15 @@ class Field
             }
             unset($this->validationRules['pending']);
         }
-        
+
         // Apply required rule if it was set before name
         if ($this->required) {
             $this->addValidationRule('required');
         }
-        
+
         // Apply automatic validation rules based on field type
         $this->applyAutomaticValidation();
-        
+
         return $this;
     }
 
@@ -83,12 +83,12 @@ class Field
     public function required(bool $required = true): self
     {
         $this->required = $required;
-        
+
         // Automatically add required validation rule if name is already set
         if ($required && $this->name) {
             $this->addValidationRule('required');
         }
-        
+
         return $this;
     }
 
@@ -104,7 +104,7 @@ class Field
         } else {
             throw new \InvalidArgumentException('The rule() method accepts custom validation rule classes that implement the passes() method or string validation rules.');
         }
-        
+
         return $this;
     }
 
@@ -122,7 +122,7 @@ class Field
             if (!isset($this->validationRules[$this->name])) {
                 $this->validationRules[$this->name] = [];
             }
-            
+
             // Handle custom rule classes
             if (is_object($rule) && method_exists($rule, 'passes')) {
                 $this->validationRules[$this->name][] = $rule;
@@ -132,7 +132,7 @@ class Field
                     $this->validationRules[$this->name][] = $rule;
                 }
             }
-            
+
             // Also add to FormService if available
             if ($this->formService) {
                 $this->formService->addValidationRule($this->name, $rule);
@@ -151,7 +151,7 @@ class Field
     {
         if ($this->name) {
             $this->validationMessages[$this->name . '.' . $rule] = $message;
-            
+
             // Also add to FormService if available
             if ($this->formService) {
                 $this->formService->addValidationMessage($this->name, $rule, $message);
@@ -188,15 +188,15 @@ class Field
             case 'textarea':
                 $this->addValidationRuleDirectly('string');
                 break;
-                
+
             case 'email':
                 $this->addValidationRuleDirectly('email');
                 break;
-                
+
             case 'number':
                 $this->addValidationRuleDirectly('numeric');
                 break;
-                
+
             case 'file':
                 if ($this->useMediaManager) {
                     // Store selected media id
@@ -205,7 +205,7 @@ class Field
                     $this->addValidationRuleDirectly('file');
                 }
                 break;
-                
+
             case 'password':
                 $this->addValidationRuleDirectly('string');
                 break;
@@ -239,11 +239,11 @@ class Field
 
         if ($this->type === 'file' && isset($this->attributes['accept'])) {
             $accept = $this->attributes['accept'];
-            
+
             if (strpos($accept, 'image/') !== false) {
                 $this->addValidationRuleDirectly('image');
             }
-            
+
             // Extract file extensions from accept attribute
             if (preg_match_all('/\.([a-zA-Z0-9]+)/', $accept, $matches)) {
                 $extensions = implode(',', $matches[1]);
@@ -259,12 +259,12 @@ class Field
             if (!isset($this->validationRules[$this->name])) {
                 $this->validationRules[$this->name] = [];
             }
-            
+
             // String rule - check if it's already added
             if (!in_array($rule, $this->validationRules[$this->name])) {
                 $this->validationRules[$this->name][] = $rule;
             }
-            
+
             // Also add to FormService if available
             if ($this->formService) {
                 $this->formService->addValidationRule($this->name, $rule);
@@ -290,7 +290,7 @@ class Field
             foreach ($this->validationRules as $fieldName => $rules) {
                 $this->formService->addValidationRule($fieldName, $rules);
             }
-            
+
             // Add validation messages
             foreach ($this->validationMessages as $fieldRule => $message) {
                 $parts = explode('.', $fieldRule);
@@ -451,32 +451,32 @@ class Field
     protected function renderAttributes(): string
     {
         $attributes = [];
-        
+
         if ($this->name) {
             $attributes[] = 'name="' . htmlspecialchars($this->name) . '"';
         }
-        
+
         if ($this->value !== null) {
             $attributes[] = 'value="' . htmlspecialchars($this->value) . '"';
         }
-        
+
         if ($this->placeholder) {
             $attributes[] = 'placeholder="' . htmlspecialchars($this->placeholder) . '"';
         }
-        
+
         if ($this->required) {
             $attributes[] = 'required';
         }
-        
+
         // Add conditional display attributes
         if (!empty($this->conditionalRules)) {
             $attributes[] = 'data-conditional="' . htmlspecialchars(json_encode($this->conditionalRules)) . '"';
         }
-        
+
         foreach ($this->attributes as $key => $value) {
             $attributes[] = $key . '="' . htmlspecialchars($value) . '"';
         }
-        
+
         return implode(' ', $attributes);
     }
 
@@ -484,10 +484,10 @@ class Field
     {
         $attributes = $this->renderAttributes();
         $label = $this->label ? '<label for="' . $this->name . '" class="block text-sm font-medium text-gray-700 mb-1">' . htmlspecialchars($this->label) . '</label>' : '';
-        $help = $this->helpText ? '<p class="text-sm text-gray-500">' . htmlspecialchars($this->helpText) . '</p>' : '';
-        
+        $help = $this->helpText ? '<p class="text-sm text-gray-500" style="margin-bottom: 10px;margin-top: 0px;">' . htmlspecialchars($this->helpText) . '</p>' : '';
+
         $fieldContent = '';
-        
+
         switch ($this->type) {
             case 'text':
             case 'email':
@@ -495,12 +495,12 @@ class Field
             case 'number':
                 $fieldContent = $label . '<input type="' . $this->type . '" ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">' . $help;
                 break;
-                
+
             case 'textarea':
                 $value = $this->value ? htmlspecialchars($this->value) : '';
                 $fieldContent = $label . '<textarea ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">' . $value . '</textarea>' . $help;
                 break;
-                
+
             case 'select':
                 $options = $this->getOptions();
                 $html = $label . '<select ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">';
@@ -511,28 +511,31 @@ class Field
                 $html .= '</select>' . $help;
                 $fieldContent = $html;
                 break;
-                
+
             case 'checkbox':
                 $checked = $this->value ? ' checked' : '';
                 $fieldContent = '<label class="flex items-center"><input type="checkbox" ' . $attributes . $checked . ' class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"> <span class="ml-2 text-sm text-gray-700">' . htmlspecialchars($this->label) . '</span></label>' . $help;
                 break;
-                
+
             case 'radio':
                 $checked = $this->value ? ' checked' : '';
                 $fieldContent = '<label class="flex items-center"><input type="radio" ' . $attributes . $checked . ' class="rounded-full border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"> <span class="ml-2 text-sm text-gray-700">' . htmlspecialchars($this->label) . '</span></label>' . $help;
                 break;
-                
+
             case 'switch':
                 $checked = $this->value ? ' checked' : '';
-                $fieldContent = '<div class="flex items-center justify-between">
-                    <label class="text-sm font-medium text-gray-700">' . htmlspecialchars($this->label) . '</label>
-                    <div class="relative inline-block w-12 align-middle select-none">
-                        <input type="checkbox" ' . $attributes . $checked . ' class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform duration-200 ease-in-out" style="transform: translateX(' . ($this->value ? '24px' : '0') . ');">
-                        <label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-colors duration-200 ease-in-out"></label>
+                $fieldContent = '<div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-sm font-medium text-gray-700">' . htmlspecialchars($this->label) . '</label>
+                        <div class="relative inline-block w-12 align-middle select-none">
+                            <input type="checkbox" ' . $attributes . $checked . ' class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform duration-200 ease-in-out" style="transform: translateX(' . ($this->value ? '24px' : '0') . ');">
+                            <label class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-colors duration-200 ease-in-out"></label>
+                        </div>
                     </div>
-                </div>' . $help;
+                    ' . $help . '
+                </div>';
                 break;
-                
+
             case 'file':
                 if ($this->useMediaManager) {
                     $name = htmlspecialchars($this->name);
@@ -554,13 +557,13 @@ class Field
                     $fieldContent = $label . '<input type="file" ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">' . $help;
                 }
                 break;
-                
+
             default:
                 $fieldContent = $label . '<input type="text" ' . $attributes . ' class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">' . $help;
                 break;
         }
-        
+
         // Wrap in field container for conditional display
         return '<div class="field-container">' . $fieldContent . '</div>';
     }
-} 
+}

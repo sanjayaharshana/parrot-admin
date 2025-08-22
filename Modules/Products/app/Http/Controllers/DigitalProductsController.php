@@ -7,6 +7,7 @@ use Modules\Products\Models\Categories;
 use Modules\Products\Models\DigitalProduct;
 use Illuminate\Http\Request;
 use Modules\UserPanel\Http\Base\ResourceController;
+use Modules\UserPanel\Models\Media;
 use Modules\UserPanel\Services\ResourceService;
 
 class DigitalProductsController extends ResourceController
@@ -67,6 +68,7 @@ class DigitalProductsController extends ResourceController
              ->row()
                 // Left Column: Product Status & Visibility
                 ->column(6)
+                    ->select('license_type', ['personal', 'commercial', 'extended'])->placeholder('Select license type')->help('Type of license for the digital product')
                     ->switch('is_active')->help('Make this product visible and purchasable')
                     ->switch('is_featured')->help('Highlight this product as featured')
                     ->switch('is_visible')->help('Show this product in catalog')
@@ -74,16 +76,15 @@ class DigitalProductsController extends ResourceController
                     ->switch('is_new')->help('Mark as new product')
                     ->switch('is_on_sale')->help('Mark as on sale')
                     ->switch('is_taxable')->help('Apply taxes to this product')
-                    ->switch('allow_resale')->help('Allow customers to resell this product')
-                    ->switch('allow_modification')->help('Allow customers to modify this product')
-                    ->switch('requires_login')->help('Require user authentication to download')
-                    ->switch('instant_download')->help('Allow immediate download after purchase')
                 ->endColumn()
                 // Right Column: Licensing & Access Control
                 ->column(6)
-                    ->select('license_type', ['personal', 'commercial', 'extended'])->placeholder('Select license type')->help('Type of license for the digital product')
-                    ->textarea('license_terms')->placeholder('Enter license terms and conditions')->help('Detailed license terms and conditions')
                     ->text('usage_rights')->placeholder('Personal use only')->help('Usage rights description')
+                    ->switch('allow_resale')->help('Allow customers to resell this product')
+                    ->switch('allow_modification')->help('Allow customers to modify this product')
+                    ->textarea('license_terms')->placeholder('Enter license terms and conditions')->help('Detailed license terms and conditions')
+                    ->switch('requires_login')->help('Require user authentication to download')
+                    ->switch('instant_download')->help('Allow immediate download after purchase')
                 ->endColumn()
              ->endRow()
             ->end()
@@ -142,6 +143,12 @@ class DigitalProductsController extends ResourceController
         // ID column
         $dataView->id('ID')->sortable();
 
+        $dataView->column('thumbnail', 'Thumbnail')->display(function ($value) {
+                if (!$value) return '';
+                $media = Media::find($value);
+                return $media ? '<img src="' . $media->url . '" class="w-10 h-10 rounded object-cover" />' : '';
+            });
+
         // Basic Information
         $dataView->column('name', 'Name')
             ->sortable()
@@ -155,45 +162,6 @@ class DigitalProductsController extends ResourceController
             ->sortable()
             ->searchable();
 
-        $dataView->column('category', 'Category')
-            ->sortable()
-            ->searchable();
-
-        $dataView->column('brand', 'Brand')
-            ->sortable()
-            ->searchable();
-
-        // Status
-        $dataView->column('is_active', 'Status')
-            ->sortable()
-            ->searchable();
-
-        $dataView->column('is_featured', 'Featured')
-            ->sortable()
-            ->searchable();
-
-        // File Information
-        $dataView->column('file_size_formatted', 'File Size')
-            ->sortable()
-            ->searchable();
-
-        $dataView->column('license_type', 'License')
-            ->sortable()
-            ->searchable();
-
-
-        $dataView->column('delivery_method', 'Delivery')
-            ->sortable()
-            ->searchable();
-
-        // Download Settings
-        $dataView->column('requires_login', 'Auth Required')
-            ->sortable()
-            ->searchable();
-
-        $dataView->column('instant_download', 'Instant Download')
-            ->sortable()
-            ->searchable();
 
         // Actions
         $dataView->actions([
@@ -213,105 +181,9 @@ class DigitalProductsController extends ResourceController
         return $dataView;
     }
 
-    /**
-     * Get validation rules for the request
-     */
-    protected function getValidationRules($request = null, $id = null)
-    {
-        $rules = [
-            // Basic Information
-            'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:100|unique:digital_products,sku',
-            'slug' => 'nullable|string|max:255|unique:digital_products,slug',
-            'price' => 'required|numeric|min:0|max:999999.99',
-            'category' => 'nullable|string|max:255',
-            'brand' => 'nullable|string|max:255',
-            'vendor' => 'nullable|string|max:255',
-            'sort_order' => 'nullable|integer|min:0|max:999999',
 
-            // Media & Files
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:1024',
-            'download_link' => 'nullable|url|max:500',
-            'file_path' => 'nullable|string|max:500',
-            'file_name' => 'nullable|string|max:255',
-            'file_extension' => 'nullable|string|max:50',
-            'file_size' => 'nullable|integer|min:0',
-            'file_size_formatted' => 'nullable|string|max:50',
-            'download_limit' => 'nullable|integer|min:0|max:999999',
-            'download_expiry_days' => 'nullable|integer|min:0|max:3650',
 
-            // Settings & Rights
-            'is_active' => 'boolean',
-            'is_featured' => 'boolean',
-            'is_visible' => 'boolean',
-            'is_featured_on_homepage' => 'boolean',
-            'is_new' => 'boolean',
-            'is_on_sale' => 'boolean',
-            'is_taxable' => 'boolean',
-            'license_type' => 'nullable|in:personal,commercial,extended',
-            'license_terms' => 'nullable|string|max:1000',
-            'usage_rights' => 'nullable|string|max:500',
-            'allow_resale' => 'boolean',
-            'allow_modification' => 'boolean',
-            'requires_login' => 'boolean',
-            'instant_download' => 'boolean',
-
-            // Technical Details
-            'compatible_platforms' => 'nullable|string|max:500',
-            'compatible_software' => 'nullable|string|max:500',
-            'minimum_requirements' => 'nullable|string|max:1000',
-            'recommended_requirements' => 'nullable|string|max:1000',
-            'version' => 'nullable|string|max:50',
-            'release_date' => 'nullable|date',
-            'auto_updates' => 'boolean',
-            'update_notes' => 'nullable|string|max:1000',
-            'access_url' => 'nullable|url|max:500',
-            'access_credentials' => 'nullable|string|max:500',
-            'access_instructions' => 'nullable|string|max:1000',
-            'delivery_method' => 'nullable|in:download,email,access_link',
-
-            // SEO & Additional
-            'meta_title' => 'nullable|string|max:60',
-            'meta_description' => 'nullable|string|max:160',
-            'meta_keywords' => 'nullable|string|max:500',
-            'additional_info' => 'nullable|string|max:2000',
-            'custom_fields' => 'nullable|string|max:2000',
-            'preview_url' => 'nullable|url|max:500',
-            'demo_url' => 'nullable|url|max:500',
-            'has_preview' => 'boolean',
-            'has_demo' => 'boolean',
-        ];
-
-        return $rules;
-    }
-
-    /**
-     * Get custom validation messages
-     */
-    protected function getValidationMessages()
-    {
-        return [
-            'name.required' => 'Product name is required.',
-            'sku.required' => 'SKU is required.',
-            'sku.unique' => 'This SKU is already in use.',
-            'price.required' => 'Product price is required.',
-            'price.numeric' => 'Price must be a valid number.',
-            'price.min' => 'Price cannot be negative.',
-            'image.image' => 'The image must be a valid image file.',
-            'image.mimes' => 'The image must be a JPEG, PNG, JPG, GIF, or WebP file.',
-            'image.max' => 'The image size cannot exceed 2MB.',
-            'thumbnail.max' => 'The thumbnail size cannot exceed 1MB.',
-            'download_link.url' => 'Download link must be a valid URL.',
-            'access_url.url' => 'Access URL must be a valid URL.',
-            'preview_url.url' => 'Preview URL must be a valid URL.',
-            'demo_url.url' => 'Demo URL must be a valid URL.',
-            'meta_title.max' => 'Meta title cannot exceed 60 characters.',
-            'meta_description.max' => 'Meta description cannot exceed 160 characters.',
-        ];
-    }
-
-        /**
+            /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
