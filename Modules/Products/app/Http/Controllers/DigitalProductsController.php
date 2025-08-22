@@ -34,19 +34,31 @@ class DigitalProductsController extends ResourceController
 
             // 1. Basic Information Tab - Core product details
             ->tab('basic', 'Basic Information', 'fa fa-info-circle')
-                ->text('name')->required()->placeholder('Enter product name')->help('Product name is required')
+
+                ->row()
+                    // Left Column: Product Status & Visibility
+                    ->column(6)
+                         ->text('name')->required()->placeholder('Enter product name')->help('Product name is required')
+
+                        ->text('slug')->placeholder('Enter URL slug')->help('URL-friendly version of the name')->required()->rules([
+                            'unique:digital_products,slug'])
+                        ->number('price')->required()->placeholder('0.00')->help('Product price in decimal format')
+
+                        ->select('category')->placeholder('Enter product category')->help('Product category for organization')->options($productCategories)
+
+                    ->endColumn()
+                    ->column(6)
+                        ->text('sku')->required()->placeholder('Enter SKU')->help('Stock Keeping Unit - must be unique')->rules([
+                            'unique:digital_products,sku'])
+                        ->select('brand')->placeholder('Enter brand name')->help('Product brand or manufacturer')->options($brands)
+                        ->text('vendor')->placeholder('Enter vendor name')->help('Product vendor or supplier')
+                        ->number('sort_order')->placeholder('0')->help('Display order (lower numbers first)')->required()
+                    ->endColumn()
+                ->endRow()
+
                 ->textarea('description')->placeholder('Enter product description')->help('Detailed description of the digital product')
-                ->text('sku')->required()->placeholder('Enter SKU')->help('Stock Keeping Unit - must be unique')->rules([
-                'unique:digital_products,sku'
-            ])
-                ->text('slug')->placeholder('Enter URL slug')->help('URL-friendly version of the name')->required()->rules([
-                    'unique:digital_products,slug',
-            ])
-                ->number('price')->required()->placeholder('0.00')->help('Product price in decimal format')
-                ->select('category')->placeholder('Enter product category')->help('Product category for organization')->options($productCategories)
-                ->select('brand')->placeholder('Enter brand name')->help('Product brand or manufacturer')->options($brands)
-                ->text('vendor')->placeholder('Enter vendor name')->help('Product vendor or supplier')
-                ->number('sort_order')->placeholder('0')->help('Display order (lower numbers first)')->required()
+
+
             ->end()
 
             // 2. Media & Files Tab - Images, downloads, file management
